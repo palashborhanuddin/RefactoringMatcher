@@ -3,6 +3,8 @@
 
 target/*
 
+projectDirectory/*
+
 # Log file
 *.log
 
