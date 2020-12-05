@@ -2,27 +2,13 @@ package com.refactoringMatcher.init;
 
 import com.refactoringMatcher.dbConnection.DBConnection;
 import com.refactoringMatcher.domain.*;
-import com.refactoringMatcher.java.ast.decomposition.cfg.Graph;
-import com.refactoringMatcher.java.ast.decomposition.cfg.GraphEdge;
-import com.refactoringMatcher.java.ast.decomposition.cfg.GraphNode;
-import com.refactoringMatcher.java.ast.decomposition.cfg.GroumNode;
-import com.refactoringMatcher.refactoringDetection.RefactoringDetection;
+import com.refactoringMatcher.service.RefactoringDetectionService;
 import com.refactoringMatcher.service.RefactoringExtractionService;
-import com.refactoringMatcher.utils.Cache;
-import com.refactoringMatcher.utils.GitUtils;
-import gr.uom.java.xmi.LocationInfo;
-import gr.uom.java.xmi.diff.ExtractOperationRefactoring;
 import org.apache.commons.lang3.tuple.Pair;
-import org.eclipse.jgit.lib.Repository;
-import org.refactoringminer.api.GitService;
 import org.refactoringminer.api.Refactoring;
-import org.refactoringminer.util.GitServiceImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -42,7 +28,7 @@ public class App {
 
         RefactoringExtractionService extractionService = new RefactoringExtractionService();
 
-         RefactoringDetection refactoringDetection = new RefactoringDetection();
+         RefactoringDetectionService refactoringDetectionService = new RefactoringDetectionService();
 
         RepositoryInfo repositoryInfo = new RepositoryInfo("Guardsquare-proguard",
                 "https://github.com/Guardsquare/proguard");
@@ -50,7 +36,7 @@ public class App {
         /*
          * Save the refactoring information
          */
-        //saveRefactoringInfo(refactoringDetection, extractionService, connection, repositoryInfo);
+        //saveRefactoringInfo(refactoringDetectionService, extractionService, connection, repositoryInfo);
 
 
         List<RefactoringInfo> refactoringInfoList = connection.getRefactoringInfoList();
@@ -101,13 +87,13 @@ public class App {
         connection.close();
     }
 
-    private static void saveRefactoringInfo(RefactoringDetection refactoringDetection,
+    private static void saveRefactoringInfo(RefactoringDetectionService refactoringDetectionService,
                                             RefactoringExtractionService extractionService,
                                             DBConnection connection,
                                             RepositoryInfo repositoryInfo) throws Exception {
 
         List<Pair<String, Refactoring>> refactoringPairList =
-                refactoringDetection.detectRefactoringData(repositoryInfo);
+                refactoringDetectionService.detectRefactoringData(repositoryInfo);
 
         List<RefactoringInfo> refactoringList = extractionService.getRefactoringInfo(refactoringPairList, repositoryInfo);
 

@@ -1,9 +1,8 @@
-package com.refactoringMatcher.refactoringDetection;
+package com.refactoringMatcher.service;
 
 import com.refactoringMatcher.domain.RepositoryInfo;
 import com.refactoringMatcher.utils.GitUtils;
 import com.refactoringMatcher.utils.PropertyReader;
-import gr.uom.java.xmi.diff.ExtractOperationRefactoring;
 import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.jgit.lib.Repository;
@@ -23,15 +22,15 @@ import java.util.Properties;
  * @author Diptopol
  * @since 11/28/2020 9:36 AM
  */
-public class RefactoringDetection {
+public class RefactoringDetectionService {
 
-    private static Logger logger = LoggerFactory.getLogger(RefactoringDetection.class);
+    private static Logger logger = LoggerFactory.getLogger(RefactoringDetectionService.class);
 
     private Properties properties;
     private GitService gitService;
     private GitHistoryRefactoringMiner miner;
 
-    public RefactoringDetection() {
+    public RefactoringDetectionService() {
         properties = new PropertyReader().getProperties();
         gitService = new GitServiceImpl();
         miner = new GitHistoryRefactoringMinerImpl();
