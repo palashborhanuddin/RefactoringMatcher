@@ -6,15 +6,19 @@ import com.refactoringMatcher.java.ast.MethodObject;
 import com.refactoringMatcher.java.ast.decomposition.cfg.*;
 import gr.uom.java.xmi.LocationInfo;
 import gr.uom.java.xmi.diff.ExtractOperationRefactoring;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.ObjectLoader;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.merge.MergeStrategy;
 import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
+import org.eclipse.jgit.treewalk.TreeWalk;
 import org.refactoringminer.api.GitService;
 import org.refactoringminer.api.Refactoring;
 import org.refactoringminer.api.RefactoringType;
@@ -24,13 +28,12 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author Diptopol
@@ -49,18 +52,24 @@ public class GitUtils {
     }
 
 
-    public static String getWholeTextFromFile(LocationInfo locationInfo, Repository repository, String commitId)
-            throws IOException, Exception {
-        try {
-            if (!repository.getFullBranch().equals(commitId))
-                new GitServiceImpl().checkout(repository, commitId);
+    public static String getWholeTextFromFile(LocationInfo locationInfo, Repository repository, String commitIdStr)
+            throws Exception {
+        ObjectId commitId = ObjectId.fromString(commitIdStr);
 
-            String wholeText = readFile(new String(repository.getDirectory().getAbsolutePath().replaceAll("\\.git", "")
-                    + "/" + locationInfo.getFilePath()), StandardCharsets.UTF_8);
-            return wholeText;
+        try (RevWalk revWalk = new RevWalk(repository)) {
+            RevCommit commit = revWalk.parseCommit(commitId);
+
+            List<String> filePaths = new ArrayList<>();
+            filePaths.add(locationInfo.getFilePath());
+
+            Map<String, String> fileContentsCurrent = new LinkedHashMap<>();
+            Set<String> repositoryDirectoriesCurrent = new LinkedHashSet<>();
+
+            populateFileContents(repository, commit, filePaths, fileContentsCurrent, repositoryDirectoriesCurrent);
+
+            return fileContentsCurrent.get(locationInfo.getFilePath());
+
         } catch (Exception e) {
-            revert(repository);
-
             logger.error("Could not read file: " + locationInfo.getFilePath());
             throw e;
         }
@@ -215,13 +224,33 @@ public class GitUtils {
         return new String(encoded);
     }
 
-    private static boolean revert(Repository repository) {
-        try (Git git = new Git(repository)) {
-            git.revert().setStrategy(MergeStrategy.THEIRS).call();
-            return true;
-        } catch (Exception ex) {
-            logger.error(ex.getMessage());
-            return false;
+    private static void populateFileContents(Repository repository, RevCommit commit,
+                                             List<String> filePaths, Map<String, String> fileContents,
+                                             Set<String> repositoryDirectories) throws Exception {
+        RevTree parentTree = commit.getTree();
+        try (TreeWalk treeWalk = new TreeWalk(repository)) {
+            treeWalk.addTree(parentTree);
+            treeWalk.setRecursive(true);
+            while (treeWalk.next()) {
+                String pathString = treeWalk.getPathString();
+                if(filePaths.contains(pathString)) {
+                    ObjectId objectId = treeWalk.getObjectId(0);
+                    ObjectLoader loader = repository.open(objectId);
+                    StringWriter writer = new StringWriter();
+                    IOUtils.copy(loader.openStream(), writer);
+                    fileContents.put(pathString, writer.toString());
+                }
+                if(pathString.endsWith(".java") && pathString.contains("/")) {
+                    String directory = pathString.substring(0, pathString.lastIndexOf("/"));
+                    repositoryDirectories.add(directory);
+                    //include sub-directories
+                    String subDirectory = new String(directory);
+                    while(subDirectory.contains("/")) {
+                        subDirectory = subDirectory.substring(0, subDirectory.lastIndexOf("/"));
+                        repositoryDirectories.add(subDirectory);
+                    }
+                }
+            }
         }
     }
 }
