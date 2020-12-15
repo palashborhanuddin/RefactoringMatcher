@@ -13,8 +13,6 @@ public class RefactoringInfo {
     private String projectUrl;
 
     private RefactoringExtractionInfo extracted;
-    private RefactoringExtractionInfo beforeExtraction;
-    private RefactoringExtractionInfo afterExtraction;
 
     public RefactoringInfo() {
     }
@@ -61,21 +59,5 @@ public class RefactoringInfo {
 
     public void setExtracted(RefactoringExtractionInfo extracted) {
         this.extracted = extracted;
-    }
-
-    public RefactoringExtractionInfo getBeforeExtraction() {
-        return beforeExtraction;
-    }
-
-    public void setBeforeExtraction(RefactoringExtractionInfo beforeExtraction) {
-        this.beforeExtraction = beforeExtraction;
-    }
-
-    public RefactoringExtractionInfo getAfterExtraction() {
-        return afterExtraction;
-    }
-
-    public void setAfterExtraction(RefactoringExtractionInfo afterExtraction) {
-        this.afterExtraction = afterExtraction;
     }
 }

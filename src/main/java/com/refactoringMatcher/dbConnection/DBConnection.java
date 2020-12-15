@@ -58,16 +58,8 @@ public class DBConnection {
                             result.get("re.filePath").asString(),
                             result.get("re.sourceCode").asString(), result.get("re.startOffset").asInt(), result.get("re.length").asInt());
 
-                    switch (type) {
-                        case "extracted":
-                            refactoringInfo.setExtracted(refactoringExtractionInfo);
-                            break;
-                        case "beforeExtraction":
-                            refactoringInfo.setBeforeExtraction(refactoringExtractionInfo);
-                            break;
-                        case "afterExtraction":
-                            refactoringInfo.setAfterExtraction(refactoringExtractionInfo);
-                            break;
+                    if ("extracted".equals(type)) {
+                        refactoringInfo.setExtracted(refactoringExtractionInfo);
                     }
 
                     int index = IntStream.range(0, refactoringInfoList.size())
@@ -201,12 +193,8 @@ public class DBConnection {
             session.writeTransaction(tx -> {
                 String query = "MERGE (refactoringInfo:RefactoringInfo {projectUrl: $projectUrl, commitId: $commitId, uuid: apoc.create.uuid()})" +
                         " MERGE (extracted:RefactoringExtractionInfo {filePath: $eFilePath, sourceCode: $eSourceCode, startOffset: $eStartOffset, length: $eLength, uuid: apoc.create.uuid()})" +
-                        " MERGE (beforeExtraction:RefactoringExtractionInfo {filePath: $bFilePath, sourceCode: $bSourceCode, startOffset: $bStartOffset, length: $bLength, uuid: apoc.create.uuid()})" +
-                        " MERGE (afterExtraction:RefactoringExtractionInfo {filePath: $aFilePath, sourceCode: $aSourceCode, startOffset: $aStartOffset, length: $aLength, uuid: apoc.create.uuid()})" +
-                        " WITH refactoringInfo, extracted, beforeExtraction, afterExtraction" +
-                        " MERGE (refactoringInfo) - [ownExtracted:CONTAINS{type: 'extracted'}] -> (extracted)" +
-                        " MERGE (refactoringInfo) - [ownBeforeExtraction:CONTAINS{type: 'beforeExtraction'}]-> (beforeExtraction)" +
-                        " MERGE (refactoringInfo) -[ownAfterExtraction:CONTAINS{type: 'afterExtraction'}] -> (afterExtraction)";
+                        " WITH refactoringInfo, extracted" +
+                        " MERGE (refactoringInfo) - [ownExtracted:CONTAINS{type: 'extracted'}] -> (extracted)";
 
                 Map<String, Object> parameterMap = new HashMap<>();
                 parameterMap.put("projectUrl", refactoringInfo.getProjectUrl());
@@ -216,17 +204,6 @@ public class DBConnection {
                 parameterMap.put("eSourceCode", refactoringInfo.getExtracted().getSourceCode());
                 parameterMap.put("eStartOffset", refactoringInfo.getExtracted().getStartOffset());
                 parameterMap.put("eLength", refactoringInfo.getExtracted().getLength());
-
-                parameterMap.put("bFilePath", refactoringInfo.getBeforeExtraction().getFilePath());
-                parameterMap.put("bSourceCode", refactoringInfo.getBeforeExtraction().getSourceCode());
-                parameterMap.put("bStartOffset", refactoringInfo.getBeforeExtraction().getStartOffset());
-                parameterMap.put("bLength", refactoringInfo.getBeforeExtraction().getLength());
-
-                parameterMap.put("aFilePath", refactoringInfo.getAfterExtraction().getFilePath());
-                parameterMap.put("aSourceCode", refactoringInfo.getAfterExtraction().getSourceCode());
-                parameterMap.put("aStartOffset", refactoringInfo.getAfterExtraction().getStartOffset());
-                parameterMap.put("aLength", refactoringInfo.getAfterExtraction().getLength());
-
 
                 return tx.run(query, parameterMap);
             });

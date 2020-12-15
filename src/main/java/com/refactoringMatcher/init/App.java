@@ -1,7 +1,9 @@
 package com.refactoringMatcher.init;
 
 import com.refactoringMatcher.dbConnection.DBConnection;
-import com.refactoringMatcher.domain.*;
+import com.refactoringMatcher.domain.RefactoringExtractionInfo;
+import com.refactoringMatcher.domain.RefactoringInfo;
+import com.refactoringMatcher.domain.RepositoryInfo;
 import com.refactoringMatcher.service.RefactoringDetectionService;
 import com.refactoringMatcher.service.RefactoringExtractionService;
 import org.apache.commons.lang3.tuple.Pair;
@@ -43,8 +45,6 @@ public class App {
 
         for (RefactoringInfo refactoringInfo : refactoringInfoList) {
             extractionService.populateRefactoringExtractionInfo(refactoringInfo.getExtracted(), "extracted");
-            extractionService.populateRefactoringExtractionInfo(refactoringInfo.getBeforeExtraction(), "beforeExtraction");
-            extractionService.populateRefactoringExtractionInfo(refactoringInfo.getAfterExtraction(), "afterExtraction");
         }
 
 

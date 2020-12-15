@@ -48,20 +48,10 @@ public class RefactoringExtractionService {
                 RefactoringInfo refactoringInfo = new RefactoringInfo();
 
                 refactoringInfo.setCommitId(commitId);
-                refactoringInfo.setPreviousCommitId(GitUtils.getParentCommit(repository, commitId));
                 refactoringInfo.setProjectUrl(repositoryInfo.getHtmlUrl());
 
                 LocationInfo extractedCodeLocationInfo = extractOperationRefactoring.getExtractedOperation().getLocationInfo();
                 refactoringInfo.setExtracted(getRefactoringExtractionInfo(repository, commitId, extractedCodeLocationInfo));
-
-                LocationInfo beforeExtractionLocationInfo = extractOperationRefactoring.getSourceOperationBeforeExtraction().getLocationInfo();
-                /*
-                 * For text extraction before commit previous commit ID has to be used.
-                 */
-                refactoringInfo.setBeforeExtraction(getRefactoringExtractionInfo(repository, refactoringInfo.getPreviousCommitId(), beforeExtractionLocationInfo));
-
-                LocationInfo afterExtractionLocationInfo = extractOperationRefactoring.getSourceOperationAfterExtraction().getLocationInfo();
-                refactoringInfo.setAfterExtraction(getRefactoringExtractionInfo(repository, commitId, afterExtractionLocationInfo));
 
                 extractedRefactorings.add(refactoringInfo);
             }
