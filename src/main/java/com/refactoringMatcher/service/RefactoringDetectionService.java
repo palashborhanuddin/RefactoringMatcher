@@ -43,7 +43,7 @@ public class RefactoringDetectionService {
     public List<Pair<String, Refactoring>> detectRefactoringData(RepositoryInfo repositoryInfo) {
         logger.info("Full Name: {}", repositoryInfo.getFullName());
 
-        String repositoryLocalDirectory = GitUtils.getRepositoryLocalDirectory(repositoryInfo);
+        String repositoryLocalDirectory = GitUtils.getRepositoryLocalDirectory(repositoryInfo.getFullName());
         List<Pair<String, Refactoring>> refactoringPairList = new ArrayList<>();
 
         try {
@@ -90,7 +90,7 @@ public class RefactoringDetectionService {
     public List<Pair<String, Refactoring>> detectRefactoringData(RepositoryInfo repositoryInfo, String commitId) {
         logger.info("Full Name: {}", repositoryInfo.getFullName());
 
-        String repositoryLocalDirectory = GitUtils.getRepositoryLocalDirectory(repositoryInfo);
+        String repositoryLocalDirectory = GitUtils.getRepositoryLocalDirectory(repositoryInfo.getFullName());
         List<Pair<String, Refactoring>> refactoringPairList = new ArrayList<>();
 
         try {

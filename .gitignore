@@ -4,6 +4,7 @@
 target/*
 
 projectDirectory/*
+pomFileDirectory/*
 
 # Log file
 *.log
