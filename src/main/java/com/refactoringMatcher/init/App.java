@@ -56,34 +56,6 @@ public class App {
             }
         }
 
-        /*List<RefactoringData> refactoringDataList = GitUtils.generateRefactoringData(refactoringPairList, repositoryInfo);
-
-        Graph groumGraph = refactoringDataList.get(0).getExtractedMethodGroum();
-
-        for(GraphNode graphNode : groumGraph.getNodes()) {
-            if (graphNode instanceof GroumNode) {
-                System.out.println(((GroumNode) graphNode).ToGroumString());
-            }
-        }
-
-        for (GraphEdge graphEdge : groumGraph.getEdges()) {
-            GroumNode srcNode = (GroumNode) graphEdge.getSrc();
-            GroumNode dstNode = (GroumNode) graphEdge.getDst();
-
-            System.out.println("From: " + srcNode.ToGroumString() + " To" + dstNode.ToGroumString());
-        }*/
-
-        /*for (RefactoringData refactoringData : refactoringDataList) {
-            System.out.println("Extracted");
-            System.out.println(refactoringData.getExtractedMethodCode());
-
-            System.out.println("Before Extraction");
-            System.out.println(refactoringData.getSourceMethodBeforeExtractionCode());
-
-            System.out.println("After Extraction");
-            System.out.println(refactoringData.getSourceMethodAfterExtractionCode());
-        }*/
-
         connection.close();
     }
 
