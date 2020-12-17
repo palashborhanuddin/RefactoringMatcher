@@ -26,16 +26,13 @@ public class RefactoringDetectionService {
 
     private static Logger logger = LoggerFactory.getLogger(RefactoringDetectionService.class);
 
-    private Properties properties;
     private GitService gitService;
     private GitHistoryRefactoringMiner miner;
 
     public RefactoringDetectionService() {
-        properties = new PropertyReader().getProperties();
         gitService = new GitServiceImpl();
         miner = new GitHistoryRefactoringMinerImpl();
     }
-
 
     public void detectRefactoringData(List<RepositoryInfo> repositoryInfoList) {
         for (RepositoryInfo repositoryInfo : repositoryInfoList) {
@@ -77,7 +74,7 @@ public class RefactoringDetectionService {
             for (RevCommit revCommit : walk) {
                 String commitId = revCommit.getId().getName();
 
-                miner.detectAtCommit(repo, commitId, refactoringHandler, Integer.valueOf(properties.getProperty("refactoring.timeout.per.commit")));
+                miner.detectAtCommit(repo, commitId, refactoringHandler, Integer.valueOf(PropertyReader.getProperty("refactoring.timeout.per.commit")));
             }
 
             logger.info("Print commit id list with size {}", commitIdList.size());
@@ -118,7 +115,7 @@ public class RefactoringDetectionService {
                 }
             };
 
-            miner.detectAtCommit(repo, commitId, refactoringHandler, Integer.valueOf(properties.getProperty("refactoring.timeout.per.commit")));
+            miner.detectAtCommit(repo, commitId, refactoringHandler, Integer.valueOf(PropertyReader.getProperty("refactoring.timeout.per.commit")));
 
             logger.info("Print commit id list with size {}", commitIdList.size());
 

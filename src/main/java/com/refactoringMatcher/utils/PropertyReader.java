@@ -1,5 +1,8 @@
 package com.refactoringMatcher.utils;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
@@ -10,23 +13,25 @@ import java.util.Properties;
  */
 public class PropertyReader {
 
-    private Properties properties;
+    private static Logger logger = LoggerFactory.getLogger(PropertyReader.class);
 
-    public PropertyReader() {
+    private static Properties properties;
+
+    static {
         InputStream inputStream;
         properties = new Properties();
         String fileName = "config.properties";
 
         try {
-            inputStream = getClass().getClassLoader().getResourceAsStream(fileName);
+            inputStream = PropertyReader.class.getClassLoader().getResourceAsStream(fileName);
             properties.load(inputStream);
 
         } catch (IOException ex) {
-            ex.printStackTrace();
+            logger.error("Couldn't load config properties", ex);
         }
     }
 
-    public Properties getProperties() {
-        return this.properties;
+    public static String getProperty(String key) {
+        return properties.getProperty(key);
     }
 }

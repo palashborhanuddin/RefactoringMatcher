@@ -20,12 +20,10 @@ import java.util.stream.IntStream;
 public class DBConnection {
 
     private final Driver driver;
-    private Properties properties;
 
     public DBConnection() {
-        properties = new PropertyReader().getProperties();
-        driver = GraphDatabase.driver(properties.getProperty("db.uri"),
-                AuthTokens.basic(properties.getProperty("db.username"), properties.getProperty("db.passwd")));
+        driver = GraphDatabase.driver(PropertyReader.getProperty("db.uri"),
+                AuthTokens.basic(PropertyReader.getProperty("db.username"), PropertyReader.getProperty("db.passwd")));
     }
 
     public void close() throws Exception {
