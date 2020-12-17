@@ -1,12 +1,8 @@
 package com.refactoringMatcher.utils;
 
 import com.refactoringMatcher.domain.RepositoryInfo;
-import com.refactoringMatcher.java.ast.ConstructorObject;
-import com.refactoringMatcher.java.ast.MethodObject;
 import gr.uom.java.xmi.LocationInfo;
 import org.apache.commons.io.IOUtils;
-import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectLoader;
 import org.eclipse.jgit.lib.Repository;
@@ -17,7 +13,6 @@ import org.eclipse.jgit.treewalk.TreeWalk;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.io.StringWriter;
 import java.util.*;
 
@@ -52,43 +47,8 @@ public class GitUtils {
         }
     }
 
-    public static MethodObject createMethodObject(MethodDeclaration methodDeclaration) {
-        final ConstructorObject constructorObject = new ConstructorObject(methodDeclaration);
-        return new MethodObject(constructorObject);
-    }
-
-    public static String extractText(int startOffset, int length, String wholeText, String file) throws IOException, Exception {
-        MethodDeclaration methodDeclaration = getMethodDeclaration(file, wholeText, startOffset, length);
-        return methodDeclaration.toString();
-    }
-
     public static String getRepositoryLocalDirectory(RepositoryInfo repositoryInfo) {
         return "projectDirectory/" + repositoryInfo.getFullName().replaceAll("/", "-");
-    }
-
-    public static MethodDeclaration getMethodDeclaration(String file, String wholeText, int startOffSet, int length)
-            throws IOException, Exception {
-        MethodDeclaration methodDeclaration;
-        try {
-            ASTParser parser = ASTParser.newParser(AST.JLS8);
-            parser.setKind(ASTParser.K_COMPILATION_UNIT);
-            Map options = JavaCore.getOptions();
-            JavaCore.setComplianceOptions(JavaCore.VERSION_1_8, options);
-            parser.setCompilerOptions(options);
-            parser.setResolveBindings(false);
-            parser.setEnvironment(new String[0], new String[] { file }, null, false);
-            parser.setSource(wholeText.toCharArray());
-            parser.setResolveBindings(true);
-            CompilationUnit compilationUnit = (CompilationUnit) parser.createAST(null);
-            ASTNode block = NodeFinder.perform(compilationUnit, startOffSet,
-                    length);
-
-            methodDeclaration = (MethodDeclaration) block;
-        } catch (Exception e) {
-            logger.error("Can not extract method from file.");
-            throw e;
-        }
-        return methodDeclaration;
     }
 
     private static void populateFileContents(Repository repository, RevCommit commit,

@@ -6,6 +6,7 @@ import com.refactoringMatcher.domain.RepositoryInfo;
 import com.refactoringMatcher.java.ast.decomposition.cfg.Graph;
 import com.refactoringMatcher.java.ast.decomposition.cfg.Groum;
 import com.refactoringMatcher.java.ast.decomposition.cfg.PDG;
+import com.refactoringMatcher.utils.ASTUtils;
 import com.refactoringMatcher.utils.Cache;
 import com.refactoringMatcher.utils.GitUtils;
 import gr.uom.java.xmi.LocationInfo;
@@ -66,12 +67,12 @@ public class RefactoringExtractionService {
             Cache.currentFile = refactoringExtractionInfo.getFilePath();
             Cache.currentFileText = refactoringExtractionInfo.getSourceCode();
 
-            String code = GitUtils.extractText(refactoringExtractionInfo.getStartOffset(),
+            String code = ASTUtils.extractText(refactoringExtractionInfo.getStartOffset(),
                     refactoringExtractionInfo.getLength(),
                     refactoringExtractionInfo.getSourceCode(), refactoringExtractionInfo.getFilePath());
 
-            PDG extractedMethodPDG = new PDG(GitUtils.createMethodObject(
-                    GitUtils.getMethodDeclaration(refactoringExtractionInfo.getFilePath(),
+            PDG extractedMethodPDG = new PDG(ASTUtils.createMethodObject(
+                    ASTUtils.getMethodDeclaration(refactoringExtractionInfo.getFilePath(),
                             refactoringExtractionInfo.getSourceCode(),
                             refactoringExtractionInfo.getStartOffset(), refactoringExtractionInfo.getLength())));
 
