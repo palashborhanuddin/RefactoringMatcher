@@ -1,6 +1,7 @@
 package com.refactoringMatcher.utils;
 
 import com.refactoringMatcher.java.ast.ConstructorObject;
+import com.refactoringMatcher.java.ast.ImportObject;
 import com.refactoringMatcher.java.ast.MethodObject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.*;
@@ -8,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -18,8 +20,8 @@ public class ASTUtils {
 
     private static Logger logger = LoggerFactory.getLogger(ASTUtils.class);
 
-    public static MethodObject createMethodObject(MethodDeclaration methodDeclaration) {
-        final ConstructorObject constructorObject = new ConstructorObject(methodDeclaration);
+    public static MethodObject createMethodObject(MethodDeclaration methodDeclaration, List<ImportObject> importObjectList) {
+        final ConstructorObject constructorObject = new ConstructorObject(methodDeclaration, importObjectList);
 
         return new MethodObject(constructorObject);
     }

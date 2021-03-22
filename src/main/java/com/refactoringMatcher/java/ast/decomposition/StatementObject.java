@@ -1,5 +1,6 @@
 package com.refactoringMatcher.java.ast.decomposition;
 
+import com.refactoringMatcher.java.ast.ImportObject;
 import com.refactoringMatcher.java.ast.ParameterObject;
 import com.refactoringMatcher.java.ast.util.ExpressionExtractor;
 import org.eclipse.jdt.core.dom.Expression;
@@ -32,7 +33,8 @@ public class StatementObject extends AbstractStatement  implements Serializable{
 	 */
 	private static final long serialVersionUID = 1572661510460765186L;
 
-	public StatementObject(Statement statement, List<ParameterObject> parameters, StatementType type, AbstractMethodFragment parent) {
+	public StatementObject(Statement statement, List<ParameterObject> parameters, List<ImportObject> importObjectList,
+						   StatementType type, AbstractMethodFragment parent) {
 		super(statement, parameters, type, parent);
 		
 		ExpressionExtractor expressionExtractor = new ExpressionExtractor();
@@ -40,6 +42,7 @@ public class StatementObject extends AbstractStatement  implements Serializable{
         List<Expression> postfixExpressions = expressionExtractor.getPostfixExpressions(statement);
         List<Expression> prefixExpressions = expressionExtractor.getPrefixExpressions(statement);
         processVariablesWithoutBindingInfo(expressionExtractor.getVariableInstructions(statement), assignments, postfixExpressions, prefixExpressions);
+        processMethodInvocations(expressionExtractor.getMethodInvocations(statement), importObjectList);
 		processArrayCreations(expressionExtractor.getArrayCreations(statement));
 		processLiterals(expressionExtractor.getLiterals(statement));
 		if(statement instanceof ThrowStatement) {

@@ -25,8 +25,8 @@ public class PDG extends Graph implements Serializable {
 		createPDG(cfg);
 	}
 
-	public PDG(MethodObject methodObject, List<ImportDeclaration> importDeclarationList) {
-		CFG cfg = new CFG(methodObject, importDeclarationList);
+	public PDG(MethodObject methodObject, List<ImportObject> importObjectList) {
+		CFG cfg = new CFG(methodObject, importObjectList);
 		createPDG(cfg);
 	}
 

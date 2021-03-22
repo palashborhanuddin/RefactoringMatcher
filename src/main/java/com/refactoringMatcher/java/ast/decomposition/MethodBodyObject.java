@@ -17,9 +17,11 @@ public class MethodBodyObject implements Serializable{
 	private static final long serialVersionUID = -3183146798042270617L;
 	private CompositeStatementObject compositeStatement;
 	private List<ParameterObject> parameters;
+	private List<ImportObject> importObjectList;
 	
-	public MethodBodyObject(Block methodBody, List<ParameterObject> parameterList) {
+	public MethodBodyObject(Block methodBody, List<ParameterObject> parameterList, List<ImportObject> importObjectList) {
 		this.parameters = parameterList;
+		this.importObjectList = importObjectList;
 		this.compositeStatement = new CompositeStatementObject(methodBody, parameters, StatementType.BLOCK, null);
         List<Statement> statements = methodBody.statements();
 		for(Statement statement : statements) {
@@ -160,7 +162,7 @@ public class MethodBodyObject implements Serializable{
 		}
 		else if(statement instanceof ExpressionStatement) {
 			ExpressionStatement expressionStatement = (ExpressionStatement)statement;
-			StatementObject child = new StatementObject(expressionStatement, parameters, StatementType.EXPRESSION, parent);
+			StatementObject child = new StatementObject(expressionStatement, parameters, importObjectList, StatementType.EXPRESSION, parent);
 			parent.addStatement(child);
 		}
 		else if(statement instanceof SwitchStatement) {
@@ -175,12 +177,12 @@ public class MethodBodyObject implements Serializable{
 		}
 		else if(statement instanceof SwitchCase) {
 			SwitchCase switchCase = (SwitchCase)statement;
-			StatementObject child = new StatementObject(switchCase, parameters, StatementType.SWITCH_CASE, parent);
+			StatementObject child = new StatementObject(switchCase, parameters, importObjectList, StatementType.SWITCH_CASE, parent);
 			parent.addStatement(child);
 		}
 		else if(statement instanceof AssertStatement) {
 			AssertStatement assertStatement = (AssertStatement)statement;
-			StatementObject child = new StatementObject(assertStatement, parameters, StatementType.ASSERT, parent);
+			StatementObject child = new StatementObject(assertStatement, parameters, importObjectList, StatementType.ASSERT, parent);
 			parent.addStatement(child);
 		}
 		else if(statement instanceof LabeledStatement) {
@@ -191,7 +193,7 @@ public class MethodBodyObject implements Serializable{
 		}
 		else if(statement instanceof ReturnStatement) {
 			ReturnStatement returnStatement = (ReturnStatement)statement;
-			StatementObject child = new StatementObject(returnStatement, parameters, StatementType.RETURN, parent);
+			StatementObject child = new StatementObject(returnStatement, parameters, importObjectList, StatementType.RETURN, parent);
 			parent.addStatement(child);	
 		}
 		else if(statement instanceof SynchronizedStatement) {
@@ -202,7 +204,7 @@ public class MethodBodyObject implements Serializable{
 		}
 		else if(statement instanceof ThrowStatement) {
 			ThrowStatement throwStatement = (ThrowStatement)statement;
-			StatementObject child = new StatementObject(throwStatement, parameters, StatementType.THROW, parent);
+			StatementObject child = new StatementObject(throwStatement, parameters, importObjectList, StatementType.THROW, parent);
 			parent.addStatement(child);
 		}
 		else if(statement instanceof TryStatement) {
@@ -257,32 +259,32 @@ public class MethodBodyObject implements Serializable{
 		}
 		else if(statement instanceof VariableDeclarationStatement) {
 			VariableDeclarationStatement variableDeclarationStatement = (VariableDeclarationStatement)statement;
-			StatementObject child = new StatementObject(variableDeclarationStatement, parameters, StatementType.VARIABLE_DECLARATION, parent);
+			StatementObject child = new StatementObject(variableDeclarationStatement, parameters, importObjectList, StatementType.VARIABLE_DECLARATION, parent);
 			parent.addStatement(child);
 		}
 		else if(statement instanceof ConstructorInvocation) {
 			ConstructorInvocation constructorInvocation = (ConstructorInvocation)statement;
-			StatementObject child = new StatementObject(constructorInvocation, parameters, StatementType.CONSTRUCTOR_INVOCATION, parent);
+			StatementObject child = new StatementObject(constructorInvocation, parameters, importObjectList, StatementType.CONSTRUCTOR_INVOCATION, parent);
 			parent.addStatement(child);
 		}
 		else if(statement instanceof SuperConstructorInvocation) {
 			SuperConstructorInvocation superConstructorInvocation = (SuperConstructorInvocation)statement;
-			StatementObject child = new StatementObject(superConstructorInvocation, parameters, StatementType.SUPER_CONSTRUCTOR_INVOCATION, parent);
+			StatementObject child = new StatementObject(superConstructorInvocation, parameters, importObjectList, StatementType.SUPER_CONSTRUCTOR_INVOCATION, parent);
 			parent.addStatement(child);
 		}
 		else if(statement instanceof BreakStatement) {
 			BreakStatement breakStatement = (BreakStatement)statement;
-			StatementObject child = new StatementObject(breakStatement, parameters, StatementType.BREAK, parent);
+			StatementObject child = new StatementObject(breakStatement, parameters, importObjectList, StatementType.BREAK, parent);
 			parent.addStatement(child);
 		}
 		else if(statement instanceof ContinueStatement) {
 			ContinueStatement continueStatement = (ContinueStatement)statement;
-			StatementObject child = new StatementObject(continueStatement, parameters, StatementType.CONTINUE, parent);
+			StatementObject child = new StatementObject(continueStatement, parameters, importObjectList, StatementType.CONTINUE, parent);
 			parent.addStatement(child);
 		}
 		else if(statement instanceof EmptyStatement) {
 			EmptyStatement emptyStatement = (EmptyStatement)statement;
-			StatementObject child = new StatementObject(emptyStatement, parameters, StatementType.EMPTY, parent);
+			StatementObject child = new StatementObject(emptyStatement, parameters, importObjectList, StatementType.EMPTY, parent);
 			parent.addStatement(child);
 		}
 	}

@@ -3,6 +3,7 @@ package com.refactoringMatcher.utils;
 import com.refactoringMatcher.dbConnection.DBConnection;
 import com.refactoringMatcher.domain.RefactoringExtractionInfo;
 import com.refactoringMatcher.domain.RefactoringInfo;
+import com.refactoringMatcher.java.ast.ImportObject;
 import com.refactoringMatcher.java.ast.MethodObject;
 import com.refactoringMatcher.java.ast.decomposition.cfg.PDG;
 import org.eclipse.jdt.core.dom.*;
@@ -11,6 +12,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author Diptopol
@@ -50,11 +52,13 @@ public class ASTUtilsTest {
 
             CompilationUnit compilationUnit = ASTUtils.getCompilationUnit(Cache.currentFileText);
             List<ImportDeclaration> importDeclarationList = compilationUnit.imports();
+            List<ImportObject> importObjectList = importDeclarationList.stream().map(ImportObject::new)
+                    .collect(Collectors.toList());
 
             methodDeclaration = (MethodDeclaration) NodeFinder.perform(compilationUnit,
                     methodDeclaration.getStartPosition(), methodDeclaration.getLength());
 
-            PDG extractedMethodPDG = new PDG(ASTUtils.createMethodObject(methodDeclaration), importDeclarationList);
+            PDG extractedMethodPDG = new PDG(ASTUtils.createMethodObject(methodDeclaration, importObjectList), importObjectList);
 
 
         } catch (Exception e) {
@@ -71,12 +75,17 @@ public class ASTUtilsTest {
 
         CompilationUnit compilationUnit = ASTUtils.getCompilationUnit(sourceCode);
 
+        List<ImportDeclaration> importDeclarationList = compilationUnit.imports();
+
+        List<ImportObject> importObjectList = importDeclarationList.stream().map(ImportObject::new)
+                .collect(Collectors.toList());
+
         List<MethodObject> methodObjectList = new ArrayList<>();
 
         compilationUnit.accept(new ASTVisitor() {
             @Override
             public boolean visit(MethodDeclaration node) {
-                methodObjectList.add(ASTUtils.createMethodObject(node));
+                methodObjectList.add(ASTUtils.createMethodObject(node, importObjectList));
 
 
                 return false;

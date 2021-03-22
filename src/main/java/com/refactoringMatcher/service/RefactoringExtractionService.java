@@ -3,6 +3,8 @@ package com.refactoringMatcher.service;
 import com.refactoringMatcher.domain.RefactoringExtractionInfo;
 import com.refactoringMatcher.domain.RefactoringInfo;
 import com.refactoringMatcher.domain.RepositoryInfo;
+import com.refactoringMatcher.java.ast.ImportObject;
+import com.refactoringMatcher.java.ast.MethodObject;
 import com.refactoringMatcher.java.ast.decomposition.cfg.Graph;
 import com.refactoringMatcher.java.ast.decomposition.cfg.Groum;
 import com.refactoringMatcher.java.ast.decomposition.cfg.PDG;
@@ -26,6 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author Diptopol
@@ -73,6 +76,8 @@ public class RefactoringExtractionService {
 
             CompilationUnit compilationUnit = ASTUtils.getCompilationUnit(refactoringExtractionInfo.getSourceCode());
             List<ImportDeclaration> importDeclarationList = compilationUnit.imports();
+            List<ImportObject> importObjectList = importDeclarationList.stream().map(ImportObject::new)
+                    .collect(Collectors.toList());
 
             MethodDeclaration methodDeclaration = (MethodDeclaration) NodeFinder.perform(compilationUnit,
                     refactoringExtractionInfo.getStartOffset(),
@@ -80,7 +85,7 @@ public class RefactoringExtractionService {
 
             String code = methodDeclaration.toString();
 
-            PDG extractedMethodPDG = new PDG(ASTUtils.createMethodObject(methodDeclaration), importDeclarationList);
+            PDG extractedMethodPDG = new PDG(ASTUtils.createMethodObject(methodDeclaration, importObjectList), importObjectList);
 
             Graph extractedMethodGroum = new Groum(extractedMethodPDG);
 

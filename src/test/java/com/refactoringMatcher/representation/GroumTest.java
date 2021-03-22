@@ -1,6 +1,7 @@
 package com.refactoringMatcher.representation;
 
 import com.refactoringMatcher.dbConnection.DBConnection;
+import com.refactoringMatcher.java.ast.ImportObject;
 import com.refactoringMatcher.java.ast.MethodObject;
 import com.refactoringMatcher.java.ast.decomposition.cfg.Groum;
 import com.refactoringMatcher.java.ast.decomposition.cfg.PDG;
@@ -9,6 +10,7 @@ import com.refactoringMatcher.utils.Cache;
 import com.refactoringMatcher.utils.GitUtils;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.ImportDeclaration;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.junit.Test;
 
@@ -17,6 +19,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * @author Diptopol
@@ -95,12 +98,17 @@ public class GroumTest {
 
         CompilationUnit compilationUnit = ASTUtils.getCompilationUnit(sourceCode);
 
+        List<ImportDeclaration> importDeclarationList = compilationUnit.imports();
+
+        List<ImportObject> importObjectList = importDeclarationList.stream().map(ImportObject::new)
+                .collect(Collectors.toList());
+
         List<MethodObject> methodObjectList = new ArrayList<>();
 
         compilationUnit.accept(new ASTVisitor() {
             @Override
             public boolean visit(MethodDeclaration node) {
-                methodObjectList.add(ASTUtils.createMethodObject(node));
+                methodObjectList.add(ASTUtils.createMethodObject(node, importObjectList));
 
                 return false;
             }

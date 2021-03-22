@@ -77,6 +77,14 @@
             <version>4.12</version>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>JarAnalyzer</groupId>
+            <artifactId>JarAnalyzer</artifactId>
+            <version>0.0.1-SNAPSHOT-Ameya</version>
+            <systemPath>${basedir}/lib/JarAnalyzer-0.0.1-SNAPSHOT-jar-with-dependencies.jar</systemPath>
+            <scope>system</scope>
+        </dependency>
     </dependencies>
 
     <build>
