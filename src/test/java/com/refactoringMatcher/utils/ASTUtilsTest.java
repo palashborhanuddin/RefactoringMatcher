@@ -3,8 +3,13 @@ package com.refactoringMatcher.utils;
 import com.refactoringMatcher.dbConnection.DBConnection;
 import com.refactoringMatcher.domain.RefactoringExtractionInfo;
 import com.refactoringMatcher.domain.RefactoringInfo;
+import com.refactoringMatcher.java.ast.MethodObject;
+import com.refactoringMatcher.java.ast.decomposition.cfg.PDG;
+import org.eclipse.jdt.core.dom.*;
 import org.junit.Test;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -34,4 +39,51 @@ public class ASTUtilsTest {
         }
 
     }
+
+    @Test
+    public void pdgExtractionTest() {
+        try {
+            String filePath = "testFileDirectory/GroumWhileTestClass.java";
+            Cache.currentFile = filePath;
+            Cache.currentFileText = GitUtils.readFile(filePath);
+            MethodDeclaration methodDeclaration = getMethodObjects(filePath).get(0).getMethodDeclaration();
+
+            CompilationUnit compilationUnit = ASTUtils.getCompilationUnit(Cache.currentFileText);
+            List<ImportDeclaration> importDeclarationList = compilationUnit.imports();
+
+            methodDeclaration = (MethodDeclaration) NodeFinder.perform(compilationUnit,
+                    methodDeclaration.getStartPosition(), methodDeclaration.getLength());
+
+            PDG extractedMethodPDG = new PDG(ASTUtils.createMethodObject(methodDeclaration), importDeclarationList);
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    private List<MethodObject> getMethodObjects(String filePath) throws IOException {
+        String sourceCode = GitUtils.readFile(filePath);
+
+        Cache.currentFile = filePath;
+        Cache.currentFileText = sourceCode;
+
+        CompilationUnit compilationUnit = ASTUtils.getCompilationUnit(sourceCode);
+
+        List<MethodObject> methodObjectList = new ArrayList<>();
+
+        compilationUnit.accept(new ASTVisitor() {
+            @Override
+            public boolean visit(MethodDeclaration node) {
+                methodObjectList.add(ASTUtils.createMethodObject(node));
+
+
+                return false;
+            }
+        });
+
+        return methodObjectList;
+    }
+
 }
