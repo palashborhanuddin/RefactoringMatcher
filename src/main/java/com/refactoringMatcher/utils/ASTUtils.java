@@ -30,26 +30,52 @@ public class ASTUtils {
     }
 
     public static CompilationUnit getCompilationUnit(String sourceCode) {
-        ASTParser parser = ASTParser.newParser(AST.JLS8);
+        ASTParser parser = ASTParser.newParser(AST.JLS14);
         parser.setKind(ASTParser.K_COMPILATION_UNIT);
+
+        Map options = JavaCore.getOptions();
+        JavaCore.setComplianceOptions(JavaCore.VERSION_1_8, options);
+        parser.setCompilerOptions(options);
+
         parser.setSource(sourceCode.toCharArray());
-        parser.setResolveBindings(true);
+
         return (CompilationUnit) parser.createAST(null);
     }
 
+    /**
+     *
+     * TODO: Compilation Unit creation should be replaced by {@link ASTUtils#getCompilationUnit(String)}
+     *
+     * @param file
+     * @param wholeText
+     * @param startOffSet
+     * @param length
+     * @return
+     * @throws Exception
+     */
     public static MethodDeclaration getMethodDeclaration(String file, String wholeText, int startOffSet, int length)
             throws Exception {
         MethodDeclaration methodDeclaration;
         try {
-            ASTParser parser = ASTParser.newParser(AST.JLS8);
+            ASTParser parser = ASTParser.newParser(AST.JLS14);
             parser.setKind(ASTParser.K_COMPILATION_UNIT);
             Map options = JavaCore.getOptions();
             JavaCore.setComplianceOptions(JavaCore.VERSION_1_8, options);
             parser.setCompilerOptions(options);
-            parser.setResolveBindings(false);
-            parser.setEnvironment(new String[0], new String[] { file }, null, false);
+
+            /*
+             * If there is no need to resolving binding, then there should not be any necessity to resolve bindings.
+             */
+            /*parser.setEnvironment(new String[0], new String[] { file }, null, false);*/
+
             parser.setSource(wholeText.toCharArray());
-            parser.setResolveBindings(true);
+
+            /*
+             * We probably will not need to resolve binding types, since we will depend on Jar Analyzer too infer type
+             * and we aren't setting all the source files in the environment for
+             */
+            /*parser.setResolveBindings(true);*/
+
             CompilationUnit compilationUnit = (CompilationUnit) parser.createAST(null);
             ASTNode block = NodeFinder.perform(compilationUnit, startOffSet,
                     length);
