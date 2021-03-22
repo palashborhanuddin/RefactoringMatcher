@@ -45,6 +45,14 @@ public class GraphNode  implements Serializable{
 		nodeNum = 0;
 	}
 
+	public Set<GraphEdge> getIncomingEdges() {
+		return incomingEdges;
+	}
+
+	public Set<GraphEdge> getOutgoingEdges() {
+		return outgoingEdges;
+	}
+
 	public int getInDegree() {
 		return incomingEdges.size();
 	}
