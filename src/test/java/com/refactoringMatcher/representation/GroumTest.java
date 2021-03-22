@@ -88,7 +88,7 @@ public class GroumTest {
     }
 
     private List<MethodObject> getMethodObjects(String filePath) throws IOException {
-        String sourceCode = GitUtils.readFile(filePath, StandardCharsets.UTF_8);
+        String sourceCode = GitUtils.readFile(filePath);
 
         Cache.currentFile = filePath;
         Cache.currentFileText = sourceCode;
