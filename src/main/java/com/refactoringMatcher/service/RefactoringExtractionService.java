@@ -12,6 +12,10 @@ import com.refactoringMatcher.utils.GitUtils;
 import gr.uom.java.xmi.LocationInfo;
 import gr.uom.java.xmi.diff.ExtractOperationRefactoring;
 import org.apache.commons.lang3.tuple.Pair;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.ImportDeclaration;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.NodeFinder;
 import org.eclipse.jgit.lib.Repository;
 import org.refactoringminer.api.GitService;
 import org.refactoringminer.api.Refactoring;
@@ -67,14 +71,16 @@ public class RefactoringExtractionService {
             Cache.currentFile = refactoringExtractionInfo.getFilePath();
             Cache.currentFileText = refactoringExtractionInfo.getSourceCode();
 
-            String code = ASTUtils.extractText(refactoringExtractionInfo.getStartOffset(),
-                    refactoringExtractionInfo.getLength(),
-                    refactoringExtractionInfo.getSourceCode(), refactoringExtractionInfo.getFilePath());
+            CompilationUnit compilationUnit = ASTUtils.getCompilationUnit(refactoringExtractionInfo.getSourceCode());
+            List<ImportDeclaration> importDeclarationList = compilationUnit.imports();
 
-            PDG extractedMethodPDG = new PDG(ASTUtils.createMethodObject(
-                    ASTUtils.getMethodDeclaration(refactoringExtractionInfo.getFilePath(),
-                            refactoringExtractionInfo.getSourceCode(),
-                            refactoringExtractionInfo.getStartOffset(), refactoringExtractionInfo.getLength())));
+            MethodDeclaration methodDeclaration = (MethodDeclaration) NodeFinder.perform(compilationUnit,
+                    refactoringExtractionInfo.getStartOffset(),
+                    refactoringExtractionInfo.getLength());
+
+            String code = methodDeclaration.toString();
+
+            PDG extractedMethodPDG = new PDG(ASTUtils.createMethodObject(methodDeclaration), importDeclarationList);
 
             Graph extractedMethodGroum = new Groum(extractedMethodPDG);
 
