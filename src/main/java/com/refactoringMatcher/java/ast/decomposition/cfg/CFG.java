@@ -1,6 +1,7 @@
 package com.refactoringMatcher.java.ast.decomposition.cfg;
 
 import com.refactoringMatcher.java.ast.AbstractMethodDeclaration;
+import com.refactoringMatcher.java.ast.ImportObject;
 import com.refactoringMatcher.java.ast.decomposition.*;
 
 import java.io.Serializable;
@@ -22,18 +23,26 @@ public class CFG extends Graph implements Serializable {
 	private Map<CFGBlockNode, List<CFGNode>> directlyNestedNodesInBlocks;
 	private BasicBlockCFG basicBlockCFG;
 
+	private List<ImportObject> importObjectList;
+
 	public CFG(AbstractMethodDeclaration method) {
+		this(method, new ArrayList<>());
+	}
+
+	public CFG(AbstractMethodDeclaration method, List<ImportObject> importObjectList) {
 		this.method = method;
 		this.unjoinedConditionalNodes = new Stack<List<CFGBranchConditionalNode>>();
 		this.switchBreakMap = new LinkedHashMap<CFGBranchSwitchNode, List<CFGNode>>();
 		this.directlyNestedNodesInBlocks = new LinkedHashMap<CFGBlockNode, List<CFGNode>>();
+		this.importObjectList = importObjectList;
+
 		MethodBodyObject methodBody = method.getMethodBody();
 		if (methodBody != null) {
 			CompositeStatementObject composite = methodBody.getCompositeStatement();
 			process(new ArrayList<CFGNode>(), composite);
 			GraphNode.resetNodeNum();
 			this.basicBlockCFG = new BasicBlockCFG(this);
-		}		
+		}
 	}
 
 	public AbstractMethodDeclaration getMethod() {

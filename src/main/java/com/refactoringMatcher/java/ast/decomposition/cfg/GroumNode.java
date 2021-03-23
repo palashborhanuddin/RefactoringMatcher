@@ -26,7 +26,7 @@ public abstract class GroumNode extends GraphNode implements Serializable  {
 		return innerNode != null ? true : false;
 	}
 	
-	private PDGNode pdgNode;
+	protected PDGNode pdgNode;
 	
 	public PDGNode GetPdgNode()	{
 		return pdgNode;

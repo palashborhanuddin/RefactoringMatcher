@@ -1,6 +1,7 @@
 package com.refactoringMatcher.java.ast.decomposition.cfg;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 public class GraphEdge  implements Serializable{
 	/**
@@ -53,5 +54,19 @@ public class GraphEdge  implements Serializable{
 //		src = graph.getNode(srcId);
 //		dst = graph.getNode(dstId);
 		this.graph = graph;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		GraphEdge graphEdge = (GraphEdge) o;
+		return srcId == graphEdge.srcId &&
+				dstId == graphEdge.dstId;
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(srcId, dstId);
 	}
 }

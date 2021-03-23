@@ -31,7 +31,7 @@ public class ConstructorObject implements AbstractMethodDeclaration, Serializabl
         this.access = Access.NONE;
     }
 
-    public ConstructorObject(MethodDeclaration methodDeclaration) {
+    public ConstructorObject(MethodDeclaration methodDeclaration, List<ImportObject> importObjectList) {
 		this.methodDeclaration = ASTInformationGenerator.generateASTInformation(methodDeclaration);
 		this.name = methodDeclaration.getName().getIdentifier();
     	this.parameterList = new ArrayList<ParameterObject>();
@@ -55,7 +55,7 @@ public class ConstructorObject implements AbstractMethodDeclaration, Serializabl
 		
 		Block methodBody = methodDeclaration.getBody();
 		if (methodBody != null) {
-			this.methodBody = new MethodBodyObject(methodBody, parameterList);
+			this.methodBody = new MethodBodyObject(methodBody, parameterList, importObjectList);
 		}
 		
 

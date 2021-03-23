@@ -1,12 +1,16 @@
 package com.refactoringMatcher.java.ast.decomposition;
 
+import ca.concordia.jaranalyzer.Models.MethodInfo;
+import ca.concordia.jaranalyzer.TypeInferenceAPI;
 import com.refactoringMatcher.java.ast.*;
 import com.refactoringMatcher.java.ast.decomposition.cfg.PlainVariable;
 import com.refactoringMatcher.java.ast.util.MethodDeclarationUtility;
 import org.eclipse.jdt.core.dom.*;
 
+
 import java.io.Serializable;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public abstract class AbstractMethodFragment implements Serializable{
 	/**
@@ -255,43 +259,52 @@ public abstract class AbstractMethodFragment implements Serializable{
 	}
 
 
-	protected void processMethodInvocations(List<Expression> methodInvocations) {
+	protected void processMethodInvocations(List<Expression> methodInvocations, List<ImportObject> importObjectList) {
+		List<String> importStatementList = importObjectList.stream()
+				.map(ImportObject::getImportStatement)
+				.collect(Collectors.toList());
+
 		try {
 			for(Expression expression : methodInvocations) {
 				if(expression instanceof MethodInvocation) {
-					MethodInvocation methodInvocation = (MethodInvocation)expression;
-//				addMethodInvocation(methodInvocation);
-					
-//				IMethodBinding methodBinding = methodInvocation.resolveMethodBinding();
-//				String originClassName = methodBinding.getDeclaringClass().getQualifiedName();
-//				TypeObject originClassTypeObject = TypeObject.extractTypeObject(originClassName);
+					MethodInvocation methodInvocation = (MethodInvocation) expression;
+					methodInvocation.arguments();
+
+					String methodName = methodInvocation.getName().getFullyQualifiedName();
+
+					List<MethodInfo> methodInfoList = TypeInferenceAPI.getAllMethods(importStatementList, methodName,
+							methodInvocation.arguments().size());
+
+					assert methodInfoList.size() == 1;
+					MethodInfo methodInfo = methodInfoList.get(0);
+
+					String originClassName = methodInfo.getClassInfo().getQualifiedName();
+					TypeObject originClassTypeObject = TypeObject.extractTypeObject(originClassName);
+
 					String methodInvocationName = methodInvocation.getName().getIdentifier();
-					String qualifiedName = methodInvocation.getName().getFullyQualifiedName();
+					String qualifiedName = methodInfo.getReturnTypeAsType().getClassName();
 					TypeObject returnType = TypeObject.extractTypeObject(qualifiedName);
-					MethodInvocationObject methodInvocationObject = new MethodInvocationObject(methodInvocationName, returnType);
+
+					MethodInvocationObject methodInvocationObject = new MethodInvocationObject(originClassTypeObject,
+							methodInvocationName, returnType);
 					methodInvocationObject.setMethodInvocation(methodInvocation);
-					
-					List<SingleVariableDeclaration> parameters = methodInvocation.arguments();
-					for(SingleVariableDeclaration parameter : parameters) {
-						Type parameterType = parameter.getType();
-						SimpleName parameterName = parameter.getName();
-						String qualifiedName1 = parameterName.getFullyQualifiedName();
-						TypeObject typeObject = TypeObject.extractTypeObject(qualifiedName1);
+
+					List<String> qualifiedParameterTypeNameList = Arrays.stream(methodInfo.getArgumentTypes())
+							.map(org.objectweb.asm.Type::getClassName)
+							.collect(Collectors.toList());
+
+					for(String parameterTypeName : qualifiedParameterTypeNameList) {
+						TypeObject typeObject = TypeObject.extractTypeObject(parameterTypeName);
 						methodInvocationObject.addParameter(typeObject);
 					}
-					
-					/*ITypeBinding[] parameterTypes = methodBinding.getParameterTypes();
-					for(ITypeBinding parameterType : parameterTypes) {
-						String qualifiedParameterName = parameterType.getQualifiedName();
-						TypeObject typeObject = TypeObject.extractTypeObject(qualifiedParameterName);
-						methodInvocationObject.addParameter(typeObject);
-					}*/
-					/*ITypeBinding[] thrownExceptionTypes = methodBinding.getExceptionTypes();
-					for(ITypeBinding thrownExceptionType : thrownExceptionTypes) {
-						methodInvocationObject.addThrownException(thrownExceptionType.getQualifiedName());
+
+					for(String thrownExceptionClassName : methodInfo.getThrownInternalClassNames()) {
+						methodInvocationObject.addThrownException(thrownExceptionClassName);
 					}
-					if((methodBinding.getModifiers() & Modifier.STATIC) != 0)
-						methodInvocationObject.setStatic(true);*/
+					if(methodInfo.isStatic()) {
+						methodInvocationObject.setStatic(true);
+					}
+
 					addMethodInvocation(methodInvocationObject);
 				}
 			}

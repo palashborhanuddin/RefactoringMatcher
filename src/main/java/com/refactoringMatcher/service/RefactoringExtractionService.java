@@ -3,6 +3,8 @@ package com.refactoringMatcher.service;
 import com.refactoringMatcher.domain.RefactoringExtractionInfo;
 import com.refactoringMatcher.domain.RefactoringInfo;
 import com.refactoringMatcher.domain.RepositoryInfo;
+import com.refactoringMatcher.java.ast.ImportObject;
+import com.refactoringMatcher.java.ast.MethodObject;
 import com.refactoringMatcher.java.ast.decomposition.cfg.Graph;
 import com.refactoringMatcher.java.ast.decomposition.cfg.Groum;
 import com.refactoringMatcher.java.ast.decomposition.cfg.PDG;
@@ -12,6 +14,10 @@ import com.refactoringMatcher.utils.GitUtils;
 import gr.uom.java.xmi.LocationInfo;
 import gr.uom.java.xmi.diff.ExtractOperationRefactoring;
 import org.apache.commons.lang3.tuple.Pair;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.ImportDeclaration;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.NodeFinder;
 import org.eclipse.jgit.lib.Repository;
 import org.refactoringminer.api.GitService;
 import org.refactoringminer.api.Refactoring;
@@ -22,6 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author Diptopol
@@ -67,14 +74,18 @@ public class RefactoringExtractionService {
             Cache.currentFile = refactoringExtractionInfo.getFilePath();
             Cache.currentFileText = refactoringExtractionInfo.getSourceCode();
 
-            String code = ASTUtils.extractText(refactoringExtractionInfo.getStartOffset(),
-                    refactoringExtractionInfo.getLength(),
-                    refactoringExtractionInfo.getSourceCode(), refactoringExtractionInfo.getFilePath());
+            CompilationUnit compilationUnit = ASTUtils.getCompilationUnit(refactoringExtractionInfo.getSourceCode());
+            List<ImportDeclaration> importDeclarationList = compilationUnit.imports();
+            List<ImportObject> importObjectList = importDeclarationList.stream().map(ImportObject::new)
+                    .collect(Collectors.toList());
 
-            PDG extractedMethodPDG = new PDG(ASTUtils.createMethodObject(
-                    ASTUtils.getMethodDeclaration(refactoringExtractionInfo.getFilePath(),
-                            refactoringExtractionInfo.getSourceCode(),
-                            refactoringExtractionInfo.getStartOffset(), refactoringExtractionInfo.getLength())));
+            MethodDeclaration methodDeclaration = (MethodDeclaration) NodeFinder.perform(compilationUnit,
+                    refactoringExtractionInfo.getStartOffset(),
+                    refactoringExtractionInfo.getLength());
+
+            String code = methodDeclaration.toString();
+
+            PDG extractedMethodPDG = new PDG(ASTUtils.createMethodObject(methodDeclaration, importObjectList), importObjectList);
 
             Graph extractedMethodGroum = new Groum(extractedMethodPDG);
 
