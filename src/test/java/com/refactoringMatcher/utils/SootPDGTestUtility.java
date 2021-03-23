@@ -12,7 +12,6 @@ public class SootPDGTestUtility extends BodyTransformer {
         String methodSig = body.getMethod().getSignature();
         if (methodSig.contains("com.refactoringMatcher.targets.TargetClass")
                 && body.getMethod().getName().contains("groumTestMethod")) {
-            System.out.println("Inside internalTransform......com.refactoringMatcher.utils.TestClass..." + methodSig);
             unitGraph = new EnhancedUnitGraph(body);
         }
     }
