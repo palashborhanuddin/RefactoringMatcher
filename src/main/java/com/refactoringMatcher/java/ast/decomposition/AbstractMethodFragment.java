@@ -1,12 +1,13 @@
 package com.refactoringMatcher.java.ast.decomposition;
 
 import ca.concordia.jaranalyzer.Models.MethodInfo;
-import ca.concordia.jaranalyzer.TypeInferenceAPI;
+import ca.concordia.jaranalyzer.TypeInferenceFluentAPI;
 import com.refactoringMatcher.java.ast.*;
 import com.refactoringMatcher.java.ast.decomposition.cfg.PlainVariable;
 import com.refactoringMatcher.java.ast.util.MethodDeclarationUtility;
 import org.eclipse.jdt.core.dom.*;
 
+import io.vavr.Tuple3;
 
 import java.io.Serializable;
 import java.util.*;
@@ -272,8 +273,13 @@ public abstract class AbstractMethodFragment implements Serializable{
 
 					String methodName = methodInvocation.getName().getFullyQualifiedName();
 
-					List<MethodInfo> methodInfoList = TypeInferenceAPI.getAllMethods(importStatementList, methodName,
-							methodInvocation.arguments().size());
+					// [TODO] Following two are for test purpose. Need to have actual data delegated
+					Set<Tuple3<String, String, String>> jarSet = new HashSet<>();
+					String javaVersion = "11.0.10";
+					List<MethodInfo> methodInfoList = TypeInferenceFluentAPI.getInstance().
+							new Criteria(jarSet,
+							javaVersion, importStatementList, methodName, methodInvocation.arguments().size()).getMethodList();
+
 
 					assert methodInfoList.size() == 1;
 					MethodInfo methodInfo = methodInfoList.get(0);
