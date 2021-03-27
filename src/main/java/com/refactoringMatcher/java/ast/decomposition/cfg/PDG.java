@@ -27,6 +27,7 @@ public class PDG extends Graph implements Serializable {
 
 	public PDG(MethodObject methodObject, List<ImportObject> importObjectList) {
 		CFG cfg = new CFG(methodObject, importObjectList);
+		System.out.println("CFG: " +cfg.toString());
 		createPDG(cfg);
 	}
 

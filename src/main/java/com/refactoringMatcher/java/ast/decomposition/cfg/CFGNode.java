@@ -105,10 +105,6 @@ public class CFGNode extends GraphNode implements Comparable<CFGNode>, Serializa
 		return hashCode;
 	}
 
-//	public String toString() {
-//		return id + "\t" + statementString;
-//	}
-
 	public int compareTo(CFGNode node) {
 		if(this.getId() > node.getId())
 			return 1;
@@ -120,5 +116,10 @@ public class CFGNode extends GraphNode implements Comparable<CFGNode>, Serializa
 	
 	public String getStatementString()	{
 		return statementString;
+	}
+
+	@Override
+	public String toString() {
+		return id + "\t" + statementString;
 	}
 }

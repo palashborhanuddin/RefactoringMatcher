@@ -39,7 +39,7 @@ public class GraphEdge  implements Serializable{
 	}
 	
 	public String toString() {
-		return srcId + "->" + dstId;
+		return "SRC: " +getSrc().toString() + " -> DST: " +getDst().toString();
 	}
 	
 	public void removeCyclicReferences()

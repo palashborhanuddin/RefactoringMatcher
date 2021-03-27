@@ -60,4 +60,12 @@ public class Graph  implements Serializable{
 			edge.recoverCyclicReferences(graph);
 		}
 	}
+
+	@Override
+	public String toString() {
+		return "Graph{" +
+				"\nnodes=" + nodes +
+				"\nedges=" + edges +
+				'}';
+	}
 }

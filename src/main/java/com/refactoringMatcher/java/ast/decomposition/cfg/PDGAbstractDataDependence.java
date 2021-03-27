@@ -70,7 +70,7 @@ public abstract class PDGAbstractDataDependence extends PDGDependence  implement
 	@Override
 	public String toString() {
 		String loopInfo = isLoopCarried() ? " (through loop " + loop.getId() + ")": "";
-		return getSrc().toString() + "-->" + getDst().toString() 
+		return "SRC:" + getSrc().toString() + "-->DST:" + getDst().toString()
 		+ " <" + getType().toString().toLowerCase() + "> " + data.toString() 
 		+	loopInfo 
 		+	"\n";

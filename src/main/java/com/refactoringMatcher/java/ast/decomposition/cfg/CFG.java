@@ -691,8 +691,12 @@ public class CFG extends Graph implements Serializable {
 		}
 		return null;
 	}
-	
+
+	@Override
 	public String toString() {
-		return edges.toString();
+		return "CFG{" +
+				"nodes=" + nodes +
+				", edges=" + edges +
+				'}';
 	}
 }

@@ -13,12 +13,17 @@ public class GroumWhileTestClass {
 	private static void groumTestMethod() throws IOException {
 		StringBuffer strbuf = new StringBuffer();
 		BufferedReader in = new BufferedReader(new FileReader(""));
+
 		String str;
+
 		while((str = in.readLine()) != null ) {
 			strbuf.append(str + "\n");
 		}
-		if(strbuf.length() > 0)
+
+		if(strbuf.length() > 0) {
 			outputMessage(strbuf.toString());
+		}
+
 		in.close();
 	}
 

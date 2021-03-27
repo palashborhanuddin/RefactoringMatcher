@@ -1,10 +1,11 @@
 package com.refactoringMatcher.java.ast.decomposition;
 
 import ca.concordia.jaranalyzer.Models.MethodInfo;
-import ca.concordia.jaranalyzer.TypeInferenceAPI;
+import ca.concordia.jaranalyzer.TypeInferenceFluentAPI;
 import com.refactoringMatcher.java.ast.*;
 import com.refactoringMatcher.java.ast.decomposition.cfg.PlainVariable;
 import com.refactoringMatcher.java.ast.util.MethodDeclarationUtility;
+import io.vavr.Tuple3;
 import org.eclipse.jdt.core.dom.*;
 
 
@@ -272,11 +273,19 @@ public abstract class AbstractMethodFragment implements Serializable{
 
 					String methodName = methodInvocation.getName().getFullyQualifiedName();
 
-					List<MethodInfo> methodInfoList = TypeInferenceAPI.getAllMethods(importStatementList, methodName,
-							methodInvocation.arguments().size());
-
-					assert methodInfoList.size() == 1;
+					// No need to pass the explicit Jar set here as JarAnalyzer handles it.
+					Set<Tuple3<String, String, String>> jarSet = new HashSet<>();
+					String javaVersion = "11.0.10";
+					System.out.println("MethodName: " +methodName+ ", methodInvocation: " +methodInvocation.arguments().toString());
+					List<MethodInfo> methodInfoList = TypeInferenceFluentAPI.getInstance().
+							new Criteria(jarSet,
+							javaVersion, importStatementList, methodName, methodInvocation.arguments().size()).getMethodList();
+					if (methodInfoList.size() == 0) {
+						System.out.println("No information found for: " +methodName);
+						continue;
+					}
 					MethodInfo methodInfo = methodInfoList.get(0);
+					System.out.println("MethodInfo: " + methodInfo.toString());
 
 					String originClassName = methodInfo.getClassInfo().getQualifiedName();
 					TypeObject originClassTypeObject = TypeObject.extractTypeObject(originClassName);
