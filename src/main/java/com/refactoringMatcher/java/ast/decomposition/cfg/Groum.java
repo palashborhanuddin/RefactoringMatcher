@@ -28,8 +28,6 @@ public class Groum extends Graph implements Serializable {
             CompilationUnit compilationUnit = (CompilationUnit) parser.createAST(null);
             processNode(compilationUnit, pdgNode);
         }
-
-        //CreateGroumGraph(pdg);
         createGroumGraph(pdg);
     }
 
@@ -54,9 +52,10 @@ public class Groum extends Graph implements Serializable {
         Set<GroumNode> destinationEdges = new LinkedHashSet<GroumNode>();
         for (GraphNode sourceNode : pdg.getNodes()) {
             GroumNode sourceGroumNode = compoundGroumNodes.get(sourceNode);
-
+            Boolean sourceGroumNodeExists = true;
             if (Objects.isNull(sourceGroumNode)) {
-                continue;
+                sourceGroumNodeExists = false;
+                //continue;
             }
 
             destinationEdges.clear();
@@ -69,7 +68,7 @@ public class Groum extends Graph implements Serializable {
                     // GROUM's DAG requirement.
                     continue;
                 }
-                if (sourceGroumNode.getId() == outGoingEdge.getDst().getId()) {
+                if (sourceGroumNodeExists && (sourceGroumNode.getId() == outGoingEdge.getDst().getId())) {
                     //GROUM's DAG requirement.
                     continue;
                 }
@@ -77,7 +76,8 @@ public class Groum extends Graph implements Serializable {
                 GroumNode destination = getInnerNode(compoundGroumNodes.get(outGoingEdge.getDst()));
                 if (destinationEdges.contains(destination))
                     continue;
-                addEdge(new GraphEdge(sourceGroumNode, destination, this));
+                if (sourceGroumNodeExists)
+                    addEdge(new GraphEdge(sourceGroumNode, destination, this));
                 for (GroumNode node : destinationEdges) {
                     addEdge(new GraphEdge(node, destination, this));
                 }
@@ -86,36 +86,6 @@ public class Groum extends Graph implements Serializable {
         }
     }
 
-    /*private void CreateGroumGraph(PDG pdg) {
-        GroumNode lastNode = null;
-        GroumNode currentNode = null;
-        for (GroumNode node : compoundGroumNodes.values()) {
-            if (node == null)
-                continue;
-            currentNode = CreateNodesFor(node);
-
-            if (lastNode != null) {
-                addEdge(new GraphEdge(lastNode, currentNode, this));
-            }
-
-            lastNode = node;
-        }
-
-        for (GraphNode node : pdg.getNodes()) {
-            if (compoundGroumNodes.get(node) == null)
-                continue;
-            GroumNode source = GetTop(compoundGroumNodes.get(node));
-
-            for (GraphEdge edge : node.outgoingEdges) {
-                if (compoundGroumNodes.get(edge.getDst()) == null)
-                    continue;
-
-                GroumNode destination = GetTop(compoundGroumNodes.get(edge.getDst()));
-                addEdge(new GraphEdge(source, destination, this));
-            }
-        }
-    }*/
-
     private GroumNode getInnerNode(GroumNode groumNode) {
         if (!groumNode.HasInnerNode()) {
             return groumNode;
@@ -123,24 +93,6 @@ public class Groum extends Graph implements Serializable {
             return getInnerNode(groumNode.GetInnerNode());
         }
     }
-
-    /*private GroumNode GetTop(GroumNode groumNode) {
-        if (!groumNode.HasInnerNode()) {
-            return groumNode;
-        } else {
-            return CreateNodesFor(groumNode.GetInnerNode());
-        }
-    }*/
-
-    /*private GroumNode CreateNodesFor(GroumNode groumNode) {
-        addNode(groumNode);
-        if (!groumNode.HasInnerNode()) {
-            return groumNode;
-        } else {
-            addEdge(new GraphEdge(groumNode.GetInnerNode(), groumNode, this));
-            return CreateNodesFor(groumNode.GetInnerNode());
-        }
-    }*/
 
     private GroumNode constructInnerNode(GroumNode groumNode) {
         if (!groumNode.HasInnerNode()) {
@@ -191,8 +143,6 @@ public class Groum extends Graph implements Serializable {
         while (groumNodes.size() > 1) {
             GroumNode poppedNode = groumNodes.pop();
             GroumNode previousNode = groumNodes.peek();
-            // [TODO Question] what if there are multiple inner node? there is link to previous popped node
-            //  as the current one is going to replace that.
             previousNode.SetInnerNode(poppedNode);
         }
 

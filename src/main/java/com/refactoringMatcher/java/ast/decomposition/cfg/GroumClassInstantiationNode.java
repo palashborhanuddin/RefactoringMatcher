@@ -25,7 +25,7 @@ public class GroumClassInstantiationNode extends GroumNode implements Serializab
 
 	@Override
 	public String ToGroumString() {
-		return "<init> " + classInstanceCreation.getType().toString();
+		return classInstanceCreation.getType().toString() + ".<init>" ;
 	}
 
 }
