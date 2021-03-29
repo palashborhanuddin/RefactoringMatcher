@@ -65,6 +65,10 @@ public class GraphNode  implements Serializable{
 		return value;
 	}
 
+	public void setValue(String value) {
+		this.value = value;
+	}
+
 	public String toString() {
 		if(value.isEmpty())
 			return id + "";

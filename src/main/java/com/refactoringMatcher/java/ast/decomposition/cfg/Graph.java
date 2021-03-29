@@ -26,13 +26,15 @@ public class Graph  implements Serializable{
 	}
 
 	public void addNode(GraphNode node) {
-		if(node != null)
-		nodes.add(node);
+		if(node != null) {
+			nodes.add(node);
+		}
 	}
 	
 	public void addEdge(GraphEdge edge) {
-		if(edge != null)
-		edges.add(edge);
+		if(edge != null) {
+			edges.add(edge);
+		}
 	}
 	
 	public int size()	{

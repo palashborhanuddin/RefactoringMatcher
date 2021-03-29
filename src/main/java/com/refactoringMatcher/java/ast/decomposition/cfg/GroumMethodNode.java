@@ -17,6 +17,7 @@ public class GroumMethodNode extends GroumNode implements Serializable {
 	public GroumMethodNode(MethodInvocation statement, PDGNode pdgNode) {
 		super(pdgNode);
 		methodInvocation = statement;
+		setValue(ToGroumString());
 	}
 
 	/**

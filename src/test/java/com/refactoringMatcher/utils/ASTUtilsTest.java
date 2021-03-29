@@ -85,9 +85,9 @@ public class ASTUtilsTest {
                     methodDeclaration.getStartPosition(), methodDeclaration.getLength());
 
             PDG extractedMethodPDG = new PDG(ASTUtils.createMethodObject(methodDeclaration, importObjectList), importObjectList);
-            System.out.println("PDG: \n" +extractedMethodPDG.toString());
+            //System.out.println("PDG: \n" +extractedMethodPDG.toString());
 
-            Graph extractedMethodGroum = new Groum(extractedMethodPDG);
+            Groum extractedMethodGroum = new Groum(extractedMethodPDG);
             System.out.println("GROUM: \n" +extractedMethodGroum.toString());
 
         } catch (Exception e) {

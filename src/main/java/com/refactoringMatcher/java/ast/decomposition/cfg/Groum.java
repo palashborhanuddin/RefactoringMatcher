@@ -1,9 +1,7 @@
 package com.refactoringMatcher.java.ast.decomposition.cfg;
 
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Objects;
-import java.util.Stack;
+import java.util.*;
 
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
@@ -53,6 +51,7 @@ public class Groum extends Graph implements Serializable {
             lastNode = node;
         }
 
+        Set<GroumNode> destinationEdges = new LinkedHashSet<GroumNode>();
         for (GraphNode sourceNode : pdg.getNodes()) {
             GroumNode sourceGroumNode = compoundGroumNodes.get(sourceNode);
 
@@ -60,28 +59,29 @@ public class Groum extends Graph implements Serializable {
                 continue;
             }
 
+            destinationEdges.clear();
             for (GraphEdge outGoingEdge : sourceNode.getOutgoingEdges()) {
+                if (Objects.isNull(compoundGroumNodes.get(outGoingEdge.getDst())))
+                    continue;
+
                 PDGDependence outGoingPDGEdge = (PDGDependence) outGoingEdge;
-
-                if (PDGDependenceType.CONTROL.equals(outGoingPDGEdge.getType())
-                        || PDGDependenceType.DATA.equals(outGoingPDGEdge.getType())) {
-
-                    GroumNode destinationGroumNode;
-
-                    if (PDGDependenceType.DATA.equals(outGoingPDGEdge.getType())) {
-                        destinationGroumNode = getInnerNode(compoundGroumNodes.get(outGoingEdge.getDst()));
-
-                    } else {
-
-                        destinationGroumNode = compoundGroumNodes.get(outGoingEdge.getDst());
-                    }
-
-                    if (Objects.isNull(destinationGroumNode)) {
-                        continue;
-                    }
-
-                    addEdge(new GraphEdge(sourceGroumNode, destinationGroumNode, this));
+                if (PDGDependenceType.ANTI.equals(outGoingPDGEdge.getType())) {
+                    // GROUM's DAG requirement.
+                    continue;
                 }
+                if (sourceGroumNode.getId() == outGoingEdge.getDst().getId()) {
+                    //GROUM's DAG requirement.
+                    continue;
+                }
+
+                GroumNode destination = getInnerNode(compoundGroumNodes.get(outGoingEdge.getDst()));
+                if (destinationEdges.contains(destination))
+                    continue;
+                addEdge(new GraphEdge(sourceGroumNode, destination, this));
+                for (GroumNode node : destinationEdges) {
+                    addEdge(new GraphEdge(node, destination, this));
+                }
+                destinationEdges.add(destination);
             }
         }
     }
@@ -145,13 +145,11 @@ public class Groum extends Graph implements Serializable {
     private GroumNode constructInnerNode(GroumNode groumNode) {
         if (!groumNode.HasInnerNode()) {
             addNode(groumNode);
-
             return groumNode;
         } else {
             GroumNode innerNode = constructInnerNode(groumNode.GetInnerNode());
             addNode(groumNode);
             addEdge(new GraphEdge(groumNode.GetInnerNode(), groumNode, this));
-
             return innerNode;
         }
     }
@@ -193,6 +191,8 @@ public class Groum extends Graph implements Serializable {
         while (groumNodes.size() > 1) {
             GroumNode poppedNode = groumNodes.pop();
             GroumNode previousNode = groumNodes.peek();
+            // [TODO Question] what if there are multiple inner node? there is link to previous popped node
+            //  as the current one is going to replace that.
             previousNode.SetInnerNode(poppedNode);
         }
 
@@ -203,5 +203,13 @@ public class Groum extends Graph implements Serializable {
         } else {
             compoundGroumNodes.put(pdgNode, null);
         }
+    }
+
+    @Override
+    public String toString() {
+        return "Groum{" +
+                "nodes=" + nodes +
+                ",\nedges=" + edges +
+                '}';
     }
 }

@@ -15,6 +15,7 @@ public class GroumForNode extends GroumNode implements Serializable {
 	public GroumForNode(ForStatement statement, PDGNode pdgNode) {
 		super(pdgNode);
 		forStatement = statement;
+		setValue(ToGroumString());
 	}
 
 	public String ToGroumString(){
