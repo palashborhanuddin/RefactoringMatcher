@@ -9,6 +9,7 @@ import org.eclipse.jdt.core.dom.MethodInvocation;
 public class GroumMethodNode extends GroumNode implements Serializable {
 
 	private MethodInvocation methodInvocation;
+	private Boolean isLocal = false;
 	
 	public MethodInvocation GetMethodInvocation() {
 		return methodInvocation;
@@ -18,6 +19,10 @@ public class GroumMethodNode extends GroumNode implements Serializable {
 		super(pdgNode);
 		methodInvocation = statement;
 		setValue(ToGroumString());
+	}
+
+	public Boolean IsLocal() {
+		return isLocal;
 	}
 
 	/**
@@ -40,6 +45,8 @@ public class GroumMethodNode extends GroumNode implements Serializable {
 			}
 		}
 
+		if (Objects.isNull(variableType))
+			isLocal = true;
 		return Objects.nonNull(variableType)
 				? variableType + "." + methodInvocation.getName().toString()
 				: methodInvocation.getName().toString();

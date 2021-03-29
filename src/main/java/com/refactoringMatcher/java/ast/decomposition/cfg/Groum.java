@@ -117,7 +117,8 @@ public class Groum extends Graph implements Serializable {
 
             public boolean visit(MethodInvocation statement) {
                 GroumMethodNode gmn = new GroumMethodNode(statement, pdgNode);
-                groumNodes.push(gmn);
+                if (!gmn.IsLocal())
+                    groumNodes.push(gmn);
                 return true;
             }
 
