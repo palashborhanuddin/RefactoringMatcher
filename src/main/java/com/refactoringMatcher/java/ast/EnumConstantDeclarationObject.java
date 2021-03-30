@@ -1,17 +1,13 @@
 package com.refactoringMatcher.java.ast;
 
 import com.refactoringMatcher.java.ast.decomposition.AbstractExpression;
-import org.eclipse.jdt.core.dom.EnumConstantDeclaration;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class EnumConstantDeclarationObject  implements Serializable{
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -1918528772980669084L;
+import org.eclipse.jdt.core.dom.EnumConstantDeclaration;
+
+public class EnumConstantDeclarationObject {
 	private String name;
 	private List<AbstractExpression> arguments;
 	private String enumName;

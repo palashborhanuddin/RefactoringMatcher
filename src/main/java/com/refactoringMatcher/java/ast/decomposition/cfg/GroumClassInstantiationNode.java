@@ -15,6 +15,7 @@ public class GroumClassInstantiationNode extends GroumNode implements Serializab
 	public GroumClassInstantiationNode(ClassInstanceCreation statement, PDGNode pdgNode) {
 		super(pdgNode);
 		classInstanceCreation = statement;
+		setValue(ToGroumString());
 	}
 
 	/**
@@ -24,7 +25,7 @@ public class GroumClassInstantiationNode extends GroumNode implements Serializab
 
 	@Override
 	public String ToGroumString() {
-		return "<init> " + classInstanceCreation.getType().toString();
+		return classInstanceCreation.getType().toString() + ".<init>" ;
 	}
 
 }

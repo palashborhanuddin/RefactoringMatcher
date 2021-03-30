@@ -1,25 +1,22 @@
 package com.refactoringMatcher.java.ast.decomposition.cfg;
 
 import com.refactoringMatcher.java.ast.AbstractMethodDeclaration;
-import org.eclipse.jdt.core.dom.ClassInstanceCreation;
-import org.eclipse.jdt.core.dom.VariableDeclaration;
 
-import java.io.Serializable;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-public class PDGSliceUnion  implements Serializable{
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 6335815200500799891L;
+import org.eclipse.jdt.core.dom.ClassInstanceCreation;
+import org.eclipse.jdt.core.dom.VariableDeclaration;
+
+public class PDGSliceUnion {
 	private PDG pdg;
 	private AbstractMethodDeclaration method;
 	private BasicBlock boundaryBlock;
 	private Set<PDGNode> nodeCriteria;
 	private AbstractVariable localVariableCriterion;
+	//private IFile iFile;
 	private int methodSize;
 	private PDGSlice subgraph;
 	private Set<PDGNode> sliceNodes;
@@ -35,6 +32,7 @@ public class PDGSliceUnion  implements Serializable{
 			sliceNodes.addAll(subgraph.computeSlice(nodeCriterion));
 		}
 		this.method = pdg.getMethod();
+		//this.iFile = pdg.getIFile();
 		this.methodSize = pdg.getTotalNumberOfStatements();
 		this.boundaryBlock = boundaryBlock;
 		this.nodeCriteria = nodeCriteria;
@@ -99,14 +97,14 @@ public class PDGSliceUnion  implements Serializable{
 		Set<PDGNode> nDD = new LinkedHashSet<PDGNode>();
 		for(GraphEdge edge : pdg.edges) {
 			PDGDependence dependence = (PDGDependence)edge;
-			PDGNode srcPDGNode = (PDGNode)dependence.getSrc();
-			PDGNode dstPDGNode = (PDGNode)dependence.getDst();
+			PDGNode srcPDGNode = (PDGNode)dependence.src;
+			PDGNode dstPDGNode = (PDGNode)dependence.dst;
 			if(dependence instanceof PDGDataDependence) {
 				PDGDataDependence dataDependence = (PDGDataDependence)dependence;
 				if(remainingNodes.contains(srcPDGNode) && sliceNodes.contains(dstPDGNode))
 					passedParameters.add(dataDependence.getData());
 				if(sliceNodes.contains(srcPDGNode) && remainingNodes.contains(dstPDGNode) &&
-						!dataDependence.getData().equals(localVariableCriterion) /*&& !dataDependence.getData().isField()*/)
+						!dataDependence.getData().equals(localVariableCriterion) && !dataDependence.getData().isField())
 					nDD.add(srcPDGNode);
 			}
 			else if(dependence instanceof PDGControlDependence) {
@@ -175,7 +173,7 @@ public class PDGSliceUnion  implements Serializable{
 			PDGDependence dependence = (PDGDependence)edge;
 			if(dependence instanceof PDGControlDependence) {
 				PDGControlDependence controlDependence = (PDGControlDependence)dependence;
-				PDGNode srcPDGNode = (PDGNode)controlDependence.getSrc();
+				PDGNode srcPDGNode = (PDGNode)controlDependence.src;
 				if(srcPDGNode.equals(parentNode))
 					return true;
 				else
@@ -196,9 +194,9 @@ public class PDGSliceUnion  implements Serializable{
 		return throwNodes;
 	}
 
-//	public Set<VariableDeclaration> getVariableDeclarationsAndAccessedFieldsInMethod() {
-//		return pdg.getVariableDeclarationsAndAccessedFieldsInMethod();
-//	}
+	public Set<VariableDeclaration> getVariableDeclarationsAndAccessedFieldsInMethod() {
+		return pdg.getVariableDeclarationsAndAccessedFieldsInMethod();
+	}
 
 	public AbstractMethodDeclaration getMethod() {
 		return method;
@@ -297,7 +295,7 @@ public class PDGSliceUnion  implements Serializable{
 			PDGDependence dependence = (PDGDependence)edge;
 			if(dependence instanceof PDGControlDependence) {
 				PDGControlDependence controlDependence = (PDGControlDependence)dependence;
-				PDGNode srcPDGNode = (PDGNode)controlDependence.getSrc();
+				PDGNode srcPDGNode = (PDGNode)controlDependence.src;
 				if(sliceNodes.contains(srcPDGNode))
 					return true;
 				else
@@ -317,7 +315,7 @@ public class PDGSliceUnion  implements Serializable{
 					PDGDependence dependence = (PDGDependence)edge;
 					if(subgraph.edgeBelongsToBlockBasedRegion(dependence) && dependence instanceof PDGAntiDependence) {
 						PDGAntiDependence antiDependence = (PDGAntiDependence)dependence;
-						PDGNode srcPDGNode = (PDGNode)antiDependence.getSrc();
+						PDGNode srcPDGNode = (PDGNode)antiDependence.src;
 						if(!removableNodes.contains(srcPDGNode) && !nodeDependsOnNonRemovableNode(srcPDGNode, antiDependence.getData()))
 							return true;
 					}
@@ -333,7 +331,7 @@ public class PDGSliceUnion  implements Serializable{
 			if(subgraph.edgeBelongsToBlockBasedRegion(dependence) && dependence instanceof PDGDataDependence) {
 				PDGDataDependence dataDependence = (PDGDataDependence)dependence;
 				if(dataDependence.getData().equals(variable)) {
-					PDGNode srcPDGNode = (PDGNode)dataDependence.getSrc();
+					PDGNode srcPDGNode = (PDGNode)dataDependence.src;
 					if(!removableNodes.contains(srcPDGNode))
 						return true;
 				}
@@ -352,7 +350,7 @@ public class PDGSliceUnion  implements Serializable{
 					PDGDependence dependence = (PDGDependence)edge;
 					if(subgraph.edgeBelongsToBlockBasedRegion(dependence) && dependence instanceof PDGOutputDependence) {
 						PDGOutputDependence outputDependence = (PDGOutputDependence)dependence;
-						PDGNode srcPDGNode = (PDGNode)outputDependence.getSrc();
+						PDGNode srcPDGNode = (PDGNode)outputDependence.src;
 						if(!removableNodes.contains(srcPDGNode))
 							return true;
 					}
@@ -374,7 +372,7 @@ public class PDGSliceUnion  implements Serializable{
 						PDGDependence dependence = (PDGDependence)edge;
 						if(subgraph.edgeBelongsToBlockBasedRegion(dependence) && dependence instanceof PDGDependence) {
 							PDGDependence dataDependence = (PDGDependence)dependence;
-							PDGNode dstPDGNode = (PDGNode)dataDependence.getDst();
+							PDGNode dstPDGNode = (PDGNode)dataDependence.dst;
 							if(removableNodes.contains(dstPDGNode)) {
 								if(dstPDGNode.changesStateOfReference(variableDeclaration) ||
 										dstPDGNode.assignsReference(variableDeclaration) || dstPDGNode.accessesReference(variableDeclaration))
@@ -399,11 +397,11 @@ public class PDGSliceUnion  implements Serializable{
 					if(!sliceContainsDeclaration(plainVariable))
 						return true;
 				}
-			/*	else if(stateChangingVariable instanceof PlainVariable) {
+				else if(stateChangingVariable instanceof PlainVariable) {
 					PlainVariable plainVariable = stateChangingVariable.getInitialVariable();
 					if(plainVariable.isField())
 						return true;
-				}*/
+				}
 			}
 		}
 		return false;
@@ -478,7 +476,9 @@ public class PDGSliceUnion  implements Serializable{
 		if(duplicatedSize > maximumDuplication)
 			return false;
 		if(ratioOfDuplicatedToExtracted > maximumRatioOfDuplicatedToExtracted)
-			return false;*/
+			return false;
+
+ */
 		return true;
 	}
 

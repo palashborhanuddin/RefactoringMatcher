@@ -1,15 +1,10 @@
 package com.refactoringMatcher.java.ast.decomposition.cfg;
 
-import com.refactoringMatcher.java.ast.decomposition.AbstractStatement;
 import org.eclipse.jdt.core.dom.Statement;
 
-import java.io.Serializable;
+import com.refactoringMatcher.java.ast.decomposition.AbstractStatement;
 
-public class CFGNode extends GraphNode implements Comparable<CFGNode>, Serializable {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 6195287475035045492L;
+public class CFGNode extends GraphNode implements Comparable<CFGNode> {
 	private String statementString;
 	private AbstractStatement statement;
 	private BasicBlock basicBlock;
@@ -38,7 +33,7 @@ public class CFGNode extends GraphNode implements Comparable<CFGNode>, Serializa
 
 	public boolean immediatelyFollowsBranchNode() {
 		for(GraphEdge edge : incomingEdges) {
-			CFGNode srcNode = (CFGNode)edge.getSrc();
+			CFGNode srcNode = (CFGNode)edge.src;
 			if(srcNode.isBranch())
 				return true;
 		}
@@ -105,9 +100,14 @@ public class CFGNode extends GraphNode implements Comparable<CFGNode>, Serializa
 		return hashCode;
 	}
 
-//	public String toString() {
-//		return id + "\t" + statementString;
-//	}
+	public String getStatementString()	{
+		return statementString;
+	}
+
+	@Override
+	public String toString() {
+		return id + "\t" + statementString;
+	}
 
 	public int compareTo(CFGNode node) {
 		if(this.getId() > node.getId())
@@ -116,9 +116,5 @@ public class CFGNode extends GraphNode implements Comparable<CFGNode>, Serializa
 			return -1;
 		else
 			return 0;
-	}
-	
-	public String getStatementString()	{
-		return statementString;
 	}
 }

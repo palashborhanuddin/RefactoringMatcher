@@ -1,42 +1,48 @@
 package com.refactoringMatcher.java.ast;
 
 import com.refactoringMatcher.java.ast.decomposition.MethodBodyObject;
+import com.refactoringMatcher.java.ast.decomposition.cfg.AbstractVariable;
 import com.refactoringMatcher.java.ast.decomposition.cfg.PlainVariable;
+
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.ListIterator;
+import java.util.Map;
+import java.util.Set;
+
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 
-import java.io.Serializable;
-import java.util.*;
+public class ConstructorObject implements AbstractMethodDeclaration {
 
-public class ConstructorObject implements AbstractMethodDeclaration, Serializable {
-
-    /**
-	 * 
-	 */
-	private static final long serialVersionUID = 5081012349402108295L;
-	protected String name;
+    protected String name;
 	protected List<ParameterObject> parameterList;
+	protected List<CommentObject> commentList;
     protected Access access;
     protected String className;
     protected MethodBodyObject methodBody;
     protected Set<String> exceptionsInJavaDocThrows;
+    //protected MethodDeclaration methodDeclaration;
     protected ASTInformation methodDeclaration;
     private volatile int hashCode = 0;
 
     public ConstructorObject() {
 		this.parameterList = new ArrayList<ParameterObject>();
+		this.commentList = new ArrayList<CommentObject>();
 		this.exceptionsInJavaDocThrows = new LinkedHashSet<String>();
         this.access = Access.NONE;
     }
 
-    public ConstructorObject(MethodDeclaration methodDeclaration) {
+	public ConstructorObject(MethodDeclaration methodDeclaration, List<ImportObject> importObjectList) {
 		this.methodDeclaration = ASTInformationGenerator.generateASTInformation(methodDeclaration);
 		this.name = methodDeclaration.getName().getIdentifier();
-    	this.parameterList = new ArrayList<ParameterObject>();
+		this.parameterList = new ArrayList<ParameterObject>();
 		this.exceptionsInJavaDocThrows = new LinkedHashSet<String>();
-		
+
 		int methodModifiers = methodDeclaration.getModifiers();
 		if ((methodModifiers & Modifier.PUBLIC) != 0)
 			this.access = Access.PUBLIC;
@@ -46,26 +52,26 @@ public class ConstructorObject implements AbstractMethodDeclaration, Serializabl
 			this.access = Access.PRIVATE;
 		else
 			this.access = Access.NONE;
-		
+
 		List<SingleVariableDeclaration> parameters = methodDeclaration.parameters();
 		for (SingleVariableDeclaration parameter : parameters) {
 			ParameterObject parameterObject = new ParameterObject(parameter);
 			parameterList.add(parameterObject);
 		}
-		
+
 		Block methodBody = methodDeclaration.getBody();
 		if (methodBody != null) {
-			this.methodBody = new MethodBodyObject(methodBody, parameterList);
+			this.methodBody = new MethodBodyObject(methodBody, parameterList, importObjectList);
 		}
-		
-
 	}
 
-	public void setMethodDeclaration(MethodDeclaration methodDeclaration) {
+    public void setMethodDeclaration(MethodDeclaration methodDeclaration) {
+    	//this.methodDeclaration = methodDeclaration;
     	this.methodDeclaration = ASTInformationGenerator.generateASTInformation(methodDeclaration);
     }
 
     public MethodDeclaration getMethodDeclaration() {
+    	//return this.methodDeclaration;
     	return (MethodDeclaration)this.methodDeclaration.recoverASTNode();
     }
 
@@ -109,6 +115,14 @@ public class ConstructorObject implements AbstractMethodDeclaration, Serializabl
         return this.className;
     }
 
+	public boolean addComment(CommentObject comment) {
+		return commentList.add(comment);
+	}
+
+	public ListIterator<CommentObject> getCommentListIterator() {
+		return commentList.listIterator();
+	}
+
 	public boolean addParameter(ParameterObject parameter) {
 		return parameterList.add(parameter);
 	}
@@ -129,6 +143,41 @@ public class ConstructorObject implements AbstractMethodDeclaration, Serializabl
     	}
     	else
     		return null;
+    }
+
+	public List<MethodInvocationObject> getMethodInvocations() {
+		if(methodBody != null)
+			return methodBody.getMethodInvocations();
+		else
+			return new ArrayList<MethodInvocationObject>();
+	}
+
+	public List<SuperMethodInvocationObject> getSuperMethodInvocations() {
+		if(methodBody != null)
+			return methodBody.getSuperMethodInvocations();
+		else
+			return new ArrayList<SuperMethodInvocationObject>();
+	}
+
+	public List<ConstructorInvocationObject> getConstructorInvocations() {
+		if(methodBody != null)
+			return methodBody.getConstructorInvocations();
+		else
+			return new ArrayList<ConstructorInvocationObject>();
+	}
+
+    public List<FieldInstructionObject> getFieldInstructions() {
+    	if(methodBody != null)
+    		return methodBody.getFieldInstructions();
+    	else
+    		return new ArrayList<FieldInstructionObject>();
+    }
+
+    public List<SuperFieldInstructionObject> getSuperFieldInstructions() {
+    	if(methodBody != null)
+    		return methodBody.getSuperFieldInstructions();
+    	else
+    		return new ArrayList<SuperFieldInstructionObject>();
     }
 
     public List<LocalVariableDeclarationObject> getLocalVariableDeclarations() {
@@ -173,6 +222,181 @@ public class ConstructorObject implements AbstractMethodDeclaration, Serializabl
 			return new LinkedHashSet<String>();
     }
 
+    public boolean containsMethodInvocation(MethodInvocationObject methodInvocation) {
+    	if(methodBody != null)
+    		return methodBody.containsMethodInvocation(methodInvocation);
+    	else
+    		return false;
+    }
+
+    public boolean containsFieldInstruction(FieldInstructionObject fieldInstruction) {
+    	if(methodBody != null)
+    		return methodBody.containsFieldInstruction(fieldInstruction);
+    	else
+    		return false;
+    }
+
+    public boolean containsSuperMethodInvocation(SuperMethodInvocationObject superMethodInvocation) {
+    	if(methodBody != null)
+    		return methodBody.containsSuperMethodInvocation(superMethodInvocation);
+    	else
+    		return false;
+    }
+
+	public Map<AbstractVariable, LinkedHashSet<MethodInvocationObject>> getInvokedMethodsThroughFields() {
+		if(methodBody != null)
+			return methodBody.getInvokedMethodsThroughFields();
+		else
+			return new LinkedHashMap<AbstractVariable, LinkedHashSet<MethodInvocationObject>>();
+	}
+
+	public Map<AbstractVariable, ArrayList<MethodInvocationObject>> getNonDistinctInvokedMethodsThroughFields() {
+		if(methodBody != null)
+			return methodBody.getNonDistinctInvokedMethodsThroughFields();
+		else
+			return new LinkedHashMap<AbstractVariable, ArrayList<MethodInvocationObject>>();
+	}
+
+	public Map<AbstractVariable, LinkedHashSet<MethodInvocationObject>> getInvokedMethodsThroughParameters() {
+		if(methodBody != null)
+			return methodBody.getInvokedMethodsThroughParameters();
+		else
+			return new LinkedHashMap<AbstractVariable, LinkedHashSet<MethodInvocationObject>>();
+	}
+
+	public Map<AbstractVariable, ArrayList<MethodInvocationObject>> getNonDistinctInvokedMethodsThroughParameters() {
+		if(methodBody != null)
+			return methodBody.getNonDistinctInvokedMethodsThroughParameters();
+		else
+			return new LinkedHashMap<AbstractVariable, ArrayList<MethodInvocationObject>>();
+	}
+
+	public Map<AbstractVariable, LinkedHashSet<MethodInvocationObject>> getInvokedMethodsThroughLocalVariables() {
+		if(methodBody != null)
+			return methodBody.getInvokedMethodsThroughLocalVariables();
+		else
+			return new LinkedHashMap<AbstractVariable, LinkedHashSet<MethodInvocationObject>>();
+	}
+
+	public Set<MethodInvocationObject> getInvokedMethodsThroughThisReference() {
+		if(methodBody != null)
+			return methodBody.getInvokedMethodsThroughThisReference();
+		else
+			return new LinkedHashSet<MethodInvocationObject>();
+	}
+
+	public List<MethodInvocationObject> getNonDistinctInvokedMethodsThroughThisReference() {
+		if(methodBody != null)
+			return methodBody.getNonDistinctInvokedMethodsThroughThisReference();
+		else
+			return new ArrayList<MethodInvocationObject>();
+	}
+
+	public Set<MethodInvocationObject> getInvokedStaticMethods() {
+		if(methodBody != null)
+			return methodBody.getInvokedStaticMethods();
+		else
+			return new LinkedHashSet<MethodInvocationObject>();
+	}
+
+	public Set<AbstractVariable> getDefinedFieldsThroughFields() {
+		if(methodBody != null)
+			return methodBody.getDefinedFieldsThroughFields();
+		else
+			return new LinkedHashSet<AbstractVariable>();
+	}
+
+	public Set<AbstractVariable> getUsedFieldsThroughFields() {
+		if(methodBody != null)
+			return methodBody.getUsedFieldsThroughFields();
+		else
+			return new LinkedHashSet<AbstractVariable>();
+	}
+
+	public List<AbstractVariable> getNonDistinctDefinedFieldsThroughFields() {
+		if(methodBody != null)
+			return methodBody.getNonDistinctDefinedFieldsThroughFields();
+		else
+			return new ArrayList<AbstractVariable>();
+	}
+
+	public List<AbstractVariable> getNonDistinctUsedFieldsThroughFields() {
+		if(methodBody != null)
+			return methodBody.getNonDistinctUsedFieldsThroughFields();
+		else
+			return new ArrayList<AbstractVariable>();
+	}
+
+	public Set<AbstractVariable> getDefinedFieldsThroughParameters() {
+		if(methodBody != null)
+			return methodBody.getDefinedFieldsThroughParameters();
+		else
+			return new LinkedHashSet<AbstractVariable>();
+	}
+
+	public Set<AbstractVariable> getUsedFieldsThroughParameters() {
+		if(methodBody != null)
+			return methodBody.getUsedFieldsThroughParameters();
+		else
+			return new LinkedHashSet<AbstractVariable>();
+	}
+
+	public List<AbstractVariable> getNonDistinctDefinedFieldsThroughParameters() {
+		if(methodBody != null)
+			return methodBody.getNonDistinctDefinedFieldsThroughParameters();
+		else
+			return new ArrayList<AbstractVariable>();
+	}
+
+	public List<AbstractVariable> getNonDistinctUsedFieldsThroughParameters() {
+		if(methodBody != null)
+			return methodBody.getNonDistinctUsedFieldsThroughParameters();
+		else
+			return new ArrayList<AbstractVariable>();
+	}
+
+	public Set<AbstractVariable> getDefinedFieldsThroughLocalVariables() {
+		if(methodBody != null)
+			return methodBody.getDefinedFieldsThroughLocalVariables();
+		else
+			return new LinkedHashSet<AbstractVariable>();
+	}
+
+	public Set<AbstractVariable> getUsedFieldsThroughLocalVariables() {
+		if(methodBody != null)
+			return methodBody.getUsedFieldsThroughLocalVariables();
+		else
+			return new LinkedHashSet<AbstractVariable>();
+	}
+
+	public Set<PlainVariable> getDefinedFieldsThroughThisReference() {
+		if(methodBody != null)
+			return methodBody.getDefinedFieldsThroughThisReference();
+		else
+			return new LinkedHashSet<PlainVariable>();
+	}
+
+	public List<PlainVariable> getNonDistinctDefinedFieldsThroughThisReference() {
+		if(methodBody != null)
+			return methodBody.getNonDistinctDefinedFieldsThroughThisReference();
+		else
+			return new ArrayList<PlainVariable>();
+	}
+
+	public Set<PlainVariable> getUsedFieldsThroughThisReference() {
+		if(methodBody != null)
+			return methodBody.getUsedFieldsThroughThisReference();
+		else
+			return new LinkedHashSet<PlainVariable>();
+	}
+
+	public List<PlainVariable> getNonDistinctUsedFieldsThroughThisReference() {
+		if(methodBody != null)
+			return methodBody.getNonDistinctUsedFieldsThroughThisReference();
+		else
+			return new ArrayList<PlainVariable>();
+	}
+
 	public Set<PlainVariable> getDeclaredLocalVariables() {
 		if(methodBody != null)
 			return methodBody.getDeclaredLocalVariables();
@@ -193,6 +417,34 @@ public class ConstructorObject implements AbstractMethodDeclaration, Serializabl
 		else
 			return new LinkedHashSet<PlainVariable>();
 	}
+
+	public Map<PlainVariable, LinkedHashSet<MethodInvocationObject>> getParametersPassedAsArgumentsInMethodInvocations() {
+		if(methodBody != null)
+			return methodBody.getParametersPassedAsArgumentsInMethodInvocations();
+		else
+			return new LinkedHashMap<PlainVariable, LinkedHashSet<MethodInvocationObject>>();
+	}
+
+	public Map<PlainVariable, LinkedHashSet<SuperMethodInvocationObject>> getParametersPassedAsArgumentsInSuperMethodInvocations() {
+		if(methodBody != null)
+			return methodBody.getParametersPassedAsArgumentsInSuperMethodInvocations();
+		else
+			return new LinkedHashMap<PlainVariable, LinkedHashSet<SuperMethodInvocationObject>>();
+	}
+
+	public Map<PlainVariable, LinkedHashSet<ConstructorInvocationObject>> getParametersPassedAsArgumentsInConstructorInvocations() {
+		if(methodBody != null)
+			return methodBody.getParametersPassedAsArgumentsInConstructorInvocations();
+		else
+			return new LinkedHashMap<PlainVariable, LinkedHashSet<ConstructorInvocationObject>>();
+	}
+
+    public boolean containsSuperMethodInvocation() {
+    	if(methodBody != null)
+    		return methodBody.containsSuperMethodInvocation();
+    	else
+    		return false;
+    }
 
     public boolean containsSuperFieldAccess() {
     	if(methodBody != null)
@@ -218,6 +470,11 @@ public class ConstructorObject implements AbstractMethodDeclaration, Serializabl
     public boolean equals(ClassInstanceCreationObject creationObject) {
     	return this.className.equals(creationObject.getType().getClassType()) &&
     			equalParameterTypes(this.getParameterTypeList(), creationObject.getParameterTypeList());
+    }
+
+    public boolean equals(ConstructorInvocationObject constructorInvocationObject) {
+    	return this.className.equals(constructorInvocationObject.getOriginClassType().getClassType()) &&
+    			equalParameterTypes(this.getParameterTypeList(), constructorInvocationObject.getParameterTypeList());
     }
 
     private boolean equalParameterTypes(List<TypeObject> list1, List<TypeObject> list2) {
@@ -251,9 +508,7 @@ public class ConstructorObject implements AbstractMethodDeclaration, Serializabl
     public int hashCode() {
     	if(hashCode == 0) {
     		int result = 17;
-    		if(className!=null){
-    			result = 37*result + className.hashCode();
-    		}
+    		result = 37*result + className.hashCode();
     		result = 37*result + name.hashCode();
     		result = 37*result + parameterList.hashCode();
     		hashCode = result;
@@ -273,6 +528,8 @@ public class ConstructorObject implements AbstractMethodDeclaration, Serializabl
             sb.append(parameterList.get(parameterList.size()-1).toString());
         }
         sb.append(")");
+        /*if(methodBody != null)
+        	sb.append("\n").append(methodBody.toString());*/
         return sb.toString();
     }
 

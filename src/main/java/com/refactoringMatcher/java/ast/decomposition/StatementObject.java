@@ -1,14 +1,16 @@
 package com.refactoringMatcher.java.ast.decomposition;
 
+import com.refactoringMatcher.java.ast.ImportObject;
 import com.refactoringMatcher.java.ast.ParameterObject;
 import com.refactoringMatcher.java.ast.util.ExpressionExtractor;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.eclipse.jdt.core.dom.ConstructorInvocation;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.ThrowStatement;
-
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
 
 /*
  * StatementObject represents the following AST Statement subclasses:
@@ -25,25 +27,26 @@ import java.util.List;
  * 11.	ThrowStatement
  */
 
-public class StatementObject extends AbstractStatement  implements Serializable{
+public class StatementObject extends AbstractStatement {
 	
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1572661510460765186L;
-
-	public StatementObject(Statement statement, List<ParameterObject> parameters, StatementType type, AbstractMethodFragment parent) {
-		super(statement, parameters, type, parent);
+	public StatementObject(Statement statement, List<ParameterObject> parameters, List<ImportObject> importObjectList, StatementType type, AbstractMethodFragment parent) {
+		super(statement, parameters, importObjectList, type,  parent);
 		
 		ExpressionExtractor expressionExtractor = new ExpressionExtractor();
         List<Expression> assignments = expressionExtractor.getAssignments(statement);
         List<Expression> postfixExpressions = expressionExtractor.getPostfixExpressions(statement);
         List<Expression> prefixExpressions = expressionExtractor.getPrefixExpressions(statement);
-        processVariablesWithoutBindingInfo(expressionExtractor.getVariableInstructions(statement), assignments, postfixExpressions, prefixExpressions);
+        processVariables(expressionExtractor.getVariableInstructions(statement), assignments, postfixExpressions, prefixExpressions);
+		processMethodInvocations(expressionExtractor.getMethodInvocations(statement));
+		processClassInstanceCreations(expressionExtractor.getClassInstanceCreations(statement));
 		processArrayCreations(expressionExtractor.getArrayCreations(statement));
+		//processArrayAccesses(expressionExtractor.getArrayAccesses(statement));
 		processLiterals(expressionExtractor.getLiterals(statement));
 		if(statement instanceof ThrowStatement) {
 			processThrowStatement((ThrowStatement)statement);
+		}
+		if(statement instanceof ConstructorInvocation) {
+			processConstructorInvocation((ConstructorInvocation)statement);
 		}
 	}
 

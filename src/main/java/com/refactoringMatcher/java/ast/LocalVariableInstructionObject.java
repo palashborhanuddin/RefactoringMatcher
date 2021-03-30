@@ -1,30 +1,42 @@
 package com.refactoringMatcher.java.ast;
 
-import java.io.Serializable;
-
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.QualifiedName;
 import org.eclipse.jdt.core.dom.SimpleName;
 
-public class LocalVariableInstructionObject  implements Serializable{
-    /**
-	 * 
-	 */
-	private static final long serialVersionUID = 4680603151753351907L;
-	private String name;
+public class LocalVariableInstructionObject {
+	private TypeObject type;
+    private String name;
+    //private SimpleName simpleName;
     private ASTInformation simpleName;
     private volatile int hashCode = 0;
+    private String variableBindingKey;
 
-    public LocalVariableInstructionObject(SimpleName simpleName) {
-    	this.simpleName = ASTInformationGenerator.generateASTInformation(simpleName);
-    	this.name = simpleName.getIdentifier();
+    public LocalVariableInstructionObject(TypeObject type, String name) {
+        this.type = type;
+        this.name = name;
+    }
+
+    public TypeObject getType() {
+        return type;
     }
 
     public String getName() {
         return name;
     }
 
+    public String getVariableBindingKey() {
+		return variableBindingKey;
+	}
+
+	public void setSimpleName(SimpleName simpleName) {
+    	//this.simpleName = simpleName;
+    	this.variableBindingKey = simpleName.resolveBinding().getKey();
+    	this.simpleName = ASTInformationGenerator.generateASTInformation(simpleName);
+    }
+
     public SimpleName getSimpleName() {
+    	//return this.simpleName;
     	ASTNode node = this.simpleName.recoverASTNode();
     	if(node instanceof QualifiedName) {
     		return ((QualifiedName)node).getName();
@@ -38,26 +50,29 @@ public class LocalVariableInstructionObject  implements Serializable{
         if(this == o) {
             return true;
         }
+
         if (o instanceof LocalVariableInstructionObject) {
         	LocalVariableInstructionObject lvio = (LocalVariableInstructionObject)o;
-            return this.hashCode() == lvio.hashCode();
+            return this.name.equals(lvio.name) && this.type.equals(lvio.type) &&
+            		this.variableBindingKey.equals(lvio.variableBindingKey);
         }
         return false;
     }
 
     public boolean equals(LocalVariableDeclarationObject lvdo) {
-    	return this.name.equals(lvdo.getName());
+    	return this.name.equals(lvdo.getName()) && this.type.equals(lvdo.getType()) && this.variableBindingKey.equals(lvdo.getVariableBindingKey());
     }
 
     public boolean equals(ParameterObject parameter) {
-    	return this.name.equals(parameter.getName());
+    	return this.name.equals(parameter.getName()) && this.type.equals(parameter.getType()) && this.variableBindingKey.equals(parameter.getVariableBindingKey());
     }
 
     public int hashCode() {
     	if(hashCode == 0) {
     		int result = 17;
+    		result = 37*result + type.hashCode();
     		result = 37*result + name.hashCode();
-    		result = 37*result + simpleName.hashCode();
+    		result = 37*result + variableBindingKey.hashCode();
     		hashCode = result;
     	}
     	return hashCode;
@@ -65,6 +80,7 @@ public class LocalVariableInstructionObject  implements Serializable{
 
     public String toString() {
         StringBuilder sb = new StringBuilder();
+        sb.append(type).append(" ");
         sb.append(name);
         return sb.toString();
     }

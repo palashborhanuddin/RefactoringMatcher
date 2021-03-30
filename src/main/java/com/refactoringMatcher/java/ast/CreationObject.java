@@ -1,12 +1,6 @@
 package com.refactoringMatcher.java.ast;
 
-import java.io.Serializable;
-
-public abstract class CreationObject  implements Serializable{
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -3682298098662989268L;
+public abstract class CreationObject {
 	private TypeObject type;
 	protected ASTInformation creation;
 	

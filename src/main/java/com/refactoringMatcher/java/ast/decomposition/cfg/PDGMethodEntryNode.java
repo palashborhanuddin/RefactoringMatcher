@@ -1,16 +1,11 @@
 package com.refactoringMatcher.java.ast.decomposition.cfg;
 
+import java.util.ListIterator;
+
 import com.refactoringMatcher.java.ast.AbstractMethodDeclaration;
 import com.refactoringMatcher.java.ast.ParameterObject;
 
-import java.io.Serializable;
-import java.util.ListIterator;
-
-public class PDGMethodEntryNode extends PDGNode  implements Serializable{
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 2050485918750951938L;
+public class PDGMethodEntryNode extends PDGNode {
 	private AbstractMethodDeclaration method;
 	
 	public PDGMethodEntryNode(AbstractMethodDeclaration method) {
@@ -50,6 +45,6 @@ public class PDGMethodEntryNode extends PDGNode  implements Serializable{
 	}
 
 	public String toString() {
-		return id + "";
+		return id + "\t" + method.getName();
 	}
 }

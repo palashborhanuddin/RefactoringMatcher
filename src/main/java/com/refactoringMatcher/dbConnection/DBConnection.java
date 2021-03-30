@@ -129,7 +129,7 @@ public class DBConnection {
         return stringBuilder.toString();
     }
 
-    public void insertGraphNodes(Graph groum, RefactoringExtractionInfo refactoringExtractionInfo) {
+    public void insertGraphNodes(Graph groum, String refactoringExtractionInfoUUID) {
         try (Session session = driver.session()) {
             session.writeTransaction(tx -> {
                 Set<GraphNode> graphNodes = groum.getNodes();
@@ -138,24 +138,25 @@ public class DBConnection {
                         .collect(Collectors.toSet());
 
                 String nodeInsertQuery = "UNWIND " + getNodesJson(groumNodes) +" AS nodeVal" +
-                        " CREATE (n:node {id: nodeVal.id, groumString: nodeVal.groumString, refactoringExtractionInfo_uuid:$refactoringExtractionInfoUUID})";
+                        " CREATE (n:node {id: nodeVal.id, groumString: nodeVal.groumString," +
+                        " refactoringExtractionInfo_uuid:$refactoringExtractionInfoUUID})";
 
                 Map<String, Object> nodeInsertParameters = new HashMap<>();
-                nodeInsertParameters.put("refactoringExtractionInfoUUID", refactoringExtractionInfo.getUuid());
+                nodeInsertParameters.put("refactoringExtractionInfoUUID", refactoringExtractionInfoUUID);
 
                 return tx.run(nodeInsertQuery, nodeInsertParameters);
             });
         }
     }
 
-    public void insertGraphEdge(Graph groum, RefactoringExtractionInfo refactoringExtractionInfo) {
+    public void insertGraphEdge(Graph groum, String refactoringExtractionInfoUUID) {
         try (Session session = driver.session()) {
             session.writeTransaction(tx -> {
                 Set<GraphEdge> graphEdges = groum.getEdges();
 
                 String edgeInsertQuery = "UNWIND " + getEdgeJson(graphEdges) + " AS edge" +
-                        " MATCH (n1: node{id: edge.srcId, refactoringExtractionInfo_uuid:'" + refactoringExtractionInfo.getUuid() + "'})," +
-                        " (n2: node{id:edge.destId, refactoringExtractionInfo_uuid:'" + refactoringExtractionInfo.getUuid() + "'})" +
+                        " MATCH (n1: node{id: edge.srcId, refactoringExtractionInfo_uuid:'" + refactoringExtractionInfoUUID + "'})," +
+                        " (n2: node{id:edge.dstId, refactoringExtractionInfo_uuid:'" + refactoringExtractionInfoUUID + "'})" +
                         " MERGE (n1)-[e:edge]->(n2)";
 
                 return tx.run(edgeInsertQuery);
@@ -166,21 +167,20 @@ public class DBConnection {
 
 
     public void insertGroumRepresentation(Graph groum, RefactoringExtractionInfo refactoringExtractionInfo) {
-        insertGraphNodes(groum, refactoringExtractionInfo);
-        insertGraphEdge(groum, refactoringExtractionInfo);
+        insertGraphNodes(groum, refactoringExtractionInfo.getUuid());
+        insertGraphEdge(groum, refactoringExtractionInfo.getUuid());
 
         /*try (Session session = driver.session()) {
             try (Transaction transaction = session.beginTransaction()) {
                 //TODO: not complete
-                *//*String linkQeury = "MATCH (n:node), (re:refactoringExtractionInfo)" +
+                String linkQeury = "MATCH (n:node), (re:refactoringExtractionInfo)" +
                         " WHERE n.id = 1" +
                         " AND n.refactoringExtractionInfo_uuid = $refactoringExtractionInfoUUID AND re.uuid = $refactoringExtractionInfoUUID" +
                         " CREATE (re)-[rep:representation{name: 'groum'}]-> (n)";
 
                 Map<String, Object> linkInsertParameter = new HashMap<>();
 
-                transaction.run(linkQeury, nodeInsertParameters);
-                transaction.run(edgeInsertQuery, linkInsertParameter);*//*
+                transaction.run(linkQeury, linkInsertParameter);
             }
         }*/
     }

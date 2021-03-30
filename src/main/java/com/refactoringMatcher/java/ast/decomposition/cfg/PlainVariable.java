@@ -1,31 +1,30 @@
 package com.refactoringMatcher.java.ast.decomposition.cfg;
 
-import java.io.Serializable;
-
+import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.VariableDeclaration;
 
-public class PlainVariable extends AbstractVariable implements Serializable{
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -6318741105215089221L;
+public class PlainVariable extends AbstractVariable {
 	private volatile int hashCode = 0;
 	
-	public PlainVariable(VariableDeclaration variableDeclaration) {
-		super(variableDeclaration);
-	}
-
-	public PlainVariable(String variableName) {
+	public PlainVariable(VariableDeclaration variableName) {
 		super(variableName);
 	}
 
+	public PlainVariable(IVariableBinding variableBinding) {
+		super(variableBinding);
+	}
+
+	public PlainVariable(String variableBindingKey, String variableName, String variableType, boolean isField, boolean isParameter, boolean isStatic) {
+		super(variableBindingKey, variableName, variableType, isField, isParameter, isStatic);
+	}
+
 	public boolean containsPlainVariable(PlainVariable variable) {
-		return this.variableName.equals(variable.variableName);
+		return this.variableBindingKey.equals(variable.variableBindingKey);
 	}
 
 	public boolean startsWithVariable(AbstractVariable variable) {
 		if(variable instanceof PlainVariable) {
-			return this.variableName.equals( variable.variableName);
+			return this.equals((PlainVariable)variable);
 		}
 		return false;
 	}
@@ -40,7 +39,7 @@ public class PlainVariable extends AbstractVariable implements Serializable{
 		}
 		if(o instanceof PlainVariable) {
 			PlainVariable plain = (PlainVariable)o;
-			return this.hashCode() == plain.hashCode();
+			return this.variableBindingKey.equals(plain.variableBindingKey);
 		}
 		return false;
 	}
@@ -48,9 +47,7 @@ public class PlainVariable extends AbstractVariable implements Serializable{
 	public int hashCode() {
 		if(hashCode == 0) {
 			int result = 17;
-			result = 31*result + variableName.hashCode();
-			if(variableDeclaration!=null)
-				result = 31*result + variableDeclaration.hashCode();
+			result = 31*result + variableBindingKey.hashCode();
 			hashCode = result;
 		}
 		return hashCode;
@@ -58,7 +55,6 @@ public class PlainVariable extends AbstractVariable implements Serializable{
 
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append(variableType).append(" ");
 		sb.append(variableName);
 		return sb.toString();
 	}

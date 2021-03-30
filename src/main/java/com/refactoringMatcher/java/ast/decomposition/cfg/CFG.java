@@ -1,17 +1,37 @@
 package com.refactoringMatcher.java.ast.decomposition.cfg;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Stack;
+
+import com.refactoringMatcher.java.ast.ImportObject;
+import org.eclipse.jdt.core.dom.Block;
+import org.eclipse.jdt.core.dom.BreakStatement;
+import org.eclipse.jdt.core.dom.ContinueStatement;
+import org.eclipse.jdt.core.dom.DoStatement;
+import org.eclipse.jdt.core.dom.EnhancedForStatement;
+import org.eclipse.jdt.core.dom.ForStatement;
+import org.eclipse.jdt.core.dom.IfStatement;
+import org.eclipse.jdt.core.dom.LabeledStatement;
+import org.eclipse.jdt.core.dom.ReturnStatement;
+import org.eclipse.jdt.core.dom.Statement;
+import org.eclipse.jdt.core.dom.SwitchCase;
+import org.eclipse.jdt.core.dom.SwitchStatement;
+import org.eclipse.jdt.core.dom.ThrowStatement;
+import org.eclipse.jdt.core.dom.WhileStatement;
+
 import com.refactoringMatcher.java.ast.AbstractMethodDeclaration;
-import com.refactoringMatcher.java.ast.decomposition.*;
+import com.refactoringMatcher.java.ast.decomposition.AbstractStatement;
+import com.refactoringMatcher.java.ast.decomposition.CompositeStatementObject;
+import com.refactoringMatcher.java.ast.decomposition.MethodBodyObject;
+import com.refactoringMatcher.java.ast.decomposition.StatementObject;
+import com.refactoringMatcher.java.ast.decomposition.SynchronizedStatementObject;
+import com.refactoringMatcher.java.ast.decomposition.TryStatementObject;
 
-import java.io.Serializable;
-import java.util.*;
-
-public class CFG extends Graph implements Serializable {
-
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -5505187017014211591L;
+public class CFG extends Graph {
 	private static final int PUSH_NEW_LIST = 0;
 	private static final int JOIN_TOP_LIST = 1;
 	private static final int PLACE_NEW_LIST_SECOND_FROM_TOP = 2;
@@ -22,18 +42,24 @@ public class CFG extends Graph implements Serializable {
 	private Map<CFGBlockNode, List<CFGNode>> directlyNestedNodesInBlocks;
 	private BasicBlockCFG basicBlockCFG;
 
+	private List<ImportObject> importObjectList;
+
 	public CFG(AbstractMethodDeclaration method) {
+		this(method, new ArrayList<>());
+	}
+	public CFG(AbstractMethodDeclaration method, List<ImportObject> importObjectList) {
 		this.method = method;
 		this.unjoinedConditionalNodes = new Stack<List<CFGBranchConditionalNode>>();
 		this.switchBreakMap = new LinkedHashMap<CFGBranchSwitchNode, List<CFGNode>>();
 		this.directlyNestedNodesInBlocks = new LinkedHashMap<CFGBlockNode, List<CFGNode>>();
+		this.importObjectList = importObjectList;
 		MethodBodyObject methodBody = method.getMethodBody();
-		if (methodBody != null) {
+		if(methodBody != null) {
 			CompositeStatementObject composite = methodBody.getCompositeStatement();
 			process(new ArrayList<CFGNode>(), composite);
 			GraphNode.resetNodeNum();
 			this.basicBlockCFG = new BasicBlockCFG(this);
-		}		
+		}
 	}
 
 	public AbstractMethodDeclaration getMethod() {
@@ -53,70 +79,85 @@ public class CFG extends Graph implements Serializable {
 	}
 
 	private List<CFGNode> process(List<CFGNode> previousNodes, CompositeStatementObject composite) {
-		if (composite.getType().equals(StatementType.TRY)) {
+		if(composite instanceof TryStatementObject) {
 			CFGTryNode tryNode = new CFGTryNode(composite);
 			directlyNestedNodeInBlock(tryNode);
 			findBlockNodeControlParent(tryNode);
 			directlyNestedNodesInBlocks.put(tryNode, new ArrayList<CFGNode>());
 			AbstractStatement firstStatement = composite.getStatements().get(0);
-			composite = (CompositeStatementObject) firstStatement;
-		} else if (composite.getType().equals(StatementType.SYNCHRONIZED)) {
+			composite = (CompositeStatementObject)firstStatement;
+		}
+		else if(composite instanceof SynchronizedStatementObject) {
 			CFGSynchronizedNode synchronizedNode = new CFGSynchronizedNode(composite);
 			directlyNestedNodeInBlock(synchronizedNode);
 			findBlockNodeControlParent(synchronizedNode);
 			directlyNestedNodesInBlocks.put(synchronizedNode, new ArrayList<CFGNode>());
 			AbstractStatement firstStatement = composite.getStatements().get(0);
-			composite = (CompositeStatementObject) firstStatement;
+			composite = (CompositeStatementObject)firstStatement;
 		}
 		int i = 0;
-		for (AbstractStatement abstractStatement : composite.getStatements()) {
-			if (abstractStatement instanceof StatementObject) {
-				StatementObject statement = (StatementObject) abstractStatement;
+		for(AbstractStatement abstractStatement : composite.getStatements()) {
+			if(abstractStatement instanceof StatementObject) {
+				StatementObject statement = (StatementObject)abstractStatement;
 				previousNodes = processNonCompositeStatement(previousNodes, statement, composite);
-			} else if (abstractStatement instanceof CompositeStatementObject) {
-				CompositeStatementObject compositeStatement = (CompositeStatementObject) abstractStatement;
-				if (compositeStatement.getType().equals(StatementType.BLOCK)) {
+			}
+			else if(abstractStatement instanceof CompositeStatementObject) {
+				CompositeStatementObject compositeStatement = (CompositeStatementObject)abstractStatement;
+				if(compositeStatement.getStatement() instanceof Block) {
 					previousNodes = process(previousNodes, compositeStatement);
-				} else if (compositeStatement.getType().equals(StatementType.LABELED)) {
+				}
+				else if(compositeStatement.getStatement() instanceof LabeledStatement) {
 					List<AbstractStatement> nestedStatements = compositeStatement.getStatements();
-					if (!nestedStatements.isEmpty()) {
+					if(!nestedStatements.isEmpty()) {
 						AbstractStatement firstStatement = nestedStatements.get(0);
-						if (firstStatement instanceof CompositeStatementObject) {
-							CompositeStatementObject compositeStatement2 = (CompositeStatementObject) firstStatement;
-							if (compositeStatement2.getType().equals(StatementType.BLOCK)) {
+						if(firstStatement instanceof CompositeStatementObject) {
+							CompositeStatementObject compositeStatement2 = (CompositeStatementObject)firstStatement;
+							if(compositeStatement2.getStatement() instanceof Block) {
 								previousNodes = process(previousNodes, compositeStatement2);
-							} else if (compositeStatement2.getType().equals(StatementType.SYNCHRONIZED)) {
+							}
+							else if(compositeStatement2 instanceof SynchronizedStatementObject) {
 								previousNodes = processSynchronizedStatement(previousNodes, compositeStatement2);
-							} else if (compositeStatement2.getType().equals(StatementType.TRY)) {
+							}
+							else if(compositeStatement2 instanceof TryStatementObject) {
 								previousNodes = processTryStatement(previousNodes, compositeStatement2);
-							} else if (isLoop(compositeStatement2)) {
+							}
+							else if(isLoop(compositeStatement2)) {
 								previousNodes = processLoopStatement(previousNodes, compositeStatement2);
-							} else if (compositeStatement2.getType().equals(StatementType.DO)) {
+							}
+							else if(compositeStatement2.getStatement() instanceof DoStatement) {
 								previousNodes = processDoStatement(previousNodes, compositeStatement2);
-							} else if (compositeStatement2.getType().equals(StatementType.SWITCH)) {
+							}
+							else if(compositeStatement2.getStatement() instanceof SwitchStatement) {
 								int action = getAction(composite, i, compositeStatement2);
 								previousNodes = processSwitchStatement(previousNodes, compositeStatement2, action);
-							} else if (compositeStatement2.getType().equals(StatementType.IF)) {
+							}
+							else if(compositeStatement2.getStatement() instanceof IfStatement) {
 								int action = getAction(composite, i, compositeStatement2);
 								previousNodes = processIfStatement(previousNodes, compositeStatement2, action);
 							}
-						} else if (firstStatement instanceof StatementObject) {
-							previousNodes = processNonCompositeStatement(previousNodes,
-									(StatementObject) firstStatement, composite);
+						}
+						else if(firstStatement instanceof StatementObject) {
+							previousNodes = processNonCompositeStatement(previousNodes, (StatementObject)firstStatement, composite);
 						}
 					}
-				} else if (compositeStatement.getType().equals(StatementType.SYNCHRONIZED)) {
+				}
+				else if(compositeStatement instanceof SynchronizedStatementObject) {
 					previousNodes = processSynchronizedStatement(previousNodes, compositeStatement);
-				} else if (compositeStatement.getType().equals(StatementType.TRY)) {
+				}
+				else if(compositeStatement instanceof TryStatementObject) {
 					previousNodes = processTryStatement(previousNodes, compositeStatement);
-				} else if (isLoop(compositeStatement)) {
+				}
+				else if(isLoop(compositeStatement)) {
 					previousNodes = processLoopStatement(previousNodes, compositeStatement);
-				} else if (compositeStatement.getType().equals(StatementType.DO)) {
+				}
+				else if(compositeStatement.getStatement() instanceof DoStatement) {
 					previousNodes = processDoStatement(previousNodes, compositeStatement);
-				} else if (compositeStatement.getType().equals(StatementType.SWITCH)) {
+				}
+				else if(compositeStatement.getStatement() instanceof SwitchStatement) {
 					int action = getAction(composite, i, compositeStatement);
 					previousNodes = processSwitchStatement(previousNodes, compositeStatement, action);
-				} else if (compositeStatement.getType().equals(StatementType.IF)) {
+				}
+				else if(compositeStatement.getStatement() instanceof IfStatement) {
 					int action = getAction(composite, i, compositeStatement);
 					previousNodes = processIfStatement(previousNodes, compositeStatement, action);
 				}
@@ -126,8 +167,7 @@ public class CFG extends Graph implements Serializable {
 		return previousNodes;
 	}
 
-	private List<CFGNode> processSynchronizedStatement(List<CFGNode> previousNodes,
-			CompositeStatementObject compositeStatement) {
+	private List<CFGNode> processSynchronizedStatement(List<CFGNode> previousNodes, CompositeStatementObject compositeStatement) {
 		CFGSynchronizedNode synchronizedNode = new CFGSynchronizedNode(compositeStatement);
 		directlyNestedNodeInBlock(synchronizedNode);
 		findBlockNodeControlParent(synchronizedNode);
@@ -138,26 +178,24 @@ public class CFG extends Graph implements Serializable {
 		currentNodes.add(synchronizedNode);
 		previousNodes = currentNodes;
 		AbstractStatement firstStatement = compositeStatement.getStatements().get(0);
-		previousNodes = process(previousNodes, (CompositeStatementObject) firstStatement);
+		previousNodes = process(previousNodes, (CompositeStatementObject)firstStatement);
 		return previousNodes;
 	}
 
-	private List<CFGNode> processTryStatement(List<CFGNode> previousNodes,
-			CompositeStatementObject compositeStatement) {
-		TryStatementObject tryStatement = (TryStatementObject) compositeStatement;
-		if (!tryStatement.hasResources()) {
-			// if a try node does not have resources, it is treated as a block
-			// and is omitted
+	private List<CFGNode> processTryStatement(List<CFGNode> previousNodes, CompositeStatementObject compositeStatement) {
+		TryStatementObject tryStatement = (TryStatementObject)compositeStatement;
+		if(!tryStatement.hasResources()) {
+			//if a try node does not have resources, it is treated as a block and is omitted
 			CFGTryNode tryNode = new CFGTryNode(compositeStatement);
-			// nodes.add(tryNode);
+			//nodes.add(tryNode);
 			directlyNestedNodeInBlock(tryNode);
 			findBlockNodeControlParent(tryNode);
 			directlyNestedNodesInBlocks.put(tryNode, new ArrayList<CFGNode>());
 			AbstractStatement firstStatement = compositeStatement.getStatements().get(0);
-			previousNodes = process(previousNodes, (CompositeStatementObject) firstStatement);
-		} else {
-			// if a try node has resources, it is treated as a non-composite
-			// node
+			previousNodes = process(previousNodes, (CompositeStatementObject)firstStatement);
+		}
+		else {
+			//if a try node has resources, it is treated as a non-composite node
 			CFGTryNode tryNode = new CFGTryNode(compositeStatement);
 			directlyNestedNodeInBlock(tryNode);
 			findBlockNodeControlParent(tryNode);
@@ -168,25 +206,25 @@ public class CFG extends Graph implements Serializable {
 			currentNodes.add(tryNode);
 			previousNodes = currentNodes;
 			AbstractStatement firstStatement = compositeStatement.getStatements().get(0);
-			previousNodes = process(previousNodes, (CompositeStatementObject) firstStatement);
+			previousNodes = process(previousNodes, (CompositeStatementObject)firstStatement);
 		}
 		return previousNodes;
 	}
 
 	private void findBlockNodeControlParent(CFGBlockNode blockNode) {
-		for (GraphNode node : nodes) {
-			CFGNode cfgNode = (CFGNode) node;
-			if (cfgNode.getStatement() instanceof CompositeStatementObject) {
-				CompositeStatementObject composite = (CompositeStatementObject) cfgNode.getStatement();
-				if (directlyNestedNode(blockNode, composite)) {
+		for(GraphNode node : nodes) {
+			CFGNode cfgNode = (CFGNode)node;
+			if(cfgNode.getStatement() instanceof CompositeStatementObject) {
+				CompositeStatementObject composite = (CompositeStatementObject)cfgNode.getStatement();
+				if(directlyNestedNode(blockNode, composite)) {
 					blockNode.setControlParent(cfgNode);
 					break;
 				}
 			}
 		}
-		for (CFGBlockNode blockNode2 : directlyNestedNodesInBlocks.keySet()) {
+		for(CFGBlockNode blockNode2 : directlyNestedNodesInBlocks.keySet()) {
 			List<CFGNode> nestedNodes = directlyNestedNodesInBlocks.get(blockNode2);
-			if (nestedNodes.contains(blockNode)) {
+			if(nestedNodes.contains(blockNode)) {
 				blockNode.setControlParent(blockNode2);
 				break;
 			}
@@ -201,9 +239,9 @@ public class CFG extends Graph implements Serializable {
 		directlyNestedNodeInBlock(currentNode);
 		createTopDownFlow(previousNodes, currentNode);
 		CFGNode topNode = getCommonNextNode(tmpNodes);
-		if (topNode == null)
-			topNode = (CFGNode) nodes.toArray()[0];
-		Flow flow = new Flow(currentNode, topNode, this);
+		if(topNode == null)
+			topNode = (CFGNode)nodes.toArray()[0];
+		Flow flow = new Flow(currentNode, topNode);
 		flow.setTrueControlFlow(true);
 		flow.setLoopbackFlow(true);
 		edges.add(flow);
@@ -213,8 +251,7 @@ public class CFG extends Graph implements Serializable {
 		return previousNodes;
 	}
 
-	private List<CFGNode> processLoopStatement(List<CFGNode> previousNodes,
-			CompositeStatementObject compositeStatement) {
+	private List<CFGNode> processLoopStatement(List<CFGNode> previousNodes, CompositeStatementObject compositeStatement) {
 		CFGBranchNode currentNode = new CFGBranchLoopNode(compositeStatement);
 		nodes.add(currentNode);
 		directlyNestedNodeInBlock(currentNode);
@@ -223,10 +260,10 @@ public class CFG extends Graph implements Serializable {
 		ArrayList<CFGNode> currentNodes = new ArrayList<CFGNode>();
 		currentNodes.add(currentNode);
 		previousNodes.addAll(process(currentNodes, compositeStatement));
-		for (CFGNode previousNode : previousNodes) {
-			Flow flow = new Flow(previousNode, currentNode, this);
-			if (previousNode instanceof CFGBranchNode) {
-				if (previousNode.equals(currentNode))
+		for(CFGNode previousNode : previousNodes) {
+			Flow flow = new Flow(previousNode, currentNode);
+			if(previousNode instanceof CFGBranchNode) {
+				if(previousNode.equals(currentNode))
 					flow.setTrueControlFlow(true);
 				else
 					flow.setFalseControlFlow(true);
@@ -234,9 +271,9 @@ public class CFG extends Graph implements Serializable {
 			flow.setLoopbackFlow(true);
 			edges.add(flow);
 		}
-		if (previousNodes.size() > 1) {
+		if(previousNodes.size() > 1) {
 			List<CFGBranchConditionalNode> conditionalNodes = unjoinedConditionalNodes.pop();
-			for (CFGBranchConditionalNode conditionalNode : conditionalNodes) {
+			for(CFGBranchConditionalNode conditionalNode : conditionalNodes) {
 				conditionalNode.setJoinNode(currentNode);
 			}
 		}
@@ -249,56 +286,57 @@ public class CFG extends Graph implements Serializable {
 		List<AbstractStatement> statements = new ArrayList<AbstractStatement>(parentComposite.getStatements());
 		CompositeStatementObject parent = (CompositeStatementObject) statements.get(0).getParent();
 		boolean isBlockWithoutCompositeParent = isBlockWithoutCompositeParent(parent);
-		if (parent.getType().equals(StatementType.BLOCK)) 
+		if(parent.getStatement() instanceof Block)
 			parent = (CompositeStatementObject) parent.getParent();
 		int position = i;
-		while (parent != null
-				&& (parent.getType().equals(StatementType.TRY) || parent.getType().equals(StatementType.SYNCHRONIZED))) {
+		while(parent != null && (parent instanceof TryStatementObject || parent instanceof SynchronizedStatementObject)) {
 			CompositeStatementObject tryStatement = parent;
 			CompositeStatementObject tryStatementParent = (CompositeStatementObject) tryStatement.getParent();
-			List<AbstractStatement> tryParentStatements = new ArrayList<AbstractStatement>(
-					tryStatementParent.getStatements());
-			if (tryStatementParent.getType().equals(StatementType.BLOCK))
+			List<AbstractStatement> tryParentStatements = new ArrayList<AbstractStatement>(tryStatementParent.getStatements());
+			if(tryStatementParent.getStatement() instanceof Block)
 				tryStatementParent = (CompositeStatementObject) tryStatementParent.getParent();
 			int positionOfTryStatementInParent = 0;
 			int j = 0;
-			for (AbstractStatement statement : tryParentStatements) {
-				if (statement.equals(tryStatement)) {
+			for(AbstractStatement statement : tryParentStatements) {
+				if(statement.equals(tryStatement)) {
 					positionOfTryStatementInParent = j;
 					break;
 				}
 				j++;
 			}
-			if (tryStatement.getType().equals(StatementType.TRY)) {
-				TryStatementObject tempTry = (TryStatementObject) tryStatement;
-				if (tempTry.hasResources()) {
+			if(tryStatement instanceof TryStatementObject) {
+				TryStatementObject tempTry = (TryStatementObject)tryStatement;
+				if(tempTry.hasResources()) {
 					tryParentStatements.addAll(positionOfTryStatementInParent + 1, statements);
-				} else {
+				}
+				else {
 					tryParentStatements.remove(tryStatement);
 					tryParentStatements.addAll(positionOfTryStatementInParent, statements);
 				}
-			} else {
+			}
+			else {
 				tryParentStatements.addAll(positionOfTryStatementInParent + 1, statements);
 			}
 			statements = tryParentStatements;
 			parent = tryStatementParent;
-			if (tryStatement.getType().equals(StatementType.TRY)) {
-				TryStatementObject tempTry = (TryStatementObject) tryStatement;
-				if (tempTry.hasResources())
+			if(tryStatement instanceof TryStatementObject) {
+				TryStatementObject tempTry = (TryStatementObject)tryStatement;
+				if(tempTry.hasResources())
 					position = positionOfTryStatementInParent + position + 1;
 				else
 					position = positionOfTryStatementInParent + position;
-			} else {
+			}
+			else {
 				position = positionOfTryStatementInParent + position + 1;
 			}
 		}
-		if (parent != null && parent.getType().equals(StatementType.SWITCH)
-				&& parentComposite.getType().equals(StatementType.BLOCK)) {
+		if(parent != null && parent.getStatement() instanceof SwitchStatement &&
+				parentComposite.getStatement() instanceof Block) {
 			List<AbstractStatement> switchStatements = new ArrayList<AbstractStatement>(parent.getStatements());
 			int positionOfBlockInParentSwitch = 0;
 			int j = 0;
-			for (AbstractStatement statement : switchStatements) {
-				if (statement.equals(parentComposite)) {
+			for(AbstractStatement statement : switchStatements) {
+				if(statement.equals(parentComposite)) {
 					positionOfBlockInParentSwitch = j;
 					break;
 				}
@@ -309,12 +347,12 @@ public class CFG extends Graph implements Serializable {
 			statements = switchStatements;
 			position = positionOfBlockInParentSwitch + position;
 		}
-		if (parent != null && isBlockWithoutCompositeParent) {
+		if(parent != null && isBlockWithoutCompositeParent) {
 			List<AbstractStatement> blockStatements = new ArrayList<AbstractStatement>(parent.getStatements());
 			int positionOfBlockInParent = 0;
 			int j = 0;
-			for (AbstractStatement statement : blockStatements) {
-				if (statement.equals(parentComposite)) {
+			for(AbstractStatement statement : blockStatements) {
+				if(statement.equals(parentComposite)) {
 					positionOfBlockInParent = j;
 					break;
 				}
@@ -325,66 +363,69 @@ public class CFG extends Graph implements Serializable {
 			statements = blockStatements;
 			position = positionOfBlockInParent + position;
 		}
-		if (statements.size() == 1) {
+		if(statements.size() == 1) {
 			action = JOIN_TOP_LIST;
-			if (parent != null) {
-				if (isLoop(parent) || parent.getType().equals(StatementType.DO))
+			if(parent != null) {
+				if(isLoop(parent) || parent.getStatement() instanceof DoStatement)
 					action = PUSH_NEW_LIST;
+				/*else if(parent.getStatement() instanceof DoStatement)
+					action = PLACE_NEW_LIST_SECOND_FROM_TOP;*/
 			}
-		} else if (statements.size() > 1) {
+		}
+		else if(statements.size() > 1) {
 			AbstractStatement previousStatement = null;
-			if (position >= 1)
-				previousStatement = statements.get(position - 1);
+			if(position >= 1)
+				previousStatement = statements.get(position-1);
 			int j = 0;
-			while (previousStatement != null && previousStatement.getType().equals(StatementType.TRY)
-					&& !((TryStatementObject) previousStatement).hasResources()) {
-				CompositeStatementObject tryStatement = (CompositeStatementObject) previousStatement;
+			while(previousStatement != null && previousStatement instanceof TryStatementObject && !((TryStatementObject)previousStatement).hasResources()) {
+				CompositeStatementObject tryStatement = (CompositeStatementObject)previousStatement;
 				AbstractStatement firstStatement = tryStatement.getStatements().get(0);
-				if (firstStatement instanceof CompositeStatementObject) {
-					CompositeStatementObject tryBlock = (CompositeStatementObject) firstStatement;
+				if(firstStatement instanceof CompositeStatementObject) {
+					CompositeStatementObject tryBlock = (CompositeStatementObject)firstStatement;
 					List<AbstractStatement> tryBlockStatements = tryBlock.getStatements();
-					if (tryBlockStatements.size() > 0) {
-						// previous statement is the last statement of this try
-						// block
-						previousStatement = tryBlockStatements.get(tryBlockStatements.size() - 1);
-					} else {
-						// try block is empty and previous statement is the
-						// statement before this try block
-						if (position >= 2 + j)
-							previousStatement = statements.get(position - 2 - j);
+					if(tryBlockStatements.size() > 0) {
+						//previous statement is the last statement of this try block
+						previousStatement = tryBlockStatements.get(tryBlockStatements.size()-1);
+					}
+					else {
+						//try block is empty and previous statement is the statement before this try block
+						if(position >= 2+j)
+							previousStatement = statements.get(position-2-j);
 						else
 							previousStatement = null;
 					}
 				}
 				j++;
 			}
-			while (previousStatement != null && isBlockWithoutCompositeParent(previousStatement)) {
-				CompositeStatementObject block = (CompositeStatementObject) previousStatement;
+			while(previousStatement != null && isBlockWithoutCompositeParent(previousStatement)) {
+				CompositeStatementObject block = (CompositeStatementObject)previousStatement;
 				List<AbstractStatement> blockStatements = block.getStatements();
-				if (blockStatements.size() > 0) {
-					// previous statement is the last statement of this block
-					previousStatement = blockStatements.get(blockStatements.size() - 1);
+				if(blockStatements.size() > 0) {
+					//previous statement is the last statement of this block
+					previousStatement = blockStatements.get(blockStatements.size()-1);
 				}
 			}
-			if (statements.get(statements.size() - 1).equals(childComposite)) {
-				// current if statement is the last statement of the composite
-				// statement
-				if (previousStatement != null && (previousStatement.getType().equals(StatementType.IF)
-						|| previousStatement.getType().equals(StatementType.SWITCH))) {
+			if(statements.get(statements.size()-1).equals(childComposite)) {
+				//current if statement is the last statement of the composite statement
+				if(previousStatement != null && (previousStatement.getStatement() instanceof IfStatement || previousStatement.getStatement() instanceof SwitchStatement)) {
 					action = JOIN_SECOND_FROM_TOP_LIST;
-					if (parent != null && (isLoop(parent) || parent.getType().equals(StatementType.DO)))
+					if(parent != null && (isLoop(parent) || parent.getStatement() instanceof DoStatement))
 						action = PLACE_NEW_LIST_SECOND_FROM_TOP;
-				} else {
+				}
+				else {
 					action = JOIN_TOP_LIST;
-					if (parent != null && (isLoop(parent) || parent.getType().equals(StatementType.DO)))
+					if(parent != null && (isLoop(parent) || parent.getStatement() instanceof DoStatement))
 						action = PUSH_NEW_LIST;
 				}
-			} else {
-				if (previousStatement != null && (previousStatement.getType().equals(StatementType.IF)
-						|| previousStatement.getType().equals(StatementType.SWITCH)))
+			}
+			else {
+				if(previousStatement != null && (previousStatement.getStatement() instanceof IfStatement || previousStatement.getStatement() instanceof SwitchStatement))
 					action = PLACE_NEW_LIST_SECOND_FROM_TOP;
 				else {
 					action = PUSH_NEW_LIST;
+					/*if(parent != null && parent.getStatement() instanceof DoStatement &&
+							statements.get(0).getStatement() instanceof IfStatement)
+						action = PLACE_NEW_LIST_SECOND_FROM_TOP;*/
 				}
 			}
 		}
@@ -393,12 +434,12 @@ public class CFG extends Graph implements Serializable {
 
 	private boolean isBlockWithoutCompositeParent(AbstractStatement statement) {
 		boolean isBlock = false;
-		if (statement.getType().equals(StatementType.BLOCK)) {
+		if(statement.getStatement() instanceof Block) {
 			isBlock = true;
 		}
 		boolean parentIsBlock = false;
-		AbstractStatement parent = (AbstractStatement) statement.getParent();
-		if (parent != null && parent.getType().equals(StatementType.BLOCK)) {
+		AbstractStatement parent = (AbstractStatement)statement.getParent();
+		if(parent != null && parent.getStatement() instanceof Block) {
 			parentIsBlock = true;
 		}
 		return isBlock && parentIsBlock;
@@ -406,34 +447,38 @@ public class CFG extends Graph implements Serializable {
 
 	private List<CFGNode> processNonCompositeStatement(List<CFGNode> previousNodes, StatementObject statement,
 			CompositeStatementObject composite) {
-		// special handling of break, continue, return
+		//special handling of break, continue, return
 		CFGNode currentNode = createNonCompositeNode(statement);
 		nodes.add(currentNode);
-		if ((currentNode instanceof CFGBreakNode || currentNode instanceof CFGExitNode)
-				&& composite.getType().equals(StatementType.SWITCH) && directlyNestedNode(currentNode, composite)) {
+		if((currentNode instanceof CFGBreakNode || currentNode instanceof CFGExitNode) &&
+				composite.getStatement() instanceof SwitchStatement && directlyNestedNode(currentNode, composite)) {
 			CFGBranchSwitchNode switchNode = getMostRecentSwitchNode();
-			if (switchBreakMap.containsKey(switchNode)) {
+			if(switchBreakMap.containsKey(switchNode)) {
 				List<CFGNode> breakList = switchBreakMap.get(switchNode);
 				breakList.add(currentNode);
-			} else {
+			}
+			else {
 				List<CFGNode> breakList = new ArrayList<CFGNode>();
 				breakList.add(currentNode);
 				switchBreakMap.put(switchNode, breakList);
 			}
 			createTopDownFlow(previousNodes, currentNode);
-		} else if (currentNode instanceof CFGSwitchCaseNode) {
-			CFGSwitchCaseNode switchCase = (CFGSwitchCaseNode) currentNode;
-			if (previousNodesContainBreakOrReturn(previousNodes, composite)) {
+		}
+		else if(currentNode instanceof CFGSwitchCaseNode) {
+			CFGSwitchCaseNode switchCase = (CFGSwitchCaseNode)currentNode;
+			if(previousNodesContainBreakOrReturn(previousNodes, composite)) {
 				CFGBranchSwitchNode switchNode = getMostRecentSwitchNode();
-				Flow flow = new Flow(switchNode, currentNode, this);
-				if (switchCase.isDefault())
+				Flow flow = new Flow(switchNode, currentNode);
+				if(switchCase.isDefault())
 					flow.setFalseControlFlow(true);
 				else
 					flow.setTrueControlFlow(true);
 				edges.add(flow);
-			} else
+			}
+			else
 				createTopDownFlow(previousNodes, currentNode);
-		} else
+		}
+		else
 			createTopDownFlow(previousNodes, currentNode);
 		ArrayList<CFGNode> currentNodes = new ArrayList<CFGNode>();
 		currentNodes.add(currentNode);
@@ -443,16 +488,16 @@ public class CFG extends Graph implements Serializable {
 
 	private CFGNode createNonCompositeNode(StatementObject statement) {
 		CFGNode currentNode;
-		// Statement astStatement = statement.getStatement();
-		if (statement.getType().equals(StatementType.RETURN))
+		Statement astStatement = statement.getStatement();
+		if(astStatement instanceof ReturnStatement)
 			currentNode = new CFGExitNode(statement);
-		else if (statement.getType().equals(StatementType.SWITCH_CASE))
+		else if(astStatement instanceof SwitchCase)
 			currentNode = new CFGSwitchCaseNode(statement);
-		else if (statement.getType().equals(StatementType.BREAK))
+		else if(astStatement instanceof BreakStatement)
 			currentNode = new CFGBreakNode(statement);
-		else if (statement.getType().equals(StatementType.CONTINUE))
+		else if(astStatement instanceof ContinueStatement)
 			currentNode = new CFGContinueNode(statement);
-		else if (statement.getType().equals(StatementType.THROW))
+		else if(astStatement instanceof ThrowStatement)
 			currentNode = new CFGThrowNode(statement);
 		else
 			currentNode = new CFGNode(statement);
@@ -461,24 +506,24 @@ public class CFG extends Graph implements Serializable {
 	}
 
 	private boolean previousNodesContainBreakOrReturn(List<CFGNode> previousNodes, CompositeStatementObject composite) {
-		for (CFGNode previousNode : previousNodes) {
-			AbstractStatement statement = previousNode.getStatement();
-			if ((statement.getType().equals(StatementType.BREAK) || statement.getType().equals(StatementType.RETURN))
-					&& directlyNestedNode(previousNode, composite))
+		for(CFGNode previousNode : previousNodes) {
+			Statement statement = previousNode.getASTStatement();
+			if((statement instanceof BreakStatement || statement instanceof ReturnStatement) &&
+					directlyNestedNode(previousNode, composite))
 				return true;
 		}
 		return false;
 	}
 
 	private boolean directlyNestedNode(CFGNode node, CompositeStatementObject composite) {
-		for (AbstractStatement statement : composite.getStatements()) {
-			if (statement.equals(node.getStatement()))
+		for(AbstractStatement statement : composite.getStatements()) {
+			if(statement.equals(node.getStatement()))
 				return true;
-			if (statement instanceof CompositeStatementObject) {
-				CompositeStatementObject composite2 = (CompositeStatementObject) statement;
-//				Statement astComposite2 = composite2.getStatement();
-				if (composite2.getType().equals(StatementType.BLOCK)) {
-					if (directlyNestedNode(node, composite2))
+			if(statement instanceof CompositeStatementObject) {
+				CompositeStatementObject composite2 = (CompositeStatementObject)statement;
+				Statement astComposite2 = composite2.getStatement();
+				if(astComposite2 instanceof Block) {
+					if(directlyNestedNode(node, composite2))
 						return true;
 				}
 			}
@@ -487,8 +532,8 @@ public class CFG extends Graph implements Serializable {
 	}
 
 	private void directlyNestedNodeInBlock(CFGNode node) {
-		for (CFGBlockNode blockNode : directlyNestedNodesInBlocks.keySet()) {
-			if (directlyNestedNode(node, (CompositeStatementObject) blockNode.getStatement())) {
+		for(CFGBlockNode blockNode : directlyNestedNodesInBlocks.keySet()) {
+			if(directlyNestedNode(node, (CompositeStatementObject)blockNode.getStatement())) {
 				List<CFGNode> directlyNestedNodes = directlyNestedNodesInBlocks.get(blockNode);
 				directlyNestedNodes.add(node);
 				break;
@@ -496,8 +541,7 @@ public class CFG extends Graph implements Serializable {
 		}
 	}
 
-	private List<CFGNode> processSwitchStatement(List<CFGNode> previousNodes,
-			CompositeStatementObject compositeStatement, int action) {
+	private List<CFGNode> processSwitchStatement(List<CFGNode> previousNodes, CompositeStatementObject compositeStatement, int action) {
 		CFGBranchSwitchNode currentNode = new CFGBranchSwitchNode(compositeStatement);
 		handleAction(currentNode, action);
 		nodes.add(currentNode);
@@ -508,106 +552,110 @@ public class CFG extends Graph implements Serializable {
 		currentNodes.add(currentNode);
 		previousNodes.addAll(process(currentNodes, compositeStatement));
 		List<CFGNode> breakList = switchBreakMap.get(currentNode);
-		if (breakList != null) {
-			for (CFGNode node : breakList) {
-				if (!previousNodes.contains(node))
+		if(breakList != null) {
+			for(CFGNode node : breakList) {
+				if(!previousNodes.contains(node))
 					previousNodes.add(node);
 			}
 		}
-		if (currentNode.getFalseControlFlow() == null)
+		if(currentNode.getFalseControlFlow() == null)
 			previousNodes.add(currentNode);
 		return previousNodes;
 	}
 
-	private List<CFGNode> processIfStatement(List<CFGNode> previousNodes, CompositeStatementObject compositeStatement,
-			int action) {
+	private List<CFGNode> processIfStatement(List<CFGNode> previousNodes, CompositeStatementObject compositeStatement, int action) {
 		CFGBranchIfNode currentNode = new CFGBranchIfNode(compositeStatement);
 		handleAction(currentNode, action);
-
+		
 		nodes.add(currentNode);
 		directlyNestedNodeInBlock(currentNode);
 		createTopDownFlow(previousNodes, currentNode);
 		previousNodes = new ArrayList<CFGNode>();
 		List<AbstractStatement> ifStatementList = compositeStatement.getStatements();
 		AbstractStatement thenClause = ifStatementList.get(0);
-		if (thenClause instanceof StatementObject) {
-			StatementObject thenClauseStatement = (StatementObject) thenClause;
+		if(thenClause instanceof StatementObject) {
+			StatementObject thenClauseStatement = (StatementObject)thenClause;
 			CFGNode thenClauseNode = createNonCompositeNode(thenClauseStatement);
 			nodes.add(thenClauseNode);
 			ArrayList<CFGNode> currentNodes = new ArrayList<CFGNode>();
 			currentNodes.add(currentNode);
 			createTopDownFlow(currentNodes, thenClauseNode);
 			previousNodes.add(thenClauseNode);
-		} else if (thenClause instanceof CompositeStatementObject) {
-			CompositeStatementObject thenClauseCompositeStatement = (CompositeStatementObject) thenClause;
+		}
+		else if(thenClause instanceof CompositeStatementObject) {
+			CompositeStatementObject thenClauseCompositeStatement = (CompositeStatementObject)thenClause;
 			ArrayList<CFGNode> currentNodes = new ArrayList<CFGNode>();
 			currentNodes.add(currentNode);
-			if (thenClauseCompositeStatement.getType().equals(StatementType.IF))
+			if(thenClauseCompositeStatement.getStatement() instanceof IfStatement)
 				previousNodes.addAll(processIfStatement(currentNodes, thenClauseCompositeStatement, JOIN_TOP_LIST));
-			else if (thenClauseCompositeStatement.getType().equals(StatementType.SWITCH))
+			else if(thenClauseCompositeStatement.getStatement() instanceof SwitchStatement)
 				previousNodes.addAll(processSwitchStatement(currentNodes, thenClauseCompositeStatement, JOIN_TOP_LIST));
-			else if (isLoop(thenClauseCompositeStatement))
+			else if(isLoop(thenClauseCompositeStatement))
 				previousNodes.addAll(processLoopStatement(currentNodes, thenClauseCompositeStatement));
-			else if (thenClauseCompositeStatement.getType().equals(StatementType.DO))
+			else if(thenClauseCompositeStatement.getStatement() instanceof DoStatement)
 				previousNodes.addAll(processDoStatement(currentNodes, thenClauseCompositeStatement));
 			else
 				previousNodes.addAll(process(currentNodes, thenClauseCompositeStatement));
 		}
-		if (ifStatementList.size() == 2) {
+		if(ifStatementList.size() == 2) {
 			AbstractStatement elseClause = ifStatementList.get(1);
-			if (elseClause instanceof StatementObject) {
-				StatementObject elseClauseStatement = (StatementObject) elseClause;
+			if(elseClause instanceof StatementObject) {
+				StatementObject elseClauseStatement = (StatementObject)elseClause;
 				CFGNode elseClauseNode = createNonCompositeNode(elseClauseStatement);
 				nodes.add(elseClauseNode);
 				ArrayList<CFGNode> currentNodes = new ArrayList<CFGNode>();
 				currentNodes.add(currentNode);
 				createTopDownFlow(currentNodes, elseClauseNode);
 				previousNodes.add(elseClauseNode);
-			} else if (elseClause instanceof CompositeStatementObject) {
-				CompositeStatementObject elseClauseCompositeStatement = (CompositeStatementObject) elseClause;
+			}
+			else if(elseClause instanceof CompositeStatementObject) {
+				CompositeStatementObject elseClauseCompositeStatement = (CompositeStatementObject)elseClause;
 				ArrayList<CFGNode> currentNodes = new ArrayList<CFGNode>();
 				currentNodes.add(currentNode);
-				if (elseClauseCompositeStatement.getType().equals(StatementType.IF))
+				if(elseClauseCompositeStatement.getStatement() instanceof IfStatement)
 					previousNodes.addAll(processIfStatement(currentNodes, elseClauseCompositeStatement, JOIN_TOP_LIST));
-				else if (elseClauseCompositeStatement.getType().equals(StatementType.SWITCH))
-					previousNodes
-							.addAll(processSwitchStatement(currentNodes, elseClauseCompositeStatement, JOIN_TOP_LIST));
-				else if (isLoop(elseClauseCompositeStatement))
+				else if(elseClauseCompositeStatement.getStatement() instanceof SwitchStatement)
+					previousNodes.addAll(processSwitchStatement(currentNodes, elseClauseCompositeStatement, JOIN_TOP_LIST));
+				else if(isLoop(elseClauseCompositeStatement))
 					previousNodes.addAll(processLoopStatement(currentNodes, elseClauseCompositeStatement));
-				else if (elseClauseCompositeStatement.getType().equals(StatementType.DO))
+				else if(elseClauseCompositeStatement.getStatement() instanceof DoStatement)
 					previousNodes.addAll(processDoStatement(currentNodes, elseClauseCompositeStatement));
 				else
 					previousNodes.addAll(process(currentNodes, elseClauseCompositeStatement));
 			}
-		} else {
+		}
+		else {
 			previousNodes.add(currentNode);
 		}
 		return previousNodes;
 	}
 
 	private void handleAction(CFGBranchConditionalNode currentNode, int action) {
-		if (action == JOIN_TOP_LIST && !unjoinedConditionalNodes.empty()) {
+		if(action == JOIN_TOP_LIST && !unjoinedConditionalNodes.empty()) {
 			List<CFGBranchConditionalNode> topList = unjoinedConditionalNodes.peek();
 			topList.add(currentNode);
-		} else if (action == JOIN_SECOND_FROM_TOP_LIST) {
-			if (unjoinedConditionalNodes.size() > 1) {
-				List<CFGBranchConditionalNode> list = unjoinedConditionalNodes
-						.elementAt(unjoinedConditionalNodes.size() - 2);
+		}
+		else if(action == JOIN_SECOND_FROM_TOP_LIST) {
+			if(unjoinedConditionalNodes.size() > 1) {
+				List<CFGBranchConditionalNode> list = unjoinedConditionalNodes.elementAt(unjoinedConditionalNodes.size()-2);
 				list.add(currentNode);
-			} else {
+			}
+			else {
 				List<CFGBranchConditionalNode> topList = unjoinedConditionalNodes.pop();
 				List<CFGBranchConditionalNode> list = new ArrayList<CFGBranchConditionalNode>();
 				list.add(currentNode);
 				unjoinedConditionalNodes.push(list);
 				unjoinedConditionalNodes.push(topList);
 			}
-		} else if (action == PLACE_NEW_LIST_SECOND_FROM_TOP && !unjoinedConditionalNodes.empty()) {
+		}
+		else if(action == PLACE_NEW_LIST_SECOND_FROM_TOP && !unjoinedConditionalNodes.empty()) {
 			List<CFGBranchConditionalNode> topList = unjoinedConditionalNodes.pop();
 			List<CFGBranchConditionalNode> list = new ArrayList<CFGBranchConditionalNode>();
 			list.add(currentNode);
 			unjoinedConditionalNodes.push(list);
 			unjoinedConditionalNodes.push(topList);
-		} else {
+		}
+		else {
 			List<CFGBranchConditionalNode> list = new ArrayList<CFGBranchConditionalNode>();
 			list.add(currentNode);
 			unjoinedConditionalNodes.push(list);
@@ -615,75 +663,71 @@ public class CFG extends Graph implements Serializable {
 	}
 
 	private void createTopDownFlow(List<CFGNode> previousNodes, CFGNode currentNode) {
-		for (CFGNode previousNode : previousNodes) {
-			Flow flow = new Flow(previousNode, currentNode, this);
+		for(CFGNode previousNode : previousNodes) {
+			Flow flow = new Flow(previousNode, currentNode);
 			int numberOfImmediateBlocks = getNumberOfImmediateBlocks(currentNode);
-			if (previousNode instanceof CFGBranchNode) {
-				if (currentNode.getId() == previousNode.getId() + 1 + numberOfImmediateBlocks
-						&& !(previousNode instanceof CFGBranchDoLoopNode))
+			if(previousNode instanceof CFGBranchNode) {
+				if(currentNode.getId() == previousNode.getId() + 1 + numberOfImmediateBlocks &&
+						!(previousNode instanceof CFGBranchDoLoopNode))
 					flow.setTrueControlFlow(true);
 				else
 					flow.setFalseControlFlow(true);
 			}
 			edges.add(flow);
 		}
-		if (previousNodes.size() > 1) {
+		if(previousNodes.size() > 1) {
 			List<CFGBranchConditionalNode> conditionalNodes = unjoinedConditionalNodes.pop();
-			for (CFGBranchConditionalNode conditionalNode : conditionalNodes) {
+			for(CFGBranchConditionalNode conditionalNode : conditionalNodes) {
 				conditionalNode.setJoinNode(currentNode);
 			}
 		}
 	}
 
 	private int getNumberOfImmediateBlocks(CFGNode node) {
-		for (CFGBlockNode tryNode : directlyNestedNodesInBlocks.keySet()) {
+		for(CFGBlockNode tryNode : directlyNestedNodesInBlocks.keySet()) {
 			List<CFGNode> directlyNestedNodes = directlyNestedNodesInBlocks.get(tryNode);
-			if (directlyNestedNodes.contains(node))
+			if(directlyNestedNodes.contains(node))
 				return 1 + getNumberOfImmediateBlocks(tryNode);
 		}
 		return 0;
 	}
 
 	private boolean isLoop(CompositeStatementObject compositeStatement) {
-		if (compositeStatement.getType().equals(StatementType.WHILE) 
-				|| compositeStatement.getType().equals(StatementType.FOR)
-				|| compositeStatement.getType().equals(StatementType.ENHANCED_FOR))
+		if(compositeStatement.getStatement() instanceof WhileStatement ||
+				compositeStatement.getStatement() instanceof ForStatement ||
+				compositeStatement.getStatement() instanceof EnhancedForStatement)
 			return true;
 		return false;
 	}
 
 	private CFGNode getCommonNextNode(List<CFGNode> nodes) {
 		HashMap<CFGNode, Integer> nextNodeCounterMap = new HashMap<CFGNode, Integer>();
-		for (CFGNode node : nodes) {
-			for (GraphEdge edge : node.outgoingEdges) {
-				CFGNode nextNode = (CFGNode) edge.getDst();
-				if (nextNodeCounterMap.containsKey(nextNode))
-					nextNodeCounterMap.put(nextNode, nextNodeCounterMap.get(nextNode) + 1);
+		for(CFGNode node : nodes) {
+			for(GraphEdge edge : node.outgoingEdges) {
+				CFGNode nextNode = (CFGNode)edge.dst;
+				if(nextNodeCounterMap.containsKey(nextNode))
+					nextNodeCounterMap.put(nextNode, nextNodeCounterMap.get(nextNode)+1);
 				else
 					nextNodeCounterMap.put(nextNode, 1);
 			}
 		}
-		for (CFGNode key : nextNodeCounterMap.keySet()) {
-			if (nextNodeCounterMap.get(key) == nodes.size())
+		for(CFGNode key : nextNodeCounterMap.keySet()) {
+			if(nextNodeCounterMap.get(key) == nodes.size())
 				return key;
 		}
 		return null;
 	}
 
 	private CFGBranchSwitchNode getMostRecentSwitchNode() {
-		for (int i = unjoinedConditionalNodes.size() - 1; i >= 0; i--) {
+		for(int i=unjoinedConditionalNodes.size()-1; i>=0; i--) {
 			List<CFGBranchConditionalNode> unjoinedConditionalNodeList = unjoinedConditionalNodes.get(i);
-			for (int j = unjoinedConditionalNodeList.size() - 1; j >= 0; j--) {
+			for(int j=unjoinedConditionalNodeList.size()-1; j>=0; j--) {
 				CFGBranchConditionalNode conditionalNode = unjoinedConditionalNodeList.get(j);
-				if (conditionalNode instanceof CFGBranchSwitchNode) {
-					return (CFGBranchSwitchNode) conditionalNode;
+				if(conditionalNode instanceof CFGBranchSwitchNode) {
+					return (CFGBranchSwitchNode)conditionalNode;
 				}
 			}
 		}
 		return null;
-	}
-	
-	public String toString() {
-		return edges.toString();
 	}
 }

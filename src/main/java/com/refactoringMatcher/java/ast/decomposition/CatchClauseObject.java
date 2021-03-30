@@ -1,15 +1,10 @@
 package com.refactoringMatcher.java.ast.decomposition;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CatchClauseObject  implements Serializable{
+public class CatchClauseObject {
 	
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 5050543909924061112L;
 	private CompositeStatementObject body;
 	private List<AbstractExpression> expressionList;
 	private List<String> exceptionTypes;

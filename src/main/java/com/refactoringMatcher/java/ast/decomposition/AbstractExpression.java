@@ -1,30 +1,21 @@
 package com.refactoringMatcher.java.ast.decomposition;
 
-import com.refactoringMatcher.java.ast.ASTInformation;
-import com.refactoringMatcher.java.ast.ASTInformationGenerator;
-import com.refactoringMatcher.java.ast.ParameterObject;
-import com.refactoringMatcher.java.ast.util.ExpressionExtractor;
-import org.eclipse.jdt.core.dom.Expression;
-
-import java.io.Serializable;
 import java.util.List;
 
-public class AbstractExpression extends AbstractMethodFragment implements Serializable {
+import com.refactoringMatcher.java.ast.ASTInformation;
+import com.refactoringMatcher.java.ast.ASTInformationGenerator;
+import com.refactoringMatcher.java.ast.ImportObject;
+import com.refactoringMatcher.java.ast.ParameterObject;
+import com.refactoringMatcher.java.ast.util.ExpressionExtractor;
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 4279401240403763374L;
+import org.eclipse.jdt.core.dom.Expression;
+
+public class AbstractExpression extends AbstractMethodFragment {
+
 	private ASTInformation expression;
-	
-/*	public AbstractExpression(Expression expression) {
-		super(null);
-		this.expression = ASTInformationGenerator.generateASTInformation(expression);
-		processExpression(expression);
-	}*/
 
-	public AbstractExpression(Expression expression, List<ParameterObject> parameters, AbstractMethodFragment parent) {
-		super(parent, parameters);
+	public AbstractExpression(Expression expression, List<ParameterObject> parameters, List<ImportObject> importObjectList, AbstractMethodFragment parent) {
+		super(parent, parameters, importObjectList);
 		this.expression = ASTInformationGenerator.generateASTInformation(expression);
 		processExpression(expression);
 	}
@@ -34,9 +25,9 @@ public class AbstractExpression extends AbstractMethodFragment implements Serial
         List<Expression> assignments = expressionExtractor.getAssignments(expression);
         List<Expression> postfixExpressions = expressionExtractor.getPostfixExpressions(expression);
         List<Expression> prefixExpressions = expressionExtractor.getPrefixExpressions(expression);
-		processVariablesWithoutBindingInfo(expressionExtractor.getVariableInstructions(expression), assignments, postfixExpressions, prefixExpressions);
-//		processMethodInvocations(expressionExtractor.getMethodInvocations(expression));
-//		processClassInstanceCreations(expressionExtractor.getClassInstanceCreations(expression));
+        processVariables(expressionExtractor.getVariableInstructions(expression), assignments, postfixExpressions, prefixExpressions);
+		processMethodInvocations(expressionExtractor.getMethodInvocations(expression));
+		processClassInstanceCreations(expressionExtractor.getClassInstanceCreations(expression));
 		processArrayCreations(expressionExtractor.getArrayCreations(expression));
 		processLiterals(expressionExtractor.getLiterals(expression));
 	}

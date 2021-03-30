@@ -15,6 +15,7 @@ public class GroumIfNode extends GroumNode implements Serializable {
 	public GroumIfNode(IfStatement statement, PDGNode pdgNode) {
 		super(pdgNode);
 		ifStatement = statement;
+		setValue(ToGroumString());
 	}
 
 	public String ToGroumString(){

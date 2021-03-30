@@ -1,19 +1,29 @@
 package com.refactoringMatcher.java.ast.decomposition.cfg;
 
-import java.io.Serializable;
-
+import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.VariableDeclaration;
 
-public class CompositeVariable extends AbstractVariable  implements Serializable{
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 4533681874892587063L;
+public class CompositeVariable extends AbstractVariable {
 	private AbstractVariable rightPart;
 	private volatile int hashCode = 0;
 	
-	public CompositeVariable(VariableDeclaration variableDeclaration, AbstractVariable rightPart) {
-		super(variableDeclaration);
+	public CompositeVariable(VariableDeclaration referenceName, AbstractVariable rightPart) {
+		super(referenceName);
+		this.rightPart = rightPart;
+	}
+
+	public CompositeVariable(IVariableBinding referenceBinding, AbstractVariable rightPart) {
+		super(referenceBinding);
+		this.rightPart = rightPart;
+	}
+
+	public CompositeVariable(AbstractVariable argument, AbstractVariable rightPart) {
+		this(argument.getVariableBindingKey(), argument.getVariableName(),
+				argument.getVariableType(), argument.isField(), argument.isParameter(), argument.isStatic(), rightPart);
+	}
+
+	private CompositeVariable(String variableBindingKey, String variableName, String variableType, boolean isField, boolean isParameter, boolean isStatic, AbstractVariable rightPart) {
+		super(variableBindingKey, variableName, variableType, isField, isParameter, isStatic);
 		this.rightPart = rightPart;
 	}
 
@@ -23,24 +33,18 @@ public class CompositeVariable extends AbstractVariable  implements Serializable
 	}
 
 	//if composite variable is "one.two.three" then left part is "one.two"
-	private AbstractVariable getLeftPart() {
-		PlainVariable leftPart;
-		if(variableDeclaration!=null)
-			leftPart = new PlainVariable(getVariableDeclaration());
-		else
-			leftPart = new PlainVariable(variableName);
-		
+	public AbstractVariable getLeftPart() {
 		if(rightPart instanceof PlainVariable) {
-			return leftPart;
+			return new PlainVariable(variableBindingKey, variableName, variableType, isField, isParameter, isStatic);
 		}
 		else {
 			CompositeVariable compositeVariable = (CompositeVariable)rightPart;
-			return new CompositeVariable(leftPart.getVariableDeclaration(), compositeVariable.getLeftPart());
+			return new CompositeVariable(variableBindingKey, variableName, variableType, isField, isParameter, isStatic, compositeVariable.getLeftPart());
 		}
 	}
 
 	//if composite variable is "one.two.three" then final variable is "three"
-	private PlainVariable getFinalVariable() {
+	public PlainVariable getFinalVariable() {
 		if(rightPart instanceof PlainVariable) {
 			return (PlainVariable)rightPart;
 		}
@@ -51,16 +55,11 @@ public class CompositeVariable extends AbstractVariable  implements Serializable
 
 	//if composite variable is "one.two.three" then initial variable is "one"
 	public PlainVariable getInitialVariable() {
-		PlainVariable initialVariable;
-		if(variableDeclaration!=null)
-			initialVariable = new PlainVariable(getVariableDeclaration());
-		else
-			initialVariable = new PlainVariable(variableName);
-		return initialVariable;
+		return new PlainVariable(variableBindingKey, variableName, variableType, isField, isParameter, isStatic);
 	}
 
 	public boolean containsPlainVariable(PlainVariable variable) {
-		if(this.equals(variable))
+		if(this.variableBindingKey.equals(variable.variableBindingKey))
 			return true;
 		return rightPart.containsPlainVariable(variable);
 	}
@@ -78,7 +77,7 @@ public class CompositeVariable extends AbstractVariable  implements Serializable
 		}
 	}
 
-	private AbstractVariable getRightPartAfterPrefix(AbstractVariable variable) {
+	public AbstractVariable getRightPartAfterPrefix(AbstractVariable variable) {
 		if(variable instanceof PlainVariable) {
 			if(this.getInitialVariable().equals((PlainVariable)variable))
 				return this.getRightPart();
@@ -100,7 +99,8 @@ public class CompositeVariable extends AbstractVariable  implements Serializable
 		}
 		if(o instanceof CompositeVariable) {
 			CompositeVariable composite = (CompositeVariable)o;
-			return this.hashCode() == composite.hashCode();
+			return this.variableBindingKey.equals(composite.variableBindingKey) &&
+			this.rightPart.equals(composite.rightPart);
 		}
 		return false;
 	}
@@ -108,7 +108,7 @@ public class CompositeVariable extends AbstractVariable  implements Serializable
 	public int hashCode() {
 		if(hashCode == 0) {
 			int result = 17;
-			result = 31*result + super.hashCode();
+			result = 31*result + variableBindingKey.hashCode();
 			result = 31*result + rightPart.hashCode();
 			hashCode = result;
 		}

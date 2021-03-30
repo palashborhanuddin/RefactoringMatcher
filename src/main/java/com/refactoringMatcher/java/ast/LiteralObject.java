@@ -1,7 +1,5 @@
 package com.refactoringMatcher.java.ast;
 
-import java.io.Serializable;
-
 import org.eclipse.jdt.core.dom.BooleanLiteral;
 import org.eclipse.jdt.core.dom.CharacterLiteral;
 import org.eclipse.jdt.core.dom.Expression;
@@ -10,11 +8,7 @@ import org.eclipse.jdt.core.dom.NumberLiteral;
 import org.eclipse.jdt.core.dom.StringLiteral;
 import org.eclipse.jdt.core.dom.TypeLiteral;
 
-public class LiteralObject  implements Serializable{
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 8308235837695131645L;
+public class LiteralObject {
 	private LiteralType literalType;
 	private String value;
 	private TypeObject type;
@@ -26,9 +20,7 @@ public class LiteralObject  implements Serializable{
 			StringLiteral stringLiteral = (StringLiteral)expression;
 			literalType = LiteralType.STRING;
 			value = stringLiteral.getLiteralValue();
-			if(stringLiteral.resolveTypeBinding() != null) {
-				type = TypeObject.extractTypeObject(stringLiteral.resolveTypeBinding().getQualifiedName());
-			}
+			type = TypeObject.extractTypeObject(stringLiteral.resolveTypeBinding().getQualifiedName());
 		}
 		else if(expression instanceof NullLiteral) {
 			NullLiteral nullLiteral = (NullLiteral)expression;
@@ -42,33 +34,25 @@ public class LiteralObject  implements Serializable{
 			NumberLiteral numberLiteral = (NumberLiteral)expression;
 			literalType = LiteralType.NUMBER;
 			value = numberLiteral.getToken();
-			if(numberLiteral.resolveTypeBinding() != null) {
-				type = TypeObject.extractTypeObject(numberLiteral.resolveTypeBinding().getQualifiedName());
-			}
+			type = TypeObject.extractTypeObject(numberLiteral.resolveTypeBinding().getQualifiedName());
 		}
 		else if(expression instanceof BooleanLiteral) {
 			BooleanLiteral booleanLiteral = (BooleanLiteral)expression;
 			literalType = LiteralType.BOOLEAN;
 			value = Boolean.toString(booleanLiteral.booleanValue());
-			if(booleanLiteral.resolveTypeBinding() != null) {
-				type = TypeObject.extractTypeObject(booleanLiteral.resolveTypeBinding().getQualifiedName());
-			}
+			type = TypeObject.extractTypeObject(booleanLiteral.resolveTypeBinding().getQualifiedName());
 		}
 		else if(expression instanceof CharacterLiteral) {
 			CharacterLiteral characterLiteral = (CharacterLiteral)expression;
 			literalType = LiteralType.CHARACTER;
 			value = Character.toString(characterLiteral.charValue());
-			if(characterLiteral.resolveTypeBinding() != null) {
-				type = TypeObject.extractTypeObject(characterLiteral.resolveTypeBinding().getQualifiedName());
-			}
+			type = TypeObject.extractTypeObject(characterLiteral.resolveTypeBinding().getQualifiedName());
 		}
 		else if(expression instanceof TypeLiteral) {
 			TypeLiteral typeLiteral = (TypeLiteral)expression;
 			literalType = LiteralType.TYPE;
 			value = typeLiteral.getType().toString();
-			if(typeLiteral.resolveTypeBinding() != null) {
-				type = TypeObject.extractTypeObject(typeLiteral.resolveTypeBinding().getQualifiedName());
-			}
+			type = TypeObject.extractTypeObject(typeLiteral.resolveTypeBinding().getQualifiedName());
 		}
 		this.literal = ASTInformationGenerator.generateASTInformation(expression);
 	}

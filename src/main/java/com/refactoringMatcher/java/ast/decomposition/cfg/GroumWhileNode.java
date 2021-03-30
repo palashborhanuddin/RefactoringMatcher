@@ -15,6 +15,7 @@ public class GroumWhileNode extends GroumNode implements Serializable {
 	public GroumWhileNode(WhileStatement statement, PDGNode pdgNode) {
 		super(pdgNode);
 		whileStatement = statement;
+		setValue(ToGroumString());
 	}
 	
 	public String ToGroumString(){

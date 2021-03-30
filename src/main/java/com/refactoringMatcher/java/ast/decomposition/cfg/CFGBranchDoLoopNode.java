@@ -1,17 +1,11 @@
 package com.refactoringMatcher.java.ast.decomposition.cfg;
 
-import com.refactoringMatcher.java.ast.decomposition.AbstractStatement;
-
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CFGBranchDoLoopNode extends CFGBranchNode  implements Serializable{
+import com.refactoringMatcher.java.ast.decomposition.AbstractStatement;
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -8144140382435399439L;
+public class CFGBranchDoLoopNode extends CFGBranchNode {
 
 	public CFGBranchDoLoopNode(AbstractStatement statement) {
 		super(statement);
@@ -19,7 +13,7 @@ public class CFGBranchDoLoopNode extends CFGBranchNode  implements Serializable{
 
 	public CFGNode getJoinNode() {
 		Flow flow = getTrueControlFlow();
-		return (CFGNode)flow.getDst();
+		return (CFGNode)flow.dst;
 	}
 
 	public List<BasicBlock> getNestedBasicBlocks() {
