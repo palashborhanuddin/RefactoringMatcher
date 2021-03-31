@@ -173,6 +173,7 @@ public class MethodDeclarationUtility {
 	}
 
 	public static AbstractVariable createVariable(SimpleName simpleName, AbstractVariable rightPart) {
+		System.out.println("[TODO PDGCFG] createVariable SimpleName "+simpleName+" resolveBinding() would return NULL");
 		IBinding binding = simpleName.resolveBinding();
 		if(binding != null && binding.getKind() == IBinding.VARIABLE) {
 			IVariableBinding variableBinding = (IVariableBinding)binding;

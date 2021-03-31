@@ -1,12 +1,16 @@
 package com.refactoringMatcher.java.ast.decomposition;
 
+import ca.concordia.jaranalyzer.Models.MethodInfo;
+import ca.concordia.jaranalyzer.TypeInferenceFluentAPI;
 import com.refactoringMatcher.java.ast.*;
 import com.refactoringMatcher.java.ast.decomposition.cfg.AbstractVariable;
 import com.refactoringMatcher.java.ast.decomposition.cfg.PlainVariable;
 import com.refactoringMatcher.java.ast.util.MethodDeclarationUtility;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
+import io.vavr.Tuple3;
 import org.eclipse.jdt.core.dom.Annotation;
 import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
 import org.eclipse.jdt.core.dom.ArrayCreation;
@@ -332,29 +336,69 @@ public abstract class AbstractMethodFragment {
 	}
 
 	protected void processMethodInvocations(List<Expression> methodInvocations) {
+		List<String> importStatementList = importObjectList.stream()
+															.map(ImportObject::getImportStatement)
+															.collect(Collectors.toList());
 		for(Expression expression : methodInvocations) {
 			if(expression instanceof MethodInvocation) {
 				MethodInvocation methodInvocation = (MethodInvocation)expression;
-				IMethodBinding methodBinding = methodInvocation.resolveMethodBinding();
-				String originClassName = methodBinding.getDeclaringClass().getQualifiedName();
+				//IMethodBinding methodBinding = methodInvocation.resolveMethodBinding();
+				// [TODO PDGCFG] in above statement IMethodBinding would be null. so need to address using JarAnalyser.
+				String methodName = methodInvocation.getName().getFullyQualifiedName();
+				Set<Tuple3<String, String, String>> jarSet = new HashSet<>();
+				String javaVersion = "11.0.10";
+				System.out.println("MethodName: " +methodName+ ", methodInvocation: " +methodInvocation.arguments().toString());
+				List<MethodInfo> methodInfoList = TypeInferenceFluentAPI.getInstance().
+						new Criteria(jarSet,
+						javaVersion, importStatementList, methodName, methodInvocation.arguments().size()).getMethodList();
+				// [TODO PDGCFG] what could be the reason that there will be no methodInfo?
+				if (methodInfoList.size() == 0) {
+					System.out.println("No information found for: " +methodName);
+					continue;
+				}
+				// [TODO PDGCFG] why the first index only? is it expected to have multiple methodInfo? why there should be more than one?
+				MethodInfo methodInfo = methodInfoList.get(0);
+				System.out.println("MethodInfo: " + methodInfo.toString());
+
+				//String originClassName = methodBinding.getDeclaringClass().getQualifiedName();
+				//TypeObject originClassTypeObject = TypeObject.extractTypeObject(originClassName);
+				String originClassName = methodInfo.getClassInfo().getQualifiedName();
 				TypeObject originClassTypeObject = TypeObject.extractTypeObject(originClassName);
-				String methodInvocationName = methodBinding.getName();
-				String qualifiedName = methodBinding.getReturnType().getQualifiedName();
+				//String methodInvocationName = methodBinding.getName();
+				//String qualifiedName = methodBinding.getReturnType().getQualifiedName();
+				//TypeObject returnType = TypeObject.extractTypeObject(qualifiedName);
+				String methodInvocationName = methodInvocation.getName().getIdentifier();
+				String qualifiedName = methodInfo.getReturnTypeAsType().getClassName();
 				TypeObject returnType = TypeObject.extractTypeObject(qualifiedName);
+
 				MethodInvocationObject methodInvocationObject = new MethodInvocationObject(originClassTypeObject, methodInvocationName, returnType);
 				methodInvocationObject.setMethodInvocation(methodInvocation);
-				ITypeBinding[] parameterTypes = methodBinding.getParameterTypes();
+				/*ITypeBinding[] parameterTypes = methodBinding.getParameterTypes();
 				for(ITypeBinding parameterType : parameterTypes) {
 					String qualifiedParameterName = parameterType.getQualifiedName();
 					TypeObject typeObject = TypeObject.extractTypeObject(qualifiedParameterName);
 					methodInvocationObject.addParameter(typeObject);
+				}*/
+				List<String> qualifiedParameterTypeNameList = Arrays.stream(methodInfo.getArgumentTypes())
+						.map(org.objectweb.asm.Type::getClassName)
+						.collect(Collectors.toList());
+				for(String parameterTypeName : qualifiedParameterTypeNameList) {
+					TypeObject typeObject = TypeObject.extractTypeObject(parameterTypeName);
+					methodInvocationObject.addParameter(typeObject);
 				}
-				ITypeBinding[] thrownExceptionTypes = methodBinding.getExceptionTypes();
+				/*ITypeBinding[] thrownExceptionTypes = methodBinding.getExceptionTypes();
 				for(ITypeBinding thrownExceptionType : thrownExceptionTypes) {
 					methodInvocationObject.addThrownException(thrownExceptionType.getQualifiedName());
+				}*/
+				for(String thrownExceptionClassName : methodInfo.getThrownInternalClassNames()) {
+					methodInvocationObject.addThrownException(thrownExceptionClassName);
 				}
-				if((methodBinding.getModifiers() & Modifier.STATIC) != 0)
+				/*if((methodBinding.getModifiers() & Modifier.STATIC) != 0)
 					methodInvocationObject.setStatic(true);
+				 */
+				if(methodInfo.isStatic()) {
+					methodInvocationObject.setStatic(true);
+				}
 				addMethodInvocation(methodInvocationObject);
 				AbstractVariable invoker = MethodDeclarationUtility.processMethodInvocationExpression(methodInvocation.getExpression());
 				if(invoker != null) {
@@ -384,6 +428,7 @@ public abstract class AbstractMethodFragment {
 				for(Expression argument : arguments) {
 					if(argument instanceof SimpleName) {
 						SimpleName argumentName = (SimpleName)argument;
+						System.out.println("[TODO PDGCFG] IBinding "+argument.toString()+" would be NULL as methodInvocation::argumentName.resolveBinding() will fail");
 						IBinding binding = argumentName.resolveBinding();
 						if(binding != null && binding.getKind() == IBinding.VARIABLE) {
 							IVariableBinding variableBinding = (IVariableBinding)binding;
@@ -658,6 +703,7 @@ public abstract class AbstractMethodFragment {
 	
 	protected void processLiterals(List<Expression> literals) {
 		for(Expression literal : literals) {
+			System.out.println("processLiterals: " +literal.toString());
 			LiteralObject literalObject = new LiteralObject(literal);
 			addLiteral(literalObject);
 		}

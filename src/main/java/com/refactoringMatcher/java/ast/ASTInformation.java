@@ -1,9 +1,11 @@
 package com.refactoringMatcher.java.ast;
 
+import com.refactoringMatcher.utils.Cache;
 import org.eclipse.jdt.core.ITypeRoot;
-import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.NodeFinder;
+import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.dom.*;
+
+import java.util.Map;
 
 public class ASTInformation {
 
@@ -21,9 +23,30 @@ public class ASTInformation {
 	}
 
 	public ASTNode recoverASTNode() {
-        CompilationUnit compilationUnit = CompilationUnitCache.getInstance().getCompilationUnit(iTypeRoot);
-        ASTNode astNode = NodeFinder.perform(compilationUnit, startPosition, length);
-		return astNode;
+		try {
+			ASTParser parser = ASTParser.newParser(AST.JLS8);
+			parser.setKind(ASTParser.K_COMPILATION_UNIT);
+			Map options = JavaCore.getOptions();
+			JavaCore.setComplianceOptions(JavaCore.VERSION_1_8, options);
+			parser.setCompilerOptions(options);
+			parser.setResolveBindings(false);
+			parser.setEnvironment(new String[0], new String[] { Cache.currentFile }, null, false);
+			parser.setSource(Cache.currentFileText.toCharArray());
+			CompilationUnit compilationUnit = (CompilationUnit) parser.createAST(null);
+			ASTNode block = NodeFinder.perform(compilationUnit, startPosition, length);
+
+			if (block.getNodeType() != nodeType) {
+				if (block.getParent().getNodeType() == nodeType)
+					return block.getParent();
+				else {
+					return null;
+				}
+			}
+			return block;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 	
 	public ITypeRoot getITypeRoot() {
