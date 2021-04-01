@@ -72,7 +72,7 @@ public class ReachingAliasSet {
 	public boolean containsAlias(AbstractVariable variable) {
 		for(LinkedHashSet<VariableDeclaration> aliasSet : aliasSets) {
 			for(VariableDeclaration alias : aliasSet) {
-				if(alias.resolveBinding().getKey().equals(variable.getVariableBindingKey()))
+				if(alias.equals(variable.getVariableDeclaration()))
 					return true;
 			}
 		}
@@ -97,7 +97,7 @@ public class ReachingAliasSet {
 		for(LinkedHashSet<VariableDeclaration> aliasSet : aliasSets) {
 			boolean containsVariable = false;
 			for(VariableDeclaration alias : aliasSet) {
-				if(alias.resolveBinding().getKey().equals(variable.getVariableBindingKey())) {
+				if(alias.equals(variable.getVariableDeclaration())) {
 					containsVariable = true;
 					break;
 				}
@@ -105,7 +105,7 @@ public class ReachingAliasSet {
 			if(containsVariable) {
 				Set<VariableDeclaration> aliases = new LinkedHashSet<VariableDeclaration>();
 				for(VariableDeclaration alias : aliasSet) {
-					if(!alias.resolveBinding().getKey().equals(variable.getVariableBindingKey()))
+					if(!alias.equals(variable.getVariableDeclaration()))
 						aliases.add(alias);
 				}
 				return aliases;

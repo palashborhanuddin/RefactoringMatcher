@@ -508,7 +508,9 @@ public class ConstructorObject implements AbstractMethodDeclaration {
     public int hashCode() {
     	if(hashCode == 0) {
     		int result = 17;
-    		result = 37*result + className.hashCode();
+			if(className!=null){
+				result = 37*result + className.hashCode();
+			}
     		result = 37*result + name.hashCode();
     		result = 37*result + parameterList.hashCode();
     		hashCode = result;

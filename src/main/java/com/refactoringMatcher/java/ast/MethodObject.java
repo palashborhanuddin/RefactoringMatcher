@@ -36,6 +36,9 @@ import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.ThisExpression;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
+import org.eclipse.jdt.core.dom.IExtendedModifier;
+import org.eclipse.jdt.core.dom.Type;
+import org.eclipse.jdt.core.dom.Annotation;
 
 public class MethodObject implements AbstractMethodDeclaration {
 
@@ -55,6 +58,36 @@ public class MethodObject implements AbstractMethodDeclaration {
         this._synchronized = false;
         this._native = false;
         this.testAnnotation = false;
+
+		int methodModifiers = co.getMethodDeclaration().getModifiers();
+		if ((methodModifiers & Modifier.ABSTRACT) != 0)
+			this._abstract = true;
+		if ((methodModifiers & Modifier.STATIC) != 0)
+			this._static = true;
+		if ((methodModifiers & Modifier.SYNCHRONIZED) != 0)
+			this._synchronized = true;
+		if ((methodModifiers & Modifier.NATIVE) != 0)
+			this._native = true;
+
+		Type returnType = co.getMethodDeclaration().getReturnType2();
+		TypeObject typeObject;
+		if(returnType == null)
+			typeObject = null;
+		else
+			typeObject = TypeObject.extractTypeObject(returnType.toString());
+
+		this.returnType = typeObject;
+
+		List<IExtendedModifier> extendedModifiers = co.getMethodDeclaration().modifiers();
+		for (IExtendedModifier extendedModifier : extendedModifiers) {
+			if (extendedModifier.isAnnotation()) {
+				Annotation annotation = (Annotation) extendedModifier;
+				if (annotation.getTypeName().getFullyQualifiedName().equals("Test")) {
+					this.testAnnotation = true;
+					break;
+				}
+			}
+		}
     }
 
     public void setReturnType(TypeObject returnType) {
@@ -312,7 +345,8 @@ public class MethodObject implements AbstractMethodDeclaration {
     }
 
     public boolean validTargetObject(ClassObject sourceClass, ClassObject targetClass) {
-    	ITypeBinding targetClassBinding = targetClass.getAbstractTypeDeclaration().resolveBinding();
+    	// Method Not in use, commented to avoid compilation error. will be removed later.
+    /*	ITypeBinding targetClassBinding = targetClass.getAbstractTypeDeclaration().resolveBinding();
     	List<LocalVariableInstructionObject> localVariableInstructions = getLocalVariableInstructions();
     	for(LocalVariableInstructionObject localVariableInstruction : localVariableInstructions) {
     		if(localVariableInstruction.getType().getClassType().equals(targetClass.getName())) {
@@ -358,6 +392,8 @@ public class MethodObject implements AbstractMethodDeclaration {
     				return true;
     		}
     	}
+
+     */
     	return false;
     }
 

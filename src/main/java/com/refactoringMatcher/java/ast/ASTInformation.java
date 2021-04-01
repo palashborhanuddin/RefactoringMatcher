@@ -77,12 +77,12 @@ public class ASTInformation {
 	}
 	
 	public int hashCode() {
-		if(hashCode == 0) {
+		if (hashCode == 0) {
 			int result = 17;
-			result = 37*result + iTypeRoot.hashCode();
-			result = 37*result + startPosition;
-			result = 37*result + length;
-			result = 37*result + nodeType;
+			result = 37 * result + startPosition;
+			result = 37 * result + length;
+			result = 37 * result + nodeType;
+			result = 37 * result + recoverASTNode().toString().hashCode();
 			hashCode = result;
 		}
 		return hashCode;

@@ -41,6 +41,7 @@ import org.eclipse.jdt.core.dom.ThrowStatement;
 import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.VariableDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
+import org.eclipse.jdt.core.dom.QualifiedName;
 
 public abstract class AbstractMethodFragment {
 	private AbstractMethodFragment parent;
@@ -152,11 +153,12 @@ public abstract class AbstractMethodFragment {
 			List<Expression> postfixExpressions, List<Expression> prefixExpressions) {
 		for(Expression variableInstruction : variableInstructions) {
 			SimpleName simpleName = (SimpleName)variableInstruction;
-			IBinding binding = simpleName.resolveBinding();
-			if(binding != null && binding.getKind() == IBinding.VARIABLE) {
-				IVariableBinding variableBinding = (IVariableBinding)binding;
-				if(variableBinding.isField()) {
-					if(variableBinding.getDeclaringClass() != null) {
+//			IBinding binding = simpleName.resolveBinding();
+//			if(binding != null && binding.getKind() == IBinding.VARIABLE) {
+//				IVariableBinding variableBinding = (IVariableBinding)binding;
+				boolean letsskiptheisfield = false;
+				if(/*variableBinding.isField()*/letsskiptheisfield) {
+					/*if(variableBinding.getDeclaringClass() != null) {
 						String originClassName = variableBinding.getDeclaringClass().getQualifiedName();
 						String qualifiedName = variableBinding.getType().getQualifiedName();
 						TypeObject fieldType = TypeObject.extractTypeObject(qualifiedName);
@@ -200,25 +202,42 @@ public abstract class AbstractMethodFragment {
 								}
 							}
 						}
-					}
+					}*/
 				}
 				else {
-					if(variableBinding.getDeclaringClass() == null) {
-						String variableName = variableBinding.getName();
-						String variableType = variableBinding.getType().getQualifiedName();
-						TypeObject localVariableType = TypeObject.extractTypeObject(variableType);
-						PlainVariable variable = new PlainVariable(variableBinding);
+			//		if(variableBinding.getDeclaringClass() == null) {
+			//			String variableName = variableBinding.getName();
+			//			String variableType = variableBinding.getType().getQualifiedName();
+			//			TypeObject localVariableType = TypeObject.extractTypeObject(variableType);
+			//			PlainVariable variable = new PlainVariable(variableBinding);
 						if(simpleName.isDeclaration()) {
-							LocalVariableDeclarationObject localVariable = new LocalVariableDeclarationObject(localVariableType, variableName);
 							VariableDeclaration variableDeclaration = (VariableDeclaration)simpleName.getParent();
-							localVariable.setVariableDeclaration(variableDeclaration);
+							LocalVariableDeclarationObject localVariable = new LocalVariableDeclarationObject(variableDeclaration);
+							//localVariable.setVariableDeclaration(variableDeclaration);
 							addLocalVariableDeclaration(localVariable);
+							PlainVariable variable = new PlainVariable(variableDeclaration);
 							addDeclaredLocalVariable(variable);
 						}
 						else {
-							LocalVariableInstructionObject localVariable = new LocalVariableInstructionObject(localVariableType, variableName);
-							localVariable.setSimpleName(simpleName);
+							LocalVariableInstructionObject localVariable = new LocalVariableInstructionObject(simpleName);
+							//localVariable.setSimpleName(simpleName);
 							addLocalVariableInstruction(localVariable);
+							PlainVariable variable;
+							if(simpleName.getParent() instanceof FieldAccess){
+								variable = new PlainVariable(localVariable.getName());
+							} else if(simpleName.getParent() instanceof QualifiedName && simpleName.getParent().toString().endsWith(simpleName.getIdentifier()) ){
+								variable = new PlainVariable(simpleName.getParent().toString());
+							}
+							else{
+								VariableDeclaration variableDeclaration = getVaribleDeclaration(localVariable);
+								if(variableDeclaration == null) {
+									variable = new PlainVariable(localVariable.getName());
+								}
+								else {
+									variable = new PlainVariable(variableDeclaration);
+								}
+							}
+
 							Set<Assignment> localVariableAssignments = getMatchingAssignments(simpleName, assignments);
 							Set<PostfixExpression> localVariablePostfixAssignments = getMatchingPostfixAssignments(simpleName, postfixExpressions);
 							Set<PrefixExpression> localVariablePrefixAssignments = getMatchingPrefixAssignments(simpleName, prefixExpressions);
@@ -242,9 +261,35 @@ public abstract class AbstractMethodFragment {
 								addUsedLocalVariable(variable);
 							}
 						}
-					}
+					//}
 				}
+			//}
+		}
+	}
+
+	private VariableDeclaration getVaribleDeclaration(LocalVariableInstructionObject localVariable) {
+		if (parent == null)
+		{
+			for (ParameterObject parameter : parameters) {
+				if(parameter.getName().equals(localVariable.getName()))
+					return parameter.getVariableDeclaration();
 			}
+			return null;
+		}
+
+		Set<PlainVariable> declarationsInParent = parent.getDeclaredLocalVariables();
+		PlainVariable declaration = null;
+		for (PlainVariable plainVariable : declarationsInParent) {
+			if (plainVariable.getVariableName().equals(localVariable.getName())) {
+				if(plainVariable.scopeContains(localVariable.getSimpleName()))
+					declaration = plainVariable;
+			}
+		}
+
+		if (declaration != null) {
+			return declaration.getVariableDeclaration();
+		} else {
+			return parent.getVaribleDeclaration(localVariable);
 		}
 	}
 
@@ -327,7 +372,9 @@ public abstract class AbstractMethodFragment {
 				if(binding != null && binding.getKind() == IBinding.VARIABLE) {
 					IVariableBinding variableBinding = (IVariableBinding)binding;
 					if(variableBinding.isParameter()) {
-						PlainVariable variable = new PlainVariable(variableBinding);
+						//PlainVariable variable = new PlainVariable(variableBinding);
+						// TODO PDGCFG following line replaced the above to avoid the compilation error
+						PlainVariable variable = new PlainVariable("variableBinding");
 						addParameterPassedAsArgumentInConstructorInvocation(variable, constructorInvocationObject);
 					}
 				}
@@ -433,7 +480,9 @@ public abstract class AbstractMethodFragment {
 						if(binding != null && binding.getKind() == IBinding.VARIABLE) {
 							IVariableBinding variableBinding = (IVariableBinding)binding;
 							if(variableBinding.isParameter()) {
-								PlainVariable variable = new PlainVariable(variableBinding);
+								//PlainVariable variable = new PlainVariable(variableBinding);
+								// TODO PDGCFG following line replaced the above to avoid the compilation error
+								PlainVariable variable = new PlainVariable("variableBinding");
 								addParameterPassedAsArgumentInMethodInvocation(variable, methodInvocationObject);
 							}
 						}
@@ -471,7 +520,9 @@ public abstract class AbstractMethodFragment {
 						if(binding != null && binding.getKind() == IBinding.VARIABLE) {
 							IVariableBinding variableBinding = (IVariableBinding)binding;
 							if(variableBinding.isParameter()) {
-								PlainVariable variable = new PlainVariable(variableBinding);
+								//PlainVariable variable = new PlainVariable(variableBinding);
+								// TODO PDGCFG following line replaced the above to avoid the compilation error
+								PlainVariable variable = new PlainVariable("variableBinding");
 								addParameterPassedAsArgumentInSuperMethodInvocation(variable, superMethodInvocationObject);
 							}
 						}
@@ -648,7 +699,9 @@ public abstract class AbstractMethodFragment {
 							IBinding binding = simpleName.resolveBinding();
 							if(binding != null && binding.getKind() == IBinding.VARIABLE) {
 								IVariableBinding variableBinding = (IVariableBinding)binding;
-								variable = new PlainVariable(variableBinding);
+								//variable = new PlainVariable(variableBinding);
+								// TODO PDGCFG following line replaced the above to avoid the compilation error
+								variable = new PlainVariable("variableBinding");
 							}
 						}
 						else if(assignment.getLeftHandSide() instanceof FieldAccess) {
@@ -657,7 +710,9 @@ public abstract class AbstractMethodFragment {
 							IBinding binding = simpleName.resolveBinding();
 							if(binding != null && binding.getKind() == IBinding.VARIABLE) {
 								IVariableBinding variableBinding = (IVariableBinding)binding;
-								variable = new PlainVariable(variableBinding);
+								//variable = new PlainVariable(variableBinding);
+								// TODO PDGCFG following line replaced the above to avoid the compilation error
+								variable = new PlainVariable("variableBinding");
 							}
 						}
 					}
@@ -669,7 +724,9 @@ public abstract class AbstractMethodFragment {
 						IBinding binding = simpleName.resolveBinding();
 						if(binding != null && binding.getKind() == IBinding.VARIABLE) {
 							IVariableBinding variableBinding = (IVariableBinding)binding;
-							variable = new PlainVariable(variableBinding);
+							//variable = new PlainVariable(variableBinding);
+							// TODO PDGCFG following line replaced the above to avoid the compilation error
+							variable = new PlainVariable("variableBinding");
 						}
 					}
 				}

@@ -11,7 +11,6 @@ import org.eclipse.jdt.core.dom.TypeLiteral;
 public class LiteralObject {
 	private LiteralType literalType;
 	private String value;
-	// [TODO PDGCFG] type value may not available
 	private TypeObject type;
 	private ASTInformation literal;
 	private volatile int hashCode = 0;
@@ -22,9 +21,11 @@ public class LiteralObject {
 			StringLiteral stringLiteral = (StringLiteral)expression;
 			literalType = LiteralType.STRING;
 			value = stringLiteral.getLiteralValue();
-			System.out.println("[TODO PDGCFG] {"+ value +"} resolveTypeBinding() is in use, would return null here, need to address using JarAnalyzer");
 			if(stringLiteral.resolveTypeBinding() != null) {
 				type = TypeObject.extractTypeObject(stringLiteral.resolveTypeBinding().getQualifiedName());
+			}
+			else {
+				type = TypeObject.extractTypeObject("java.lang.String");
 			}
 		}
 		else if(expression instanceof NullLiteral) {
@@ -34,41 +35,53 @@ public class LiteralObject {
 			if(nullLiteral.resolveTypeBinding() != null) {
 				type = TypeObject.extractTypeObject(nullLiteral.resolveTypeBinding().getQualifiedName());
 			}
+			else {
+				type = TypeObject.extractTypeObject("null");
+			}
 		}
 		else if(expression instanceof NumberLiteral) {
 			NumberLiteral numberLiteral = (NumberLiteral)expression;
 			literalType = LiteralType.NUMBER;
 			value = numberLiteral.getToken();
-			System.out.println("[TODO PDGCFG] {"+ value +"} resolveTypeBinding() is in use, would return null here, need to address using JarAnalyzer");
 			if(numberLiteral.resolveTypeBinding() != null) {
 				type = TypeObject.extractTypeObject(numberLiteral.resolveTypeBinding().getQualifiedName());
+			}
+			else {
+				// TODO Setting a generic type for now.
+				type = TypeObject.extractTypeObject("java.Lang.Number");
 			}
 		}
 		else if(expression instanceof BooleanLiteral) {
 			BooleanLiteral booleanLiteral = (BooleanLiteral)expression;
 			literalType = LiteralType.BOOLEAN;
 			value = Boolean.toString(booleanLiteral.booleanValue());
-			System.out.println("[TODO PDGCFG] {"+ value +"} resolveTypeBinding() is in use, would return null here, need to address using JarAnalyzer");
 			if(booleanLiteral.resolveTypeBinding() != null) {
 				type = TypeObject.extractTypeObject(booleanLiteral.resolveTypeBinding().getQualifiedName());
+			}
+			else {
+				type = TypeObject.extractTypeObject("java.lang.Boolean");
 			}
 		}
 		else if(expression instanceof CharacterLiteral) {
 			CharacterLiteral characterLiteral = (CharacterLiteral)expression;
 			literalType = LiteralType.CHARACTER;
 			value = Character.toString(characterLiteral.charValue());
-			System.out.println("[TODO PDGCFG] {"+ value +"} resolveTypeBinding() is in use, would return null here, need to address using JarAnalyzer");
 			if(characterLiteral.resolveTypeBinding() != null) {
 				type = TypeObject.extractTypeObject(characterLiteral.resolveTypeBinding().getQualifiedName());
+			}
+			else {
+				type = TypeObject.extractTypeObject("java.lang.Character");
 			}
 		}
 		else if(expression instanceof TypeLiteral) {
 			TypeLiteral typeLiteral = (TypeLiteral)expression;
 			literalType = LiteralType.TYPE;
 			value = typeLiteral.getType().toString();
-			System.out.println("[TODO PDGCFG] {"+ value +"} resolveTypeBinding() is in use, would return null here, need to address using JarAnalyzer");
 			if(typeLiteral.resolveTypeBinding() != null) {
 				type = TypeObject.extractTypeObject(typeLiteral.resolveTypeBinding().getQualifiedName());
+			}
+			else {
+				type = TypeObject.extractTypeObject("java.lang.Class");
 			}
 		}
 		this.literal = ASTInformationGenerator.generateASTInformation(expression);

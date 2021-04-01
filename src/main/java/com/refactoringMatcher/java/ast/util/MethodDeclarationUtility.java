@@ -1,5 +1,6 @@
 package com.refactoringMatcher.java.ast.util;
 
+import com.refactoringMatcher.java.ast.decomposition.AbstractMethodFragment;
 import com.refactoringMatcher.java.ast.decomposition.cfg.AbstractVariable;
 import com.refactoringMatcher.java.ast.decomposition.cfg.CompositeVariable;
 import com.refactoringMatcher.java.ast.decomposition.cfg.PlainVariable;
@@ -28,6 +29,7 @@ import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.ThisExpression;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
+import org.eclipse.jdt.core.dom.VariableDeclaration;
 
 public class MethodDeclarationUtility {
 
@@ -173,15 +175,14 @@ public class MethodDeclarationUtility {
 	}
 
 	public static AbstractVariable createVariable(SimpleName simpleName, AbstractVariable rightPart) {
-		System.out.println("[TODO PDGCFG] createVariable SimpleName "+simpleName+" resolveBinding() would return NULL");
-		IBinding binding = simpleName.resolveBinding();
-		if(binding != null && binding.getKind() == IBinding.VARIABLE) {
-			IVariableBinding variableBinding = (IVariableBinding)binding;
+	//	IBinding binding = simpleName.resolveBinding();
+	//	if(binding != null && binding.getKind() == IBinding.VARIABLE) {
+	//		IVariableBinding variableBinding = (IVariableBinding)binding;
 			AbstractVariable currentVariable = null;
 			if(rightPart == null)
-				currentVariable = new PlainVariable(variableBinding);
+				currentVariable = new PlainVariable(simpleName.getIdentifier());
 			else
-				currentVariable = new CompositeVariable(variableBinding, rightPart);
+				currentVariable = new CompositeVariable((VariableDeclaration) simpleName.getParent(), rightPart);
 			
 			if(simpleName.getParent() instanceof QualifiedName) {
 				QualifiedName qualifiedName = (QualifiedName)simpleName.getParent();
@@ -216,7 +217,7 @@ public class MethodDeclarationUtility {
 			else {
 				return currentVariable;
 			}
-		}
+		//}
 		return null;
 	}
 

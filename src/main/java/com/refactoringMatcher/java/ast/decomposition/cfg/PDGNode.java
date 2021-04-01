@@ -299,7 +299,8 @@ public class PDGNode extends GraphNode implements Comparable<PDGNode> {
 	}
 
 	protected void processArgumentsOfInternalMethodInvocation(MethodInvocationObject methodInvocationObject, AbstractVariable variable) {
-		SystemObject systemObject = ASTReader.getSystemObject();
+		// [TODO PDGCFG] skip it for now
+		/*SystemObject systemObject = ASTReader.getSystemObject();
 		MethodInvocation methodInvocation = methodInvocationObject.getMethodInvocation();
 		IMethodBinding methodBinding = methodInvocation.resolveMethodBinding();
 		ClassObject classObject = systemObject.getClassObject(methodInvocationObject.getOriginClassName());
@@ -312,10 +313,13 @@ public class PDGNode extends GraphNode implements Comparable<PDGNode> {
 			//methodObject != null => the internal method might not exist, in the case of built-in enumeration methods, such as values() and valueOf()
 			methodCallAnalyzer.processArgumentsOfInternalMethodInvocation(classObject, methodObject, methodInvocation.arguments(), methodBinding, variable);
 		}
+
+		 */
 	}
 
 	protected void processArgumentsOfInternalClassInstanceCreation(ClassInstanceCreationObject classInstanceCreationObject, AbstractVariable variable) {
-		SystemObject systemObject = ASTReader.getSystemObject();
+		// [TODO PDGCFG] skip it for now.
+		/*SystemObject systemObject = ASTReader.getSystemObject();
 		ClassInstanceCreation classInstanceCreation = classInstanceCreationObject.getClassInstanceCreation();
 		IMethodBinding methodBinding = classInstanceCreation.resolveConstructorBinding();
 		ClassObject classObject = systemObject.getClassObject(classInstanceCreationObject.getType().getClassType());
@@ -328,6 +332,7 @@ public class PDGNode extends GraphNode implements Comparable<PDGNode> {
 			//constructorObject != null => the internal constructor might not exist, in the case the default constructor is called
 			methodCallAnalyzer.processArgumentsOfInternalMethodInvocation(classObject, constructorObject, classInstanceCreation.arguments(), methodBinding, variable);
 		}
+		 */
 	}
 
 	public void updateReachingAliasSet(ReachingAliasSet reachingAliasSet) {
@@ -549,7 +554,7 @@ public class PDGNode extends GraphNode implements Comparable<PDGNode> {
 		for(AbstractVariable abstractVariable : definedVariables) {
 			if(abstractVariable instanceof CompositeVariable) {
 				CompositeVariable compositeVariable = (CompositeVariable)abstractVariable;
-				if(variableDeclaration.resolveBinding().getKey().equals(compositeVariable.getVariableBindingKey()))
+				if(variableDeclaration.equals(compositeVariable.getVariableDeclaration()))
 					return true;
 			}
 		}
@@ -560,7 +565,7 @@ public class PDGNode extends GraphNode implements Comparable<PDGNode> {
 		for(AbstractVariable abstractVariable : usedVariables) {
 			if(abstractVariable instanceof PlainVariable) {
 				PlainVariable plainVariable = (PlainVariable)abstractVariable;
-				if(variableDeclaration.resolveBinding().getKey().equals(plainVariable.getVariableBindingKey()))
+				if(variableDeclaration.equals(plainVariable.getVariableDeclaration()))
 					return true;
 			}
 		}
