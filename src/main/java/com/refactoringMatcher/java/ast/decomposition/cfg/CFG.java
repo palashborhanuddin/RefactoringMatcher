@@ -730,4 +730,12 @@ public class CFG extends Graph {
 		}
 		return null;
 	}
+
+	@Override
+	public String toString() {
+		return "CFG{" +
+				"nodes=" + nodes +
+				", edges=" + edges +
+				'}';
+	}
 }

@@ -669,8 +669,8 @@ public class PDG extends Graph {
 			}
 			else if(initialNode.declaresLocalVariable(variableInstruction) && !initialNode.equals(dstPDGNode)) {
 				//create def-order data dependence edge
-				PDGDataDependence dataDependence = new PDGDataDependence(initialNode, dstPDGNode, variableInstruction, loop);
-				edges.add(dataDependence);
+				PDGDefOrderDependence defOrderDependence = new PDGDefOrderDependence(initialNode, dstPDGNode, variableInstruction, loop);
+				edges.add(defOrderDependence);
 			}
 		}
 	}
@@ -838,5 +838,13 @@ public class PDG extends Graph {
 				return pdgNode;
 		}
 		return null;
+	}
+
+	@Override
+	public String toString() {
+		return "PDG{" +
+				"nodes=" + nodes +
+				", edges=" + edges +
+				'}';
 	}
 }
