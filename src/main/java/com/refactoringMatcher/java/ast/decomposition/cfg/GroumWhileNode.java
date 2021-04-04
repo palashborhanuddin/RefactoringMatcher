@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.eclipse.jdt.core.dom.WhileStatement;
 
-public class GroumWhileNode extends GroumNode implements Serializable {
+public class GroumWhileNode extends GroumControlNode implements Serializable {
 
 	private WhileStatement whileStatement;
 	
@@ -14,21 +14,9 @@ public class GroumWhileNode extends GroumNode implements Serializable {
 	}
 	
 	public GroumWhileNode(WhileStatement statement, PDGNode pdgNode) {
-		super(pdgNode, GroumNodeType.CONTROL);
+		super(pdgNode);
 		whileStatement = statement;
 		setValue(ToGroumString());
-		determineDefinedAndUsedVariables();
-	}
-
-	private void determineDefinedAndUsedVariables() {
-		definedVariables.addAll(pdgNode.definedVariables);
-		usedVariables.addAll(pdgNode.usedVariables);
-		BasicBlock bs = pdgNode.getBasicBlock();
-		List<CFGNode> blockCfgNodes = pdgNode.getBasicBlock().getNextBasicBlock().getAllNodes();
-		for (CFGNode cfgNode : blockCfgNodes) {
-			definedVariables.addAll(cfgNode.getPDGNode().definedVariables);
-			usedVariables.addAll(cfgNode.getPDGNode().usedVariables);
-		}
 	}
 
 	public String ToGroumString(){

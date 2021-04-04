@@ -6,21 +6,15 @@ import java.util.Objects;
 
 import org.eclipse.jdt.core.dom.MethodInvocation;
 
-public class GroumMethodInvocationNode extends GroumNode implements Serializable {
+public class GroumMethodInvocationNode extends GroumActionNode implements Serializable {
 
 	private MethodInvocation methodInvocation;
 	private Boolean isLocal = false;
 
 	public GroumMethodInvocationNode(MethodInvocation statement, PDGNode pdgNode) {
-		super(pdgNode, GroumNodeType.ACTION);
+		super(pdgNode);
 		methodInvocation = statement;
 		setValue(ToGroumString());
-		determineDefinedAndUsedVariables();
-	}
-
-	private void determineDefinedAndUsedVariables() {
-		definedVariables = pdgNode.definedVariables;
-		usedVariables = pdgNode.usedVariables;
 	}
 
 	public MethodInvocation GetMethodInvocation() {

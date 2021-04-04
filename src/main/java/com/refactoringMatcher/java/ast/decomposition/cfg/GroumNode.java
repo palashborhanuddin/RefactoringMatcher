@@ -13,6 +13,8 @@ public class GroumNode extends GraphNode implements Serializable  {
 	protected Set<AbstractVariable> definedVariables;
 	protected Set<AbstractVariable> usedVariables;
 	private GroumNodeType groumNodeType;
+	private GroumBlockNode groumBlockNode;
+	private GroumNode innerNode;
 
 	public GroumNode(PDGNode pdg, GroumNodeType nodeType){
 		pdgNode = pdg;
@@ -21,8 +23,6 @@ public class GroumNode extends GraphNode implements Serializable  {
 		this.definedVariables = new LinkedHashSet<AbstractVariable>();
 		this.usedVariables = new LinkedHashSet<AbstractVariable>();
 	}
-	
-	private GroumNode innerNode;
 	
 	public void SetInnerNode(GroumNode node) {
 		innerNode = node;
@@ -35,7 +35,19 @@ public class GroumNode extends GraphNode implements Serializable  {
 	public boolean HasInnerNode() {
 		return innerNode != null;
 	}
-	
+
+	public GroumBlockNode getGroumBlockNode() {
+		return groumBlockNode;
+	}
+
+	public void setGroumBlockNode(GroumBlockNode node) {
+		groumBlockNode = node;
+	}
+
+	public boolean isBelongsToBlockScope() {
+		return groumBlockNode != null;
+	}
+
 	public PDGNode GetPdgNode()	{
 		return pdgNode;
 	}

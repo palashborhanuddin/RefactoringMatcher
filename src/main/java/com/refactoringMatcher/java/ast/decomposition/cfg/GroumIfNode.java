@@ -1,23 +1,18 @@
 package com.refactoringMatcher.java.ast.decomposition.cfg;
 
 import java.io.Serializable;
+import java.util.List;
 
 import org.eclipse.jdt.core.dom.IfStatement;
 
-public class GroumIfNode extends GroumNode implements Serializable {
+public class GroumIfNode extends GroumControlNode implements Serializable {
 
 	private IfStatement ifStatement;
 
 	public GroumIfNode(IfStatement statement, PDGNode pdgNode) {
-		super(pdgNode, GroumNodeType.CONTROL);
+		super(pdgNode);
 		ifStatement = statement;
 		setValue(ToGroumString());
-		determineDefinedAndUsedVariables();
-	}
-
-	private void determineDefinedAndUsedVariables() {
-		definedVariables = pdgNode.definedVariables;
-		usedVariables = pdgNode.usedVariables;
 	}
 
 	public IfStatement GetIfStatement() {

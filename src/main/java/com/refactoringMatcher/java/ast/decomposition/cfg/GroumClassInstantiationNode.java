@@ -4,7 +4,7 @@ import java.io.Serializable;
 
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 
-public class GroumClassInstantiationNode extends GroumNode implements Serializable  {
+public class GroumClassInstantiationNode extends GroumActionNode implements Serializable  {
 
 	private ClassInstanceCreation classInstanceCreation;
 	
@@ -13,15 +13,9 @@ public class GroumClassInstantiationNode extends GroumNode implements Serializab
 	}
 	
 	public GroumClassInstantiationNode(ClassInstanceCreation statement, PDGNode pdgNode) {
-		super(pdgNode, GroumNodeType.ACTION);
+		super(pdgNode);
 		classInstanceCreation = statement;
 		setValue(ToGroumString());
-		determineDefinedAndUsedVariables();
-	}
-
-	private void determineDefinedAndUsedVariables() {
-		definedVariables = pdgNode.definedVariables;
-		usedVariables = pdgNode.usedVariables;
 	}
 
 	/**

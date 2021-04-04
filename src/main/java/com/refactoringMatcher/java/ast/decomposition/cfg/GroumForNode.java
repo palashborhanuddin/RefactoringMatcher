@@ -1,10 +1,11 @@
 package com.refactoringMatcher.java.ast.decomposition.cfg;
 
 import java.io.Serializable;
+import java.util.List;
 
 import org.eclipse.jdt.core.dom.ForStatement;
 
-public class GroumForNode extends GroumNode implements Serializable {
+public class GroumForNode extends GroumControlNode implements Serializable {
 
 	private ForStatement forStatement;
 	
@@ -13,15 +14,9 @@ public class GroumForNode extends GroumNode implements Serializable {
 	}
 	
 	public GroumForNode(ForStatement statement, PDGNode pdgNode) {
-		super(pdgNode, GroumNodeType.CONTROL);
+		super(pdgNode);
 		forStatement = statement;
 		setValue(ToGroumString());
-		determineDefinedAndUsedVariables();
-	}
-
-	private void determineDefinedAndUsedVariables() {
-		definedVariables = pdgNode.definedVariables;
-		usedVariables = pdgNode.usedVariables;
 	}
 
 	public String ToGroumString(){

@@ -3,13 +3,25 @@ package com.refactoringMatcher.java.ast.decomposition.cfg;
 import java.io.Serializable;
 import java.util.*;
 
-import org.eclipse.jdt.core.dom.*;
+import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jdt.core.dom.ASTParser;
+import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.ClassInstanceCreation;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.ForStatement;
+import org.eclipse.jdt.core.dom.IfStatement;
+import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.WhileStatement;
+import org.eclipse.jdt.core.dom.FieldAccess;
 
 public class Groum extends Graph implements Serializable {
 
-    private HashMap<PDGNode, GroumNode> compoundGroumNodes = new HashMap<PDGNode, GroumNode>();
+    private HashMap<PDGNode, GroumNode> compoundGroumNodes;
+    private List<GroumBlockNode> groumBlocks;
 
     public Groum(PDG pdg) {
+        compoundGroumNodes = new HashMap<PDGNode, GroumNode>();
+        groumBlocks = new ArrayList<GroumBlockNode>();
         for (GraphNode graphNode : pdg.nodes) {
             PDGNode pdgNode = (PDGNode) graphNode;
             ASTParser parser = ASTParser.newParser(AST.JLS8);
