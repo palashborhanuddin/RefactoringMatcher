@@ -13,9 +13,15 @@ public class GroumClassInstantiationNode extends GroumNode implements Serializab
 	}
 	
 	public GroumClassInstantiationNode(ClassInstanceCreation statement, PDGNode pdgNode) {
-		super(pdgNode);
+		super(pdgNode, GroumNodeType.ACTION);
 		classInstanceCreation = statement;
 		setValue(ToGroumString());
+		determineDefinedAndUsedVariables();
+	}
+
+	private void determineDefinedAndUsedVariables() {
+		definedVariables = pdgNode.definedVariables;
+		usedVariables = pdgNode.usedVariables;
 	}
 
 	/**
@@ -23,7 +29,6 @@ public class GroumClassInstantiationNode extends GroumNode implements Serializab
 	 */
 	private static final long serialVersionUID = 3562275374298174028L;
 
-	@Override
 	public String ToGroumString() {
 		return classInstanceCreation.getType().toString() + ".<init>" ;
 	}

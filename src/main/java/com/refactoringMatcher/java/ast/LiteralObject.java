@@ -17,7 +17,6 @@ public class LiteralObject {
 	
 	public LiteralObject(Expression expression) {
 		if(expression instanceof StringLiteral) {
-			System.out.println("processLiterals: " +expression.toString());
 			StringLiteral stringLiteral = (StringLiteral)expression;
 			literalType = LiteralType.STRING;
 			value = stringLiteral.getLiteralValue();

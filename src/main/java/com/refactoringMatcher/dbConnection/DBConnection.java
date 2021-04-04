@@ -91,7 +91,7 @@ public class DBConnection {
 
             stringBuilder.append("id:").append(groumNode.getId());
             stringBuilder.append(", ");
-            stringBuilder.append("groumString:" + "\"" + groumNode.ToGroumString() + "\"");
+            stringBuilder.append("groumString:" + "\"" + groumNode.getValue() + "\"");
 
             stringBuilder.append("}");
             if (groumNodeIterator.hasNext()) {

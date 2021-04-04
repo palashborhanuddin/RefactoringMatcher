@@ -7,15 +7,21 @@ import org.eclipse.jdt.core.dom.IfStatement;
 public class GroumIfNode extends GroumNode implements Serializable {
 
 	private IfStatement ifStatement;
-	
-	public IfStatement GetIfStatement(){
-		return ifStatement;
-	}
-	
+
 	public GroumIfNode(IfStatement statement, PDGNode pdgNode) {
-		super(pdgNode);
+		super(pdgNode, GroumNodeType.CONTROL);
 		ifStatement = statement;
 		setValue(ToGroumString());
+		determineDefinedAndUsedVariables();
+	}
+
+	private void determineDefinedAndUsedVariables() {
+		definedVariables = pdgNode.definedVariables;
+		usedVariables = pdgNode.usedVariables;
+	}
+
+	public IfStatement GetIfStatement() {
+		return ifStatement;
 	}
 
 	public String ToGroumString(){

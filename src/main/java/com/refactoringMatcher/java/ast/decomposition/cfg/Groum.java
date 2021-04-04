@@ -3,15 +3,7 @@ package com.refactoringMatcher.java.ast.decomposition.cfg;
 import java.io.Serializable;
 import java.util.*;
 
-import org.eclipse.jdt.core.dom.AST;
-import org.eclipse.jdt.core.dom.ASTParser;
-import org.eclipse.jdt.core.dom.ASTVisitor;
-import org.eclipse.jdt.core.dom.ClassInstanceCreation;
-import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.ForStatement;
-import org.eclipse.jdt.core.dom.IfStatement;
-import org.eclipse.jdt.core.dom.MethodInvocation;
-import org.eclipse.jdt.core.dom.WhileStatement;
+import org.eclipse.jdt.core.dom.*;
 
 public class Groum extends Graph implements Serializable {
 
@@ -32,27 +24,12 @@ public class Groum extends Graph implements Serializable {
     }
 
     private void createGroumGraph(PDG pdg) {
-        GroumNode currentNode = null;
-        GroumNode lastNode = null;
-
-        for (GroumNode node : compoundGroumNodes.values()) {
-            if (Objects.isNull(node)) {
-                continue;
-            }
-
-            currentNode = constructInnerNode(node);
-
-            if (Objects.nonNull(lastNode)) {
-                addEdge(new GraphEdge(lastNode, currentNode));
-            }
-
-            lastNode = node;
-        }
+        extractTemporalGroum();
 
         Set<GroumNode> destinationEdges = new LinkedHashSet<GroumNode>();
         for (GraphNode sourceNode : pdg.getNodes()) {
             GroumNode sourceGroumNode = compoundGroumNodes.get(sourceNode);
-            Boolean sourceGroumNodeExists = true;
+            boolean sourceGroumNodeExists = true;
             if (Objects.isNull(sourceGroumNode)) {
                 sourceGroumNodeExists = false;
                 //continue;
@@ -86,6 +63,27 @@ public class Groum extends Graph implements Serializable {
         }
     }
 
+    private void extractTemporalGroum() {
+        GroumNode currentNode = null;
+        GroumNode lastNode = null;
+
+        // [TODO GROUM] Parallel merging won't work here, need to address
+
+        for (GroumNode node : compoundGroumNodes.values()) {
+            if (Objects.isNull(node)) {
+                continue;
+            }
+
+            currentNode = constructInnerNode(node);
+
+            if (Objects.nonNull(lastNode)) {
+                addEdge(new GraphEdge(lastNode, currentNode));
+            }
+
+            lastNode = node;
+        }
+    }
+
     private GroumNode getInnerNode(GroumNode groumNode) {
         if (!groumNode.HasInnerNode()) {
             return groumNode;
@@ -116,9 +114,15 @@ public class Groum extends Graph implements Serializable {
             }
 
             public boolean visit(MethodInvocation statement) {
-                GroumMethodNode gmn = new GroumMethodNode(statement, pdgNode);
+                GroumMethodInvocationNode gmn = new GroumMethodInvocationNode(statement, pdgNode);
                 if (!gmn.IsLocal())
                     groumNodes.push(gmn);
+                return true;
+            }
+
+            public boolean visit(FieldAccess statement) {
+                GroumFieldAccessNode fieldAccessNode = new GroumFieldAccessNode(statement, pdgNode);
+                groumNodes.push(fieldAccessNode);
                 return true;
             }
 

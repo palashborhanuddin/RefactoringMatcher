@@ -760,7 +760,6 @@ public abstract class AbstractMethodFragment {
 	
 	protected void processLiterals(List<Expression> literals) {
 		for(Expression literal : literals) {
-			System.out.println("processLiterals: " +literal.toString());
 			LiteralObject literalObject = new LiteralObject(literal);
 			addLiteral(literalObject);
 		}

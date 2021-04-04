@@ -13,9 +13,15 @@ public class GroumForNode extends GroumNode implements Serializable {
 	}
 	
 	public GroumForNode(ForStatement statement, PDGNode pdgNode) {
-		super(pdgNode);
+		super(pdgNode, GroumNodeType.CONTROL);
 		forStatement = statement;
 		setValue(ToGroumString());
+		determineDefinedAndUsedVariables();
+	}
+
+	private void determineDefinedAndUsedVariables() {
+		definedVariables = pdgNode.definedVariables;
+		usedVariables = pdgNode.usedVariables;
 	}
 
 	public String ToGroumString(){
