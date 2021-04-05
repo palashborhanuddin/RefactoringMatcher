@@ -2,12 +2,16 @@ package com.refactoringMatcher.java.ast.decomposition.cfg;
 
 import java.io.Serializable;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Objects;
 
-import org.eclipse.jdt.core.dom.MethodInvocation;
-import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
+import com.refactoringMatcher.java.ast.util.ExpressionExtractor;
+
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.SimpleName;
+import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
 public class GroumMethodInvocationNode extends GroumActionNode implements Serializable {
 
@@ -23,6 +27,7 @@ public class GroumMethodInvocationNode extends GroumActionNode implements Serial
 	}
 
 	private void determineDefinedAndUsedVariables() {
+
 		if (pdgNode.definedVariables.size() > 0) {
 			if ((methodInvocation.getParent() instanceof VariableDeclarationFragment)) {
 				Iterator<AbstractVariable> definedVariableIterator = this.pdgNode.getDefinedVariableIterator();
@@ -55,6 +60,8 @@ public class GroumMethodInvocationNode extends GroumActionNode implements Serial
 			}
 		}
 		Iterator<AbstractVariable> usedVariableIterator = this.pdgNode.getUsedVariableIterator();
+		ExpressionExtractor expressionExtractor = new ExpressionExtractor();
+		List<Expression> variableInstructions = expressionExtractor.getVariableInstructions((Expression) methodInvocation);
 
 		while (usedVariableIterator.hasNext()) {
 			AbstractVariable abstractVariable = usedVariableIterator.next();
@@ -64,11 +71,17 @@ public class GroumMethodInvocationNode extends GroumActionNode implements Serial
 					&& abstractVariable.getVariableName().equals(methodInvocation.getExpression().toString())) {
 				// Though it is usedVariable but considering this as definedVariable as it acts alike during groum edge generation
 				definedVariables.add(abstractVariable);
-				break;
+			}
+			for (Expression expression : variableInstructions) {
+				if (expression instanceof SimpleName) {
+					SimpleName simpleName = (SimpleName) expression;
+					if (Objects.nonNull(abstractVariable)
+							&& abstractVariable.getVariableName().equals(simpleName.toString())) {
+						usedVariables.add(abstractVariable);
+					}
+				}
 			}
 		}
-
-		// TODO GROUM need to consider arguments.
 	}
 
 	public MethodInvocation GetMethodInvocation() {

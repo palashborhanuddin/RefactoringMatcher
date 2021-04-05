@@ -93,8 +93,17 @@ public class Groum extends Graph implements Serializable {
                         if (dst.definedVariables.contains(variable) || dst.usedVariables.contains(variable))
                             related = true;
                     }
-                    if (related)
+                    if (related) {
                         addEdge(new GraphEdge(src, dst));
+                        // Find if belongs to groum control structure
+                        GroumBlockNode srcBlock = getNestedGroumBlock(src.GetPdgNode());
+                        GroumBlockNode dstBlock = getNestedGroumBlock(dst.GetPdgNode());
+                        if (Objects.nonNull(srcBlock) && Objects.nonNull(dstBlock) && !srcBlock.equals(dstBlock)) {
+                            GroumNode srcControlNode = compoundGroumNodes.get(srcBlock.getLeader());
+                            GroumNode dstControlNode = compoundGroumNodes.get(dstBlock.getLeader());
+                            addEdge(new GraphEdge(srcControlNode, dstControlNode));
+                        }
+                    }
                 }
                 findEdgesActionNode(src.GetInnerNode(), dst);
                 findEdgesActionNode(src, dst.GetInnerNode());
@@ -165,20 +174,20 @@ public class Groum extends Graph implements Serializable {
         Stack<GroumNode> groumNodes = new Stack<GroumNode>();
         compilationUnit.accept(new ASTVisitor() {
             public boolean visit(ClassInstanceCreation statement) {
-                GroumClassInstantiationNode gcicn = new GroumClassInstantiationNode(statement, pdgNode, getGroumBlock(pdgNode));
+                GroumClassInstantiationNode gcicn = new GroumClassInstantiationNode(statement, pdgNode, getNestedGroumBlock(pdgNode));
                 groumNodes.push(gcicn);
                 return true;
             }
 
             public boolean visit(MethodInvocation statement) {
-                GroumMethodInvocationNode gmn = new GroumMethodInvocationNode(statement, pdgNode, getGroumBlock(pdgNode));
+                GroumMethodInvocationNode gmn = new GroumMethodInvocationNode(statement, pdgNode, getNestedGroumBlock(pdgNode));
                 if (!gmn.IsLocal())
                     groumNodes.push(gmn);
                 return true;
             }
 
             public boolean visit(FieldAccess statement) {
-                GroumFieldAccessNode fieldAccessNode = new GroumFieldAccessNode(statement, pdgNode, getGroumBlock(pdgNode));
+                GroumFieldAccessNode fieldAccessNode = new GroumFieldAccessNode(statement, pdgNode, getNestedGroumBlock(pdgNode));
                 groumNodes.push(fieldAccessNode);
                 return true;
             }

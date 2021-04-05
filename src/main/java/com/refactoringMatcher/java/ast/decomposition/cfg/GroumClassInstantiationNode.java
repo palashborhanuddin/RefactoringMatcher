@@ -2,12 +2,16 @@ package com.refactoringMatcher.java.ast.decomposition.cfg;
 
 import java.io.Serializable;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Objects;
 
 import org.eclipse.jdt.core.dom.Assignment;
-import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.SimpleName;
+import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
+
+import com.refactoringMatcher.java.ast.util.ExpressionExtractor;
 
 public class GroumClassInstantiationNode extends GroumActionNode implements Serializable  {
 
@@ -56,7 +60,23 @@ public class GroumClassInstantiationNode extends GroumActionNode implements Seri
 					}
 				}
 			}
-			// TODO GROUM need to consider arguments.
+		}
+		Iterator<AbstractVariable> usedVariableIterator = this.pdgNode.getUsedVariableIterator();
+		ExpressionExtractor expressionExtractor = new ExpressionExtractor();
+		List<Expression> variableInstructions = expressionExtractor.getVariableInstructions((Expression) classInstanceCreation);
+
+		while (usedVariableIterator.hasNext()) {
+			AbstractVariable abstractVariable = usedVariableIterator.next();
+
+			for (Expression expression : variableInstructions) {
+				if (expression instanceof SimpleName) {
+					SimpleName simpleName = (SimpleName) expression;
+					if (Objects.nonNull(abstractVariable)
+							&& abstractVariable.getVariableName().equals(simpleName.toString())) {
+						usedVariables.add(abstractVariable);
+					}
+				}
+			}
 		}
 	}
 
