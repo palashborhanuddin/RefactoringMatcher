@@ -6,10 +6,11 @@ public class GroumFieldAccessNode extends GroumActionNode {
 
     private FieldAccess fieldAccessExpression;
 
-    public GroumFieldAccessNode(FieldAccess statement, PDGNode pdgNode) {
+    public GroumFieldAccessNode(FieldAccess statement, PDGNode pdgNode, GroumBlockNode groumBlockNode) {
         super(pdgNode);
         fieldAccessExpression = statement;
         setValue(ToGroumString());
+        setGroumBlockNode(groumBlockNode);
     }
 
     public FieldAccess GetFieldAccessStatement() {

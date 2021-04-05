@@ -21,6 +21,13 @@ public class Groum extends Graph implements Serializable {
 
     public Groum(PDG pdg) {
         compoundGroumNodes = new HashMap<PDGNode, GroumNode>();
+        groumBlocks = new LinkedHashMap<GroumBlockNode, Set<CFGNode>>();
+        Map<CFGBranchNode, Set<CFGNode>> pdgNestingMap = pdg.getPDGNestingMap();
+        for(CFGBranchNode key : pdgNestingMap.keySet()) {
+            Set<CFGNode> nestedNodes = pdgNestingMap.get(key);
+            GroumBlockNode block = new GroumBlockNode(key.getPDGNode());
+            groumBlocks.put(block, nestedNodes);
+        }
         for (GraphNode graphNode : pdg.nodes) {
             PDGNode pdgNode = (PDGNode) graphNode;
             ASTParser parser = ASTParser.newParser(AST.JLS8);
@@ -30,13 +37,6 @@ public class Groum extends Graph implements Serializable {
             parser.setResolveBindings(true);
             CompilationUnit compilationUnit = (CompilationUnit) parser.createAST(null);
             processNode(pdg, compilationUnit, pdgNode);
-        }
-        groumBlocks = new LinkedHashMap<GroumBlockNode, Set<CFGNode>>();
-        Map<CFGBranchNode, Set<CFGNode>> pdgNestingMap = pdg.getPDGNestingMap();
-        for(CFGBranchNode key : pdgNestingMap.keySet()) {
-            Set<CFGNode> nestedNodes = pdgNestingMap.get(key);
-            GroumBlockNode block = new GroumBlockNode();
-            groumBlocks.put(block, nestedNodes);
         }
         createGroumGraph(pdg);
     }
@@ -146,6 +146,14 @@ public class Groum extends Graph implements Serializable {
 
     private GroumBlockNode getGroumBlock(PDGNode pdgNode) {
         for(GroumBlockNode key : groumBlocks.keySet()) {
+            if(key.getLeader().equals(pdgNode))
+                return key;
+        }
+        return null;
+    }
+
+    private GroumBlockNode getNestedGroumBlock(PDGNode pdgNode) {
+        for(GroumBlockNode key : groumBlocks.keySet()) {
             Set<CFGNode> nestedNodes = groumBlocks.get(key);
             if(nestedNodes.contains(pdgNode.getCFGNode()))
                 return key;
@@ -157,20 +165,20 @@ public class Groum extends Graph implements Serializable {
         Stack<GroumNode> groumNodes = new Stack<GroumNode>();
         compilationUnit.accept(new ASTVisitor() {
             public boolean visit(ClassInstanceCreation statement) {
-                GroumClassInstantiationNode gcicn = new GroumClassInstantiationNode(statement, pdgNode);
+                GroumClassInstantiationNode gcicn = new GroumClassInstantiationNode(statement, pdgNode, getGroumBlock(pdgNode));
                 groumNodes.push(gcicn);
                 return true;
             }
 
             public boolean visit(MethodInvocation statement) {
-                GroumMethodInvocationNode gmn = new GroumMethodInvocationNode(statement, pdgNode);
+                GroumMethodInvocationNode gmn = new GroumMethodInvocationNode(statement, pdgNode, getGroumBlock(pdgNode));
                 if (!gmn.IsLocal())
                     groumNodes.push(gmn);
                 return true;
             }
 
             public boolean visit(FieldAccess statement) {
-                GroumFieldAccessNode fieldAccessNode = new GroumFieldAccessNode(statement, pdgNode);
+                GroumFieldAccessNode fieldAccessNode = new GroumFieldAccessNode(statement, pdgNode, getGroumBlock(pdgNode));
                 groumNodes.push(fieldAccessNode);
                 return true;
             }

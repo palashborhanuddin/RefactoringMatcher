@@ -17,10 +17,11 @@ public class GroumClassInstantiationNode extends GroumActionNode implements Seri
 		return classInstanceCreation;
 	}
 	
-	public GroumClassInstantiationNode(ClassInstanceCreation statement, PDGNode pdgNode) {
+	public GroumClassInstantiationNode(ClassInstanceCreation statement, PDGNode pdgNode, GroumBlockNode groumBlockNode) {
 		super(pdgNode);
 		classInstanceCreation = statement;
 		setValue(ToGroumString());
+		setGroumBlockNode(groumBlockNode);
 		determineDefinedAndUsedVariables();
 	}
 
@@ -34,6 +35,7 @@ public class GroumClassInstantiationNode extends GroumActionNode implements Seri
 					AbstractVariable abstractVariable = definedVariableIterator.next();
 					if (Objects.nonNull(abstractVariable)
 							&& abstractVariable.getVariableName().equals(simpleName)) {
+						declaredVariables.add(abstractVariable);
 						definedVariables.add(abstractVariable);
 						break;
 					}

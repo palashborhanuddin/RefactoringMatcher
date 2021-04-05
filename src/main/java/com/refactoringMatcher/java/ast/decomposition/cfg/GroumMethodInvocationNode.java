@@ -14,10 +14,11 @@ public class GroumMethodInvocationNode extends GroumActionNode implements Serial
 	private MethodInvocation methodInvocation;
 	private Boolean isLocal = false;
 
-	public GroumMethodInvocationNode(MethodInvocation statement, PDGNode pdgNode) {
+	public GroumMethodInvocationNode(MethodInvocation statement, PDGNode pdgNode, GroumBlockNode groumBlockNode) {
 		super(pdgNode);
 		methodInvocation = statement;
 		setValue(ToGroumString());
+		setGroumBlockNode(groumBlockNode);
 		determineDefinedAndUsedVariables();
 	}
 
@@ -31,6 +32,7 @@ public class GroumMethodInvocationNode extends GroumActionNode implements Serial
 					if (Objects.nonNull(abstractVariable)
 							&& Objects.nonNull(methodInvocation.getExpression())
 							&& abstractVariable.getVariableName().equals(methodInvocation.getExpression().toString())) {
+						declaredVariables.add(abstractVariable);
 						definedVariables.add(abstractVariable);
 						break;
 					}
