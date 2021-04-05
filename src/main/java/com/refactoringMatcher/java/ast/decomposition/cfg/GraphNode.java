@@ -58,6 +58,6 @@ public class GraphNode {
 
 	@Override
 	public String toString() {
-		return "GraphNode{" + "id=" + id + ", value='" + value + '\'' + '}';
+		return id + " " + value;
 	}
 }

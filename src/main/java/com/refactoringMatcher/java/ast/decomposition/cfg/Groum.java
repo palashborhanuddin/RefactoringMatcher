@@ -30,47 +30,60 @@ public class Groum extends Graph implements Serializable {
             parser.setSource(statement.toCharArray());
             parser.setResolveBindings(true);
             CompilationUnit compilationUnit = (CompilationUnit) parser.createAST(null);
-            processNode(compilationUnit, pdgNode);
+            processNode(pdg, compilationUnit, pdgNode);
         }
         createGroumGraph(pdg);
     }
 
     private void createGroumGraph(PDG pdg) {
         extractTemporalGroum();
+        extractEdgesForActionNodes(pdg);
+        // extractEdgesBetweenControlNodes(pdg);
+    }
 
-        Set<GroumNode> destinationEdges = new LinkedHashSet<GroumNode>();
-        for (GraphNode sourceNode : pdg.getNodes()) {
-            GroumNode sourceGroumNode = compoundGroumNodes.get(sourceNode);
-            boolean sourceGroumNodeExists = true;
-            if (Objects.isNull(sourceGroumNode)) {
-                sourceGroumNodeExists = false;
-                //continue;
+    private void extractEdgesForActionNodes(PDG pdg) {
+        GraphNode previous = null;
+        for (GraphNode sourcePdgNode : pdg.getNodes()) {
+            GroumNode sourceGroumNode = compoundGroumNodes.get(sourcePdgNode);
+            groumEdgesCorrespondPdgOutgoingEdges(sourceGroumNode, sourcePdgNode);
+        }
+    }
+
+    private void groumEdgesCorrespondPdgOutgoingEdges(GroumNode sourceGroumNode, GraphNode sourcePdgNode) {
+        Set<GroumNode> listOfOutgoingEdgesDestination = new HashSet<GroumNode>();
+        for (GraphEdge outGoingEdge : sourcePdgNode.getOutgoingEdges()) {
+            if (Objects.isNull(compoundGroumNodes.get(outGoingEdge.getDst())))
+                continue;
+            PDGDependence outGoingPDGEdge = (PDGDependence) outGoingEdge;
+
+            if (PDGDependenceType.CONTROL.equals(outGoingPDGEdge.getType())
+                    || PDGDependenceType.DATA.equals(outGoingPDGEdge.getType())
+                    || PDGDependenceType.DEF_ORDER.equals(outGoingPDGEdge.getType())) {
+                if (Objects.nonNull(sourceGroumNode)) {
+                    GroumNode src = sourceGroumNode;
+                    GroumNode dst = compoundGroumNodes.get(outGoingEdge.getDst());
+                    if (GroumNodeType.CONTROL.equals(src.getGroumNodeType())) {
+                        src = src.GetInnerNode();
+                    }
+                    if (GroumNodeType.CONTROL.equals(dst.getGroumNodeType())) {
+                        dst = dst.GetInnerNode();
+                    }
+                    findEdges(src, dst);
+                    for (GroumNode node : listOfOutgoingEdgesDestination) {
+                        findEdges(node, dst);
+                    }
+                    listOfOutgoingEdgesDestination.add(dst);
+                }
             }
+        }
+    }
 
-            destinationEdges.clear();
-            for (GraphEdge outGoingEdge : sourceNode.getOutgoingEdges()) {
-                if (Objects.isNull(compoundGroumNodes.get(outGoingEdge.getDst())))
-                    continue;
-
-                PDGDependence outGoingPDGEdge = (PDGDependence) outGoingEdge;
-                if (PDGDependenceType.ANTI.equals(outGoingPDGEdge.getType())) {
-                    // GROUM's DAG requirement.
-                    continue;
-                }
-                if (sourceGroumNodeExists && (sourceGroumNode.getId() == outGoingEdge.getDst().getId())) {
-                    //GROUM's DAG requirement.
-                    continue;
-                }
-
-                GroumNode destination = getInnerNode(compoundGroumNodes.get(outGoingEdge.getDst()));
-                if (destinationEdges.contains(destination))
-                    continue;
-                if (sourceGroumNodeExists)
-                    addEdge(new GraphEdge(sourceGroumNode, destination));
-                for (GroumNode node : destinationEdges) {
-                    addEdge(new GraphEdge(node, destination));
-                }
-                destinationEdges.add(destination);
+    private void findEdges(GroumNode src, GroumNode dst) {
+        if (Objects.nonNull(src) && Objects.nonNull(dst)) {
+            if (src.getId() != dst.getId()) {
+                addEdge(new GraphEdge(src, dst));
+                findEdges(src.GetInnerNode(), dst);
+                findEdges(src, dst.GetInnerNode());
             }
         }
     }
@@ -105,6 +118,7 @@ public class Groum extends Graph implements Serializable {
     }
 
     private GroumNode constructInnerNode(GroumNode groumNode) {
+        // [TODO GROUM] may have issue with parallel node
         if (!groumNode.HasInnerNode()) {
             addNode(groumNode);
             return groumNode;
@@ -116,7 +130,7 @@ public class Groum extends Graph implements Serializable {
         }
     }
 
-    private void processNode(CompilationUnit compilationUnit, PDGNode pdgNode) {
+    private void processNode(PDG pdg, CompilationUnit compilationUnit, PDGNode pdgNode) {
         Stack<GroumNode> groumNodes = new Stack<GroumNode>();
         compilationUnit.accept(new ASTVisitor() {
             public boolean visit(ClassInstanceCreation statement) {
@@ -139,7 +153,7 @@ public class Groum extends Graph implements Serializable {
             }
 
             public boolean visit(IfStatement statement) {
-                GroumIfNode gin = new GroumIfNode(statement, pdgNode);
+                GroumIfNode gin = new GroumIfNode(pdg, statement, pdgNode);
                 groumNodes.push(gin);
                 return true;
             }
@@ -175,8 +189,8 @@ public class Groum extends Graph implements Serializable {
     @Override
     public String toString() {
         return "Groum{" +
-                "nodes=" + nodes +
+                "\nnodes=" + nodes +
                 ",\nedges=" + edges +
-                '}';
+                "\n}";
     }
 }

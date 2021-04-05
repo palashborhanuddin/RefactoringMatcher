@@ -18,9 +18,6 @@ public class GroumClassInstantiationNode extends GroumActionNode implements Seri
 		setValue(ToGroumString());
 	}
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 3562275374298174028L;
 
 	public String ToGroumString() {

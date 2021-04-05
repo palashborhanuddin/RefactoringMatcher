@@ -21,10 +21,7 @@ public class GraphEdge {
 
 	@Override
 	public String toString() {
-		return "GraphEdge{" +
-				"src=" + src +
-				", dst=" + dst +
-				'}';
+		return src.toString() + "-->" +dst.toString();
 	}
 
 	@Override

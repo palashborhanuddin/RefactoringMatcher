@@ -1,5 +1,7 @@
 package com.refactoringMatcher.java.ast.decomposition.cfg;
 
+import com.refactoringMatcher.java.ast.FieldInstructionObject;
+
 import java.io.Serializable;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -15,15 +17,20 @@ public class GroumNode extends GraphNode implements Serializable  {
 	private GroumNodeType groumNodeType;
 	private GroumBlockNode groumBlockNode;
 	private GroumNode innerNode;
-
+	int hashCode;
 	public GroumNode(PDGNode pdg, GroumNodeType nodeType){
 		pdgNode = pdg;
 		groumNodeType = nodeType;
+		hashCode = 0;
 		this.declaredVariables = new LinkedHashSet<AbstractVariable>();
 		this.definedVariables = new LinkedHashSet<AbstractVariable>();
 		this.usedVariables = new LinkedHashSet<AbstractVariable>();
 	}
-	
+
+	public GroumNodeType getGroumNodeType() {
+		return groumNodeType;
+	}
+
 	public void SetInnerNode(GroumNode node) {
 		innerNode = node;
 	}

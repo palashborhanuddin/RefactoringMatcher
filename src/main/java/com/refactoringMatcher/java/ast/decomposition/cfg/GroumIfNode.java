@@ -9,8 +9,8 @@ public class GroumIfNode extends GroumControlNode implements Serializable {
 
 	private IfStatement ifStatement;
 
-	public GroumIfNode(IfStatement statement, PDGNode pdgNode) {
-		super(pdgNode);
+	public GroumIfNode(PDG pdg, IfStatement statement, PDGNode pdgNode) {
+		super(pdg, pdgNode);
 		ifStatement = statement;
 		setValue(ToGroumString());
 	}
