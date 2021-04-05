@@ -8,15 +8,15 @@ import org.eclipse.jdt.core.dom.ForStatement;
 public class GroumForNode extends GroumControlNode implements Serializable {
 
 	private ForStatement forStatement;
-	
-	public ForStatement GetForStatement() {
-		return forStatement;
-	}
-	
-	public GroumForNode(ForStatement statement, PDGNode pdgNode) {
-		super(pdgNode);
+
+	public GroumForNode(ForStatement statement, PDGNode pdgNode, GroumBlockNode groumBlockNode) {
+		super(pdgNode, groumBlockNode);
 		forStatement = statement;
 		setValue(ToGroumString());
+	}
+
+	public ForStatement GetForStatement() {
+		return forStatement;
 	}
 
 	public String ToGroumString(){

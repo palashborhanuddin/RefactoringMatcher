@@ -3,30 +3,13 @@ package com.refactoringMatcher.java.ast.decomposition.cfg;
 import java.util.Set;
 
 public class GroumControlNode extends GroumNode {
-    public GroumControlNode(PDGNode pdgNode) {
+    public GroumControlNode(PDGNode pdgNode, GroumBlockNode groumBlockNode) {
         super(pdgNode, GroumNodeType.CONTROL);
-        determineDefinedAndUsedVariables();
+        determineDefinedAndUsedVariables(groumBlockNode);
     }
 
-    public GroumControlNode(PDG pdg, PDGNode pdgNode) {
-        super(pdgNode, GroumNodeType.CONTROL);
-        determineGroumBlock(pdg, pdgNode);
-        determineDefinedAndUsedVariables();
-    }
-
-    private void determineGroumBlock(PDG pdg, PDGNode pdgNode) {
-        BasicBlock bs = pdgNode.getBasicBlock();
-        Set<BasicBlock> as = pdg.forwardReachableBlocks(bs);
-      //  System.out.println(as);
-    }
-
-    private void determineDefinedAndUsedVariables() {
-        definedVariables = pdgNode.definedVariables;
-        usedVariables = pdgNode.usedVariables;
-       // List<CFGNode> blockCfgNodes = pdgNode.getBasicBlock().getNextBasicBlock().getAllNodes();
-       // for (CFGNode cfgNode : blockCfgNodes) {
-       //     definedVariables.addAll(cfgNode.getPDGNode().definedVariables);
-       //     usedVariables.addAll(cfgNode.getPDGNode().usedVariables);
-       // }
+    private void determineDefinedAndUsedVariables(GroumBlockNode groumBlockNode) {
+        // TODO GROUM list the defined and used variables.
+        // declared variables should only be aplied to nested block
     }
 }

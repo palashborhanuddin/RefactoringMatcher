@@ -10,6 +10,11 @@ public class GroumBlockNode {
     private List<GroumNode> nodes;
     private GroumBlockNode innerGroumBlock;
 
+    public GroumBlockNode() {
+        blockNum++;
+        this.id = blockNum;
+    }
+
     public GroumBlockNode(GroumNode node) {
         blockNum++;
         this.id = blockNum;

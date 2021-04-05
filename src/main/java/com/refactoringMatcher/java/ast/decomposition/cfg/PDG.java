@@ -729,6 +729,10 @@ public class PDG extends Graph {
 		}
 	}
 
+	public Map<CFGBranchNode, Set<CFGNode>> getPDGNestingMap() {
+		return nestingMap;
+	}
+
 	public List<BasicBlock> getBasicBlocks() {
 		return cfg.getBasicBlocks();
 	}

@@ -17,11 +17,10 @@ import org.eclipse.jdt.core.dom.FieldAccess;
 public class Groum extends Graph implements Serializable {
 
     private HashMap<PDGNode, GroumNode> compoundGroumNodes;
-    private List<GroumBlockNode> groumBlocks;
+    private HashMap<GroumBlockNode, Set<CFGNode>> groumBlocks;
 
     public Groum(PDG pdg) {
         compoundGroumNodes = new HashMap<PDGNode, GroumNode>();
-        groumBlocks = new ArrayList<GroumBlockNode>();
         for (GraphNode graphNode : pdg.nodes) {
             PDGNode pdgNode = (PDGNode) graphNode;
             ASTParser parser = ASTParser.newParser(AST.JLS8);
@@ -31,6 +30,13 @@ public class Groum extends Graph implements Serializable {
             parser.setResolveBindings(true);
             CompilationUnit compilationUnit = (CompilationUnit) parser.createAST(null);
             processNode(pdg, compilationUnit, pdgNode);
+        }
+        groumBlocks = new LinkedHashMap<GroumBlockNode, Set<CFGNode>>();
+        Map<CFGBranchNode, Set<CFGNode>> pdgNestingMap = pdg.getPDGNestingMap();
+        for(CFGBranchNode key : pdgNestingMap.keySet()) {
+            Set<CFGNode> nestedNodes = pdgNestingMap.get(key);
+            GroumBlockNode block = new GroumBlockNode();
+            groumBlocks.put(block, nestedNodes);
         }
         createGroumGraph(pdg);
     }
@@ -138,6 +144,15 @@ public class Groum extends Graph implements Serializable {
         }
     }
 
+    private GroumBlockNode getGroumBlock(PDGNode pdgNode) {
+        for(GroumBlockNode key : groumBlocks.keySet()) {
+            Set<CFGNode> nestedNodes = groumBlocks.get(key);
+            if(nestedNodes.contains(pdgNode.getCFGNode()))
+                return key;
+        }
+        return null;
+    }
+
     private void processNode(PDG pdg, CompilationUnit compilationUnit, PDGNode pdgNode) {
         Stack<GroumNode> groumNodes = new Stack<GroumNode>();
         compilationUnit.accept(new ASTVisitor() {
@@ -161,19 +176,19 @@ public class Groum extends Graph implements Serializable {
             }
 
             public boolean visit(IfStatement statement) {
-                GroumIfNode gin = new GroumIfNode(pdg, statement, pdgNode);
+                GroumIfNode gin = new GroumIfNode(statement, pdgNode, getGroumBlock(pdgNode));
                 groumNodes.push(gin);
                 return true;
             }
 
             public boolean visit(WhileStatement statement) {
-                GroumWhileNode gwn = new GroumWhileNode(statement, pdgNode);
+                GroumWhileNode gwn = new GroumWhileNode(statement, pdgNode, getGroumBlock(pdgNode));
                 groumNodes.push(gwn);
                 return true;
             }
 
             public boolean visit(ForStatement statement) {
-                GroumForNode gfn = new GroumForNode(statement, pdgNode);
+                GroumForNode gfn = new GroumForNode(statement, pdgNode, getGroumBlock(pdgNode));
                 groumNodes.push(gfn);
                 return true;
             }
