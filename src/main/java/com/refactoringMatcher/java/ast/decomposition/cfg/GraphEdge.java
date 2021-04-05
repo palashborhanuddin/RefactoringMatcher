@@ -21,7 +21,7 @@ public class GraphEdge {
 
 	@Override
 	public String toString() {
-		return src.toString() + "-->" +dst.toString();
+		return src.toString() + "-->" +dst.toString() + "\n";
 	}
 
 	@Override

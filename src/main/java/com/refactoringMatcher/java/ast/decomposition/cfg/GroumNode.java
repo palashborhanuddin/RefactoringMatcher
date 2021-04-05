@@ -4,6 +4,7 @@ import com.refactoringMatcher.java.ast.FieldInstructionObject;
 
 import java.io.Serializable;
 import java.util.LinkedHashSet;
+import java.util.Objects;
 import java.util.Set;
 
 public class GroumNode extends GraphNode implements Serializable  {
@@ -17,11 +18,11 @@ public class GroumNode extends GraphNode implements Serializable  {
 	private GroumNodeType groumNodeType;
 	private GroumBlockNode groumBlockNode;
 	private GroumNode innerNode;
-	int hashCode;
+
 	public GroumNode(PDGNode pdg, GroumNodeType nodeType){
 		pdgNode = pdg;
 		groumNodeType = nodeType;
-		hashCode = 0;
+
 		this.declaredVariables = new LinkedHashSet<AbstractVariable>();
 		this.definedVariables = new LinkedHashSet<AbstractVariable>();
 		this.usedVariables = new LinkedHashSet<AbstractVariable>();
@@ -57,5 +58,18 @@ public class GroumNode extends GraphNode implements Serializable  {
 
 	public PDGNode GetPdgNode()	{
 		return pdgNode;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		GroumNode groumNode = (GroumNode) o;
+		return getId() == groumNode.getId();
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(getId());
 	}
 }

@@ -68,9 +68,9 @@ public class Groum extends Graph implements Serializable {
                     if (GroumNodeType.CONTROL.equals(dst.getGroumNodeType())) {
                         dst = dst.GetInnerNode();
                     }
-                    findEdges(src, dst);
+                    findEdgesActionNode(src, dst);
                     for (GroumNode node : listOfOutgoingEdgesDestination) {
-                        findEdges(node, dst);
+                        findEdgesActionNode(node, dst);
                     }
                     listOfOutgoingEdgesDestination.add(dst);
                 }
@@ -78,12 +78,20 @@ public class Groum extends Graph implements Serializable {
         }
     }
 
-    private void findEdges(GroumNode src, GroumNode dst) {
+    private void findEdgesActionNode(GroumNode src, GroumNode dst) {
         if (Objects.nonNull(src) && Objects.nonNull(dst)) {
             if (src.getId() != dst.getId()) {
-                addEdge(new GraphEdge(src, dst));
-                findEdges(src.GetInnerNode(), dst);
-                findEdges(src, dst.GetInnerNode());
+                if (src.definedVariables.size() > 0) {
+                    boolean related = false;
+                    for (AbstractVariable variable : src.definedVariables) {
+                        if (dst.definedVariables.contains(variable) || dst.usedVariables.contains(variable))
+                            related = true;
+                    }
+                    if (related)
+                        addEdge(new GraphEdge(src, dst));
+                }
+                findEdgesActionNode(src.GetInnerNode(), dst);
+                findEdgesActionNode(src, dst.GetInnerNode());
             }
         }
     }
