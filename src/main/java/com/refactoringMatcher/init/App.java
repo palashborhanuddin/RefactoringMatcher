@@ -11,6 +11,7 @@ import org.refactoringminer.api.Refactoring;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.util.List;
 import java.util.Objects;
 
@@ -43,8 +44,10 @@ public class App {
 
         List<RefactoringInfo> refactoringInfoList = connection.getRefactoringInfoList();
 
+        // TODO PROJECTTEST temporary change to generate project data. will see how it would impact but shouldn't
+        String commitID = "";
         for (RefactoringInfo refactoringInfo : refactoringInfoList) {
-            extractionService.populateRefactoringExtractionInfo(refactoringInfo.getExtracted(), "extracted");
+            extractionService.populateRefactoringExtractionInfo(refactoringInfo.getExtracted(), "extracted", repositoryInfo, commitID);
         }
 
 

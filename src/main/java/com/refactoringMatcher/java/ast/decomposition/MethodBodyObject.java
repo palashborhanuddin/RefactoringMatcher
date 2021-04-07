@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import io.vavr.Tuple3;
 import org.eclipse.jdt.core.dom.AssertStatement;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.BreakStatement;
@@ -52,6 +53,16 @@ public class MethodBodyObject {
 		this.parameters = parameterList;
 		this.importObjectList = importObjectList;
 		this.compositeStatement = new CompositeStatementObject(methodBody, parameters, importObjectList, StatementType.BLOCK, null);
+		List<Statement> statements = methodBody.statements();
+		for(Statement statement : statements) {
+			processStatement(compositeStatement, statement);
+		}
+	}
+
+	public MethodBodyObject(Block methodBody, List<ParameterObject> parameterList, List<ImportObject> importObjectList, Set<Tuple3<String, String, String>> jarSet) {
+		this.parameters = parameterList;
+		this.importObjectList = importObjectList;
+		this.compositeStatement = new CompositeStatementObject(methodBody, parameters, importObjectList, jarSet, StatementType.BLOCK, null);
 		List<Statement> statements = methodBody.statements();
 		for(Statement statement : statements) {
 			processStatement(compositeStatement, statement);

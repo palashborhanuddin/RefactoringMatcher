@@ -36,7 +36,7 @@ public class StatementObject extends AbstractStatement {
         List<Expression> assignments = expressionExtractor.getAssignments(statement);
         List<Expression> postfixExpressions = expressionExtractor.getPostfixExpressions(statement);
         List<Expression> prefixExpressions = expressionExtractor.getPrefixExpressions(statement);
-		System.out.println("STATEMENT: " +statement.toString());
+		//System.out.println("STATEMENT: " +statement.toString());
         processVariables(expressionExtractor.getVariableInstructions(statement), assignments, postfixExpressions, prefixExpressions);
 		processMethodInvocations(expressionExtractor.getMethodInvocations(statement));
 		processClassInstanceCreations(expressionExtractor.getClassInstanceCreations(statement));

@@ -11,7 +11,9 @@ import java.util.ArrayList;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.HashSet;
 
+import io.vavr.Tuple3;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.Modifier;
@@ -37,7 +39,15 @@ public class ConstructorObject implements AbstractMethodDeclaration {
         this.access = Access.NONE;
     }
 
+	public ConstructorObject(MethodDeclaration methodDeclaration, List<ImportObject> importObjectList, Set<Tuple3<String, String, String>> jarSet) {
+    	ConstructObject(methodDeclaration, importObjectList, jarSet);
+	}
+
 	public ConstructorObject(MethodDeclaration methodDeclaration, List<ImportObject> importObjectList) {
+		ConstructObject(methodDeclaration, importObjectList, new HashSet<>());
+	}
+
+	private void ConstructObject(MethodDeclaration methodDeclaration, List<ImportObject> importObjectList, Set<Tuple3<String, String, String>> jarSet) {
 		this.methodDeclaration = ASTInformationGenerator.generateASTInformation(methodDeclaration);
 		this.name = methodDeclaration.getName().getIdentifier();
 		this.parameterList = new ArrayList<ParameterObject>();
@@ -61,10 +71,9 @@ public class ConstructorObject implements AbstractMethodDeclaration {
 
 		Block methodBody = methodDeclaration.getBody();
 		if (methodBody != null) {
-			this.methodBody = new MethodBodyObject(methodBody, parameterList, importObjectList);
+			this.methodBody = new MethodBodyObject(methodBody, parameterList, importObjectList, jarSet);
 		}
 	}
-
     public void setMethodDeclaration(MethodDeclaration methodDeclaration) {
     	//this.methodDeclaration = methodDeclaration;
     	this.methodDeclaration = ASTInformationGenerator.generateASTInformation(methodDeclaration);

@@ -1,6 +1,7 @@
 package com.refactoringMatcher.utils;
 
 import gr.uom.java.xmi.LocationInfo;
+import io.vavr.Tuple3;
 import org.apache.commons.io.IOUtils;
 import org.apache.maven.shared.invoker.*;
 import org.eclipse.jgit.lib.ObjectId;
@@ -10,18 +11,24 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.treewalk.TreeWalk;
+import org.jdom2.Document;
+import org.jdom2.Element;
+import org.jdom2.input.SAXBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  * @author Diptopol
@@ -185,5 +192,84 @@ public class GitUtils {
                 }
             }
         }
+    }
+
+    public static Set<Tuple3<String, String, String>> listOfJavaProjectLibraryFromEffectivePom(String pomContent) {
+        Set<Tuple3<String, String, String>> jarSet = new HashSet<>();
+
+        try {
+            SAXBuilder saxBuilder = new SAXBuilder();
+            Document document = saxBuilder.build(new ByteArrayInputStream(pomContent.getBytes(StandardCharsets.UTF_8)));
+            Element root = document.getRootElement();
+
+            HashMap propertiesList = new HashMap();
+
+            try {
+                Element properties = getchild(root, "properties");
+                List<Element> propertiesListNode = properties.getChildren();
+
+                for(int temp = 0; temp < propertiesListNode.size(); ++temp) {
+                    Element property = (Element)propertiesListNode.get(temp);
+                    propertiesList.put("${" + property.getName() + "}", property.getValue());
+                }
+            } catch (Exception var25) {
+            }
+
+            Element dependencies = getchild(root, "dependencies");
+
+            List<Element> dependencytList = dependencies.getChildren();
+
+            for(int temp = 0; temp < dependencytList.size(); ++temp) {
+                Element dependency = (Element)dependencytList.get(temp);
+                List<Element> librariesList = dependency.getChildren();
+                String groupId = "";
+                String artifactId = "";
+                String version = "";
+
+                for(int temp1 = 0; temp1 < librariesList.size(); ++temp1) {
+                    Element libraryInfo = (Element)librariesList.get(temp1);
+                    if (libraryInfo.getName().equals("groupId")) {
+                        groupId = libraryInfo.getValue();
+                    }
+
+                    if (libraryInfo.getName().equals("artifactId")) {
+                        artifactId = libraryInfo.getValue();
+                    }
+
+                    if (libraryInfo.getName().equals("version")) {
+                        version = libraryInfo.getValue();
+                        if (version.startsWith("${")) {
+                            version = (String)propertiesList.get(version);
+                        }
+                    }
+                }
+
+                Tuple3<String, String, String> tuple = new Tuple3<>(groupId, artifactId, version);
+                jarSet.add(tuple);
+            }
+        } catch (Exception var26) {
+            System.out.println(var26.toString());
+            System.out.println(var26.getStackTrace().toString());
+            System.out.println(var26.getMessage());
+        }
+
+        return jarSet;
+    }
+
+    private static Element getchild(Element classElement, String name) {
+        try {
+            List<Element> childrens = classElement.getChildren();
+
+            for(int temp = 0; temp < childrens.size(); ++temp) {
+                Element element = (Element)childrens.get(temp);
+                if (element.getName().equals(name)) {
+                    return element;
+                }
+            }
+        } catch (Exception var6) {
+            System.out.println("No child found under:" + name);
+        }
+
+        return null;
     }
 }

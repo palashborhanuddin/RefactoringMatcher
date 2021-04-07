@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import io.vavr.Tuple3;
 import org.eclipse.jdt.core.dom.Statement;
 
 /*
@@ -33,6 +34,12 @@ public class CompositeStatementObject extends AbstractStatement {
 
 	public CompositeStatementObject(Statement statement, List<ParameterObject> parameters, List<ImportObject> importObjectList, StatementType type, AbstractMethodFragment parent) {
 		super(statement, parameters, importObjectList, type, parent);
+		this.statementList = new ArrayList<AbstractStatement>();
+		this.expressionList = new ArrayList<AbstractExpression>();
+	}
+
+	public CompositeStatementObject(Statement statement, List<ParameterObject> parameters, List<ImportObject> importObjectList, Set<Tuple3<String, String, String>> jarSet, StatementType type, AbstractMethodFragment parent) {
+		super(statement, parameters, importObjectList, jarSet, type, parent);
 		this.statementList = new ArrayList<AbstractStatement>();
 		this.expressionList = new ArrayList<AbstractExpression>();
 	}

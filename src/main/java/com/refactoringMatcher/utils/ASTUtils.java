@@ -3,6 +3,7 @@ package com.refactoringMatcher.utils;
 import com.refactoringMatcher.java.ast.ConstructorObject;
 import com.refactoringMatcher.java.ast.ImportObject;
 import com.refactoringMatcher.java.ast.MethodObject;
+import io.vavr.Tuple3;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.*;
 import org.slf4j.Logger;
@@ -11,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Diptopol
@@ -22,6 +24,12 @@ public class ASTUtils {
 
     public static MethodObject createMethodObject(MethodDeclaration methodDeclaration, List<ImportObject> importObjectList) {
         final ConstructorObject constructorObject = new ConstructorObject(methodDeclaration, importObjectList);
+
+        return new MethodObject(constructorObject);
+    }
+
+    public static MethodObject createMethodObject(MethodDeclaration methodDeclaration, List<ImportObject> importObjectList, Set<Tuple3<String, String, String>> jarSet) {
+        final ConstructorObject constructorObject = new ConstructorObject(methodDeclaration, importObjectList, jarSet);
 
         return new MethodObject(constructorObject);
     }

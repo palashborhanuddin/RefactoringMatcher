@@ -48,6 +48,14 @@ public class GraphNode {
 		nodeNum = 0;
 	}
 
+	public static int getNodeNum() {
+		return nodeNum;
+	}
+
+	public static void setNodeNum(int number) {
+		nodeNum = number;
+	}
+
 	public String getValue() {
 		return value;
 	}

@@ -16,6 +16,9 @@ import org.eclipse.jdt.core.dom.FieldAccess;
 
 public class Groum extends Graph implements Serializable {
 
+    // TODO PROJECTTEST lastNodeNum is temporary change to generate project data. remove afterwards
+    // Set the number to start with the Groum node#
+    private static int lastNodeNum = 0;
     private HashMap<PDGNode, GroumNode> compoundGroumNodes;
     private HashMap<GroumBlockNode, Set<CFGNode>> groumBlocks;
 
@@ -23,6 +26,7 @@ public class Groum extends Graph implements Serializable {
         compoundGroumNodes = new HashMap<PDGNode, GroumNode>();
         groumBlocks = new LinkedHashMap<GroumBlockNode, Set<CFGNode>>();
         Map<CFGBranchNode, Set<CFGNode>> pdgNestingMap = pdg.getPDGNestingMap();
+        GroumNode.setNodeNum(lastNodeNum);
         for(CFGBranchNode key : pdgNestingMap.keySet()) {
             Set<CFGNode> nestedNodes = pdgNestingMap.get(key);
             GroumBlockNode block = new GroumBlockNode(key.getPDGNode());
@@ -39,6 +43,7 @@ public class Groum extends Graph implements Serializable {
             processNode(pdg, compilationUnit, pdgNode);
         }
         createGroumGraph(pdg);
+        lastNodeNum = GraphNode.getNodeNum();
     }
 
     private void createGroumGraph(PDG pdg) {

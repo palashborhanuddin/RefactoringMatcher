@@ -47,6 +47,7 @@ public abstract class AbstractMethodFragment {
 	private AbstractMethodFragment parent;
 	private List<ParameterObject> parameters;
 	private List<ImportObject> importObjectList;
+	private Set<Tuple3<String, String, String>> jarSet;
 	
 	private List<MethodInvocationObject> methodInvocationList;
 	private List<SuperMethodInvocationObject> superMethodInvocationList;
@@ -94,10 +95,22 @@ public abstract class AbstractMethodFragment {
 	private Map<PlainVariable, LinkedHashSet<ConstructorInvocationObject>> parametersPassedAsArgumentsInConstructorInvocations;
 	private Map<PlainVariable, LinkedHashSet<ClassInstanceCreationObject>> variablesAssignedWithClassInstanceCreations;
 
+	protected AbstractMethodFragment(AbstractMethodFragment parent, List<ParameterObject> parameters, List<ImportObject> importObjectList, Set<Tuple3<String, String, String>> jarSet) {
+		this.parent = parent;
+		this.parameters = parameters;
+		this.importObjectList = importObjectList;
+		this.jarSet = jarSet;
+		initializeLocalMembers();
+	}
+
 	protected AbstractMethodFragment(AbstractMethodFragment parent, List<ParameterObject> parameters, List<ImportObject> importObjectList) {
 		this.parent = parent;
 		this.parameters = parameters;
 		this.importObjectList = importObjectList;
+		initializeLocalMembers();
+	}
+
+	private void initializeLocalMembers() {
 		this.methodInvocationList = new ArrayList<MethodInvocationObject>();
 		this.superMethodInvocationList = new ArrayList<SuperMethodInvocationObject>();
 		this.constructorInvocationList = new ArrayList<ConstructorInvocationObject>();
@@ -118,7 +131,7 @@ public abstract class AbstractMethodFragment {
 		//this.invokedMethodsThroughThisReference = new LinkedHashSet<MethodInvocationObject>();
 		this.nonDistinctInvokedMethodsThroughThisReference = new ArrayList<MethodInvocationObject>();
 		this.nonDistinctInvokedStaticMethods = new ArrayList<MethodInvocationObject>();
-		
+
 		//this.definedFieldsThroughFields = new LinkedHashSet<AbstractVariable>();
 		this.nonDistinctDefinedFieldsThroughFields = new ArrayList<AbstractVariable>();
 		//this.usedFieldsThroughFields = new LinkedHashSet<AbstractVariable>();
@@ -135,7 +148,7 @@ public abstract class AbstractMethodFragment {
 		this.nonDistinctDefinedFieldsThroughThisReference = new ArrayList<PlainVariable>();
 		//this.usedFieldsThroughThisReference = new LinkedHashSet<PlainVariable>();
 		this.nonDistinctUsedFieldsThroughThisReference = new ArrayList<PlainVariable>();
-		
+
 		this.declaredLocalVariables = new LinkedHashSet<PlainVariable>();
 		this.definedLocalVariables = new LinkedHashSet<PlainVariable>();
 		this.usedLocalVariables = new LinkedHashSet<PlainVariable>();
@@ -392,9 +405,8 @@ public abstract class AbstractMethodFragment {
 				//IMethodBinding methodBinding = methodInvocation.resolveMethodBinding();
 				// [TODO PDGCFG] in above statement IMethodBinding would be null. so need to address using JarAnalyser.
 				String methodName = methodInvocation.getName().getFullyQualifiedName();
-				Set<Tuple3<String, String, String>> jarSet = new HashSet<>();
 				String javaVersion = "11.0.10";
-				System.out.println("MethodName: " +methodName+ ", methodInvocation: " +methodInvocation.arguments().toString());
+				//System.out.println("MethodName: " +methodName+ ", methodInvocation: " +methodInvocation.arguments().toString());
 				List<MethodInfo> methodInfoList = TypeInferenceFluentAPI.getInstance().
 						new Criteria(jarSet,
 						javaVersion, importStatementList, methodName, methodInvocation.arguments().size()).getMethodList();
@@ -405,7 +417,7 @@ public abstract class AbstractMethodFragment {
 				}
 				// [TODO PDGCFG] why the first index only? is it expected to have multiple methodInfo? why there should be more than one?
 				MethodInfo methodInfo = methodInfoList.get(0);
-				System.out.println("MethodInfo: " + methodInfo.toString());
+				//System.out.println("MethodInfo: " + methodInfo.toString());
 
 				//String originClassName = methodBinding.getDeclaringClass().getQualifiedName();
 				//TypeObject originClassTypeObject = TypeObject.extractTypeObject(originClassName);

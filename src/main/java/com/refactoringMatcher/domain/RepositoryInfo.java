@@ -11,6 +11,7 @@ import java.util.Objects;
  * @since 11/28/2020 9:43 AM
  */
 public class RepositoryInfo {
+    private static int num = 0;
     private int id;
     private String fullName;
 
@@ -47,6 +48,8 @@ public class RepositoryInfo {
     }
 
     public RepositoryInfo(String fullName, String htmlUrl) {
+        id = num;
+        num++;
         this.fullName = fullName;
         this.htmlUrl = htmlUrl;
     }
