@@ -107,6 +107,7 @@ public abstract class AbstractMethodFragment {
 		this.parent = parent;
 		this.parameters = parameters;
 		this.importObjectList = importObjectList;
+		jarSet = new HashSet<>();
 		initializeLocalMembers();
 	}
 

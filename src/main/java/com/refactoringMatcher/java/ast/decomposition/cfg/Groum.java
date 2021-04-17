@@ -43,6 +43,8 @@ public class Groum extends Graph implements Serializable {
             processNode(pdg, compilationUnit, pdgNode);
         }
         createGroumGraph(pdg);
+        //GraphNode.resetNodeNum();
+        //GroumBlockNode.resetBlockNum();
         lastNodeNum = GraphNode.getNodeNum();
     }
 
