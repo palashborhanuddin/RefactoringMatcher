@@ -1,16 +1,10 @@
 package com.refactoringMatcher.java.ast;
 
-import java.io.Serializable;
-
 import org.eclipse.jdt.core.ITypeRoot;
 import org.eclipse.jdt.core.dom.ASTNode;
 
-public class ASTInformationGenerator  implements Serializable{
+public class ASTInformationGenerator {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 6945510446183453245L;
 	private static ITypeRoot iTypeRoot;
 	
 	public static void setCurrentITypeRoot(ITypeRoot typeRoot) {

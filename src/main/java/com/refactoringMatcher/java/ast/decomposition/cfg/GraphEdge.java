@@ -1,57 +1,40 @@
 package com.refactoringMatcher.java.ast.decomposition.cfg;
 
-import java.io.Serializable;
+import java.util.Objects;
 
-public class GraphEdge  implements Serializable{
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 4340501881512388913L;
-	protected int srcId;
-	protected int dstId;
-//	private GraphNode src;
-//	private GraphNode dst;
-	private Graph graph;
+public class GraphEdge {
+	protected GraphNode src;
+	protected GraphNode dst;
 	
-	public GraphEdge(GraphNode src, GraphNode dst, Graph graph) {
-		if(src == null)
-			src = new GraphNode();
-		if(dst == null)
-			dst = new GraphNode();
-		this.srcId = src.id;
-		this.dstId = dst.id;
-//		this.src = src;
-//		this.dst = dst;
-		this.graph = graph;
-//		graph.nodes.add(src);
-//		graph.nodes.add(dst);
+	public GraphEdge(GraphNode src, GraphNode dst) {
+		this.src = src;
+		this.dst = dst;
 	}
 
 	public GraphNode getSrc() {
-		return graph.getNode(srcId);
-//		return src;
+		return src;
 	}
 
 	public GraphNode getDst() {
-		return graph.getNode(dstId);
-//		return dst;
+		return dst;
 	}
-	
+
+	@Override
 	public String toString() {
-		return srcId + "->" + dstId;
+		return src.toString() + "-->" +dst.toString() + "\n";
 	}
-	
-	public void removeCyclicReferences()
-	{
-//		src = null;
-//		dst = null;
-		graph = null;
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		GraphEdge graphEdge = (GraphEdge) o;
+		return src.getId() == graphEdge.getSrc().getId() &&
+				dst.getId() == graphEdge.getDst().getId();
 	}
-	
-	public void recoverCyclicReferences(Graph graph)
-	{
-//		src = graph.getNode(srcId);
-//		dst = graph.getNode(dstId);
-		this.graph = graph;
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(src.getId(), dst.getId());
 	}
 }

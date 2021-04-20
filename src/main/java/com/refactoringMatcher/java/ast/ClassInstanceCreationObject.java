@@ -1,6 +1,5 @@
 package com.refactoringMatcher.java.ast;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -9,12 +8,8 @@ import java.util.Set;
 
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 
-public class ClassInstanceCreationObject extends CreationObject  implements Serializable{
+public class ClassInstanceCreationObject extends CreationObject {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 5126929643854770040L;
 	private List<TypeObject> parameterList;
 	private Set<String> thrownExceptions;
 	

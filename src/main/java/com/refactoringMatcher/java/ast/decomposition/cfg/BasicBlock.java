@@ -1,14 +1,9 @@
 package com.refactoringMatcher.java.ast.decomposition.cfg;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BasicBlock implements Serializable{
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -2671216380180510662L;
+public class BasicBlock {
 	private static int blockNum = 0;
 	private int id;
 	private CFGNode leader;

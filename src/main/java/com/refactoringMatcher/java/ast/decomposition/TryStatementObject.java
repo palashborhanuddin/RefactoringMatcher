@@ -1,23 +1,23 @@
 package com.refactoringMatcher.java.ast.decomposition;
 
+import com.refactoringMatcher.java.ast.ImportObject;
+import com.refactoringMatcher.java.ast.MethodInvocationObject;
 import com.refactoringMatcher.java.ast.ParameterObject;
 import com.refactoringMatcher.java.ast.decomposition.cfg.AbstractVariable;
+
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+
 import org.eclipse.jdt.core.dom.Statement;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-
-public class TryStatementObject extends CompositeStatementObject  implements Serializable{
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 8153901357137185823L;
+public class TryStatementObject extends CompositeStatementObject {
 	private List<CatchClauseObject> catchClauses;
 	private CompositeStatementObject finallyClause;
 	
-	public TryStatementObject(Statement statement, List<ParameterObject> parameters, AbstractMethodFragment parent) {
-		super(statement, parameters, StatementType.TRY, parent);
+	public TryStatementObject(Statement statement, List<ParameterObject> parameters, List<ImportObject> importObjectList, AbstractMethodFragment parent) {
+		super(statement, parameters, importObjectList, StatementType.TRY, parent);
 		this.catchClauses = new ArrayList<CatchClauseObject>();
 	}
 
@@ -106,7 +106,7 @@ public class TryStatementObject extends CompositeStatementObject  implements Ser
 	
 	public boolean hasFinallyClauseClosingVariable(AbstractVariable variable) {
 		if(finallyClause != null) {
-		/*	Map<AbstractVariable, LinkedHashSet<MethodInvocationObject>> invokedMethodsThroughLocalVariables = 
+			Map<AbstractVariable, LinkedHashSet<MethodInvocationObject>> invokedMethodsThroughLocalVariables = 
 					finallyClause.getInvokedMethodsThroughLocalVariables();
 			for(AbstractVariable key : invokedMethodsThroughLocalVariables.keySet()) {
 				if(key.equals(variable)) {
@@ -141,7 +141,7 @@ public class TryStatementObject extends CompositeStatementObject  implements Ser
 						}
 					}
 				}
-			}*/
+			}
 		}
 		return false;
 	}

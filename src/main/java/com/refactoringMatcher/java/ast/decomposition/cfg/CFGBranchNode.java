@@ -1,24 +1,19 @@
 package com.refactoringMatcher.java.ast.decomposition.cfg;
 
-import com.refactoringMatcher.java.ast.decomposition.AbstractStatement;
-import com.refactoringMatcher.java.ast.decomposition.CompositeStatementObject;
-import com.refactoringMatcher.java.ast.decomposition.TryStatementObject;
-import org.eclipse.jdt.core.dom.Block;
-import org.eclipse.jdt.core.dom.LabeledStatement;
-import org.eclipse.jdt.core.dom.SynchronizedStatement;
-
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-public abstract class CFGBranchNode extends CFGNode  implements Serializable{
+import org.eclipse.jdt.core.dom.Block;
+import org.eclipse.jdt.core.dom.LabeledStatement;
+import org.eclipse.jdt.core.dom.SynchronizedStatement;
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -425230970728338200L;
+import com.refactoringMatcher.java.ast.decomposition.AbstractStatement;
+import com.refactoringMatcher.java.ast.decomposition.CompositeStatementObject;
+import com.refactoringMatcher.java.ast.decomposition.TryStatementObject;
+
+public abstract class CFGBranchNode extends CFGNode {
 
 	public CFGBranchNode(AbstractStatement statement) {
 		super(statement);

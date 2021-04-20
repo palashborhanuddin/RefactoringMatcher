@@ -1,8 +1,6 @@
 package com.refactoringMatcher.java.ast;
 
-import java.io.Serializable;
-
-public enum Access implements Serializable{
+public enum Access {
     NONE, PUBLIC, PRIVATE, PROTECTED;
 
     public String toString() {

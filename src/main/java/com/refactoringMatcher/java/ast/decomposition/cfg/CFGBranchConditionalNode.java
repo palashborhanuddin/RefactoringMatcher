@@ -1,16 +1,11 @@
 package com.refactoringMatcher.java.ast.decomposition.cfg;
 
-import com.refactoringMatcher.java.ast.decomposition.AbstractStatement;
-
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class CFGBranchConditionalNode extends CFGBranchNode  implements Serializable{
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -4472248431709735158L;
+import com.refactoringMatcher.java.ast.decomposition.AbstractStatement;
+
+public abstract class CFGBranchConditionalNode extends CFGBranchNode {
 	private CFGNode joinNode;
 	
 	public CFGBranchConditionalNode(AbstractStatement statement) {
@@ -34,7 +29,7 @@ public abstract class CFGBranchConditionalNode extends CFGBranchNode  implements
 				CFGBranchLoopNode loopNode = (CFGBranchLoopNode)joinNode;
 				Flow falseControlFlow = loopNode.getFalseControlFlow();
 				if(falseControlFlow != null)
-					dstNode = (CFGNode)falseControlFlow.getDst();
+					dstNode = (CFGNode)falseControlFlow.dst;
 				else
 					return getNestedBasicBlocksToEnd();
 			}

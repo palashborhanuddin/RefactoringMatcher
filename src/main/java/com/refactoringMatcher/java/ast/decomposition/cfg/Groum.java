@@ -1,8 +1,7 @@
 package com.refactoringMatcher.java.ast.decomposition.cfg;
 
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Stack;
+import java.util.*;
 
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
@@ -13,126 +12,232 @@ import org.eclipse.jdt.core.dom.ForStatement;
 import org.eclipse.jdt.core.dom.IfStatement;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.WhileStatement;
+import org.eclipse.jdt.core.dom.FieldAccess;
 
-public class Groum extends Graph  implements Serializable{
+public class Groum extends Graph implements Serializable {
 
-	private HashMap<PDGNode, GroumNode> compoundGroumNodes = new HashMap<PDGNode, GroumNode>();
-	
-	public Groum(PDG pdg) {
-		for (GraphNode graphNode : pdg.nodes) {
-			PDGNode pdgNode = (PDGNode) graphNode;
-			ASTParser parser = ASTParser.newParser(AST.JLS8);
-			parser.setKind(ASTParser.K_COMPILATION_UNIT);
-			String statement = "public class DummyClass{void dummy(){" + pdgNode.getCFGNode().getStatementString() + ";}}";
-			parser.setSource(statement.toCharArray());
-			parser.setResolveBindings(true);
-			CompilationUnit compilationUnit = (CompilationUnit) parser.createAST(null);		
-			processNode(compilationUnit, pdgNode);
-		}
-		
-		CreateGroumGraph(pdg);
-		
+    // TODO PROJECTTEST lastNodeNum is temporary change to generate project data. remove afterwards
+    // Set the number to start with the Groum node#
+    private static int lastNodeNum = 0;
+    private HashMap<PDGNode, GroumNode> compoundGroumNodes;
+    private HashMap<GroumBlockNode, Set<CFGNode>> groumBlocks;
 
-		System.out.println("done");
-	}
+    public Groum(PDG pdg) {
+        compoundGroumNodes = new HashMap<PDGNode, GroumNode>();
+        groumBlocks = new LinkedHashMap<GroumBlockNode, Set<CFGNode>>();
+        Map<CFGBranchNode, Set<CFGNode>> pdgNestingMap = pdg.getPDGNestingMap();
+        GroumNode.setNodeNum(lastNodeNum);
+        for(CFGBranchNode key : pdgNestingMap.keySet()) {
+            Set<CFGNode> nestedNodes = pdgNestingMap.get(key);
+            GroumBlockNode block = new GroumBlockNode(key.getPDGNode());
+            groumBlocks.put(block, nestedNodes);
+        }
+        for (GraphNode graphNode : pdg.nodes) {
+            PDGNode pdgNode = (PDGNode) graphNode;
+            ASTParser parser = ASTParser.newParser(AST.JLS8);
+            parser.setKind(ASTParser.K_COMPILATION_UNIT);
+            String statement = "public class DummyClass{void dummy(){" + pdgNode.getCFGNode().getStatementString() + ";}}";
+            parser.setSource(statement.toCharArray());
+            parser.setResolveBindings(true);
+            CompilationUnit compilationUnit = (CompilationUnit) parser.createAST(null);
+            processNode(pdg, compilationUnit, pdgNode);
+        }
+        createGroumGraph(pdg);
+        //GraphNode.resetNodeNum();
+        //GroumBlockNode.resetBlockNum();
+        lastNodeNum = GraphNode.getNodeNum();
+    }
 
-	private void CreateGroumGraph(PDG pdg) {
-		GroumNode lastNode = null;
-		GroumNode currentNode = null;
-		for (GroumNode node : compoundGroumNodes.values()) {
-			if(node == null)
-				continue;
-			currentNode = CreateNodesFor(node);
+    private void createGroumGraph(PDG pdg) {
+        extractTemporalGroum();
+        extractEdgesForActionNodes(pdg);
+        // extractEdgesBetweenControlNodes(pdg);
+    }
 
-			if(lastNode != null){
-				addEdge(new GraphEdge(lastNode, currentNode, this));
-			}
+    private void extractEdgesForActionNodes(PDG pdg) {
+        GraphNode previous = null;
+        for (GraphNode sourcePdgNode : pdg.getNodes()) {
+            GroumNode sourceGroumNode = compoundGroumNodes.get(sourcePdgNode);
+            groumEdgesCorrespondPdgOutgoingEdges(sourceGroumNode, sourcePdgNode);
+        }
+    }
 
-			lastNode = currentNode;
-		}
-		
-		for(GraphNode node: pdg.getNodes()) {
-			if(compoundGroumNodes.get(node) == null)
-				continue;
-			GroumNode source = GetTop(compoundGroumNodes.get(node));
-			for(GraphEdge edge:node.outgoingEdges){
-				if(compoundGroumNodes.get(edge.getDst()) == null)
-					continue;
-				
-				GroumNode destination = GetTop(compoundGroumNodes.get(edge.getDst()));
-				addEdge(new GraphEdge(source, destination, this));
-			}
-		}
-	}
+    private void groumEdgesCorrespondPdgOutgoingEdges(GroumNode sourceGroumNode, GraphNode sourcePdgNode) {
+        Set<GroumNode> listOfOutgoingEdgesDestination = new HashSet<GroumNode>();
+        for (GraphEdge outGoingEdge : sourcePdgNode.getOutgoingEdges()) {
+            if (Objects.isNull(compoundGroumNodes.get(outGoingEdge.getDst())))
+                continue;
+            PDGDependence outGoingPDGEdge = (PDGDependence) outGoingEdge;
 
-	private GroumNode GetTop(GroumNode groumNode) {
-		if(!groumNode.HasInnerNode()){
-			return groumNode;
-		} else {
-			return CreateNodesFor(groumNode.GetInnerNode());
-		}
-	}
+            if (PDGDependenceType.CONTROL.equals(outGoingPDGEdge.getType())
+                    || PDGDependenceType.DATA.equals(outGoingPDGEdge.getType())
+                    || PDGDependenceType.DEF_ORDER.equals(outGoingPDGEdge.getType())) {
+                if (Objects.nonNull(sourceGroumNode)) {
+                    GroumNode src = sourceGroumNode;
+                    GroumNode dst = compoundGroumNodes.get(outGoingEdge.getDst());
+                    if (GroumNodeType.CONTROL.equals(src.getGroumNodeType())) {
+                        src = src.GetInnerNode();
+                    }
+                    if (GroumNodeType.CONTROL.equals(dst.getGroumNodeType())) {
+                        dst = dst.GetInnerNode();
+                    }
+                    findEdgesActionNode(src, dst);
+                    for (GroumNode node : listOfOutgoingEdgesDestination) {
+                        findEdgesActionNode(node, dst);
+                    }
+                    listOfOutgoingEdgesDestination.add(dst);
+                }
+            }
+        }
+    }
 
-	private GroumNode CreateNodesFor(GroumNode groumNode) {
-		addNode(groumNode);
-		if(!groumNode.HasInnerNode()){
-			return groumNode;
-		} else {
-			addEdge(new GraphEdge(groumNode.GetInnerNode(), groumNode, this));
-			return CreateNodesFor(groumNode.GetInnerNode());
-		}
-	}
+    private void findEdgesActionNode(GroumNode src, GroumNode dst) {
+        if (Objects.nonNull(src) && Objects.nonNull(dst)) {
+            if (src.getId() != dst.getId()) {
+                if (src.definedVariables.size() > 0) {
+                    boolean related = false;
+                    for (AbstractVariable variable : src.definedVariables) {
+                        if (dst.definedVariables.contains(variable) || dst.usedVariables.contains(variable))
+                            related = true;
+                    }
+                    if (related) {
+                        addEdge(new GraphEdge(src, dst));
+                        // Find if belongs to groum control structure
+                        GroumBlockNode srcBlock = getNestedGroumBlock(src.GetPdgNode());
+                        GroumBlockNode dstBlock = getNestedGroumBlock(dst.GetPdgNode());
+                        if (Objects.nonNull(srcBlock) && Objects.nonNull(dstBlock) && !srcBlock.equals(dstBlock)) {
+                            GroumNode srcControlNode = compoundGroumNodes.get(srcBlock.getLeader());
+                            GroumNode dstControlNode = compoundGroumNodes.get(dstBlock.getLeader());
+                            addEdge(new GraphEdge(srcControlNode, dstControlNode));
+                        }
+                    }
+                }
+                findEdgesActionNode(src.GetInnerNode(), dst);
+                findEdgesActionNode(src, dst.GetInnerNode());
+            }
+        }
+    }
 
-	private void processNode(CompilationUnit compilationUnit, PDGNode pdgNode) {
-		Stack<GroumNode> groumNodes = new Stack<GroumNode>();
-		compilationUnit.accept(new ASTVisitor() {			
-			public boolean visit(ClassInstanceCreation statement){
-				GroumClassInstantiationNode gcicn = new GroumClassInstantiationNode(statement, pdgNode);
-				groumNodes.push(gcicn);
-				return true;
-			}
-			
-			public boolean visit(MethodInvocation statement){
-				GroumMethodNode gmn = new GroumMethodNode(statement, pdgNode);
-				groumNodes.push(gmn);
-				return true;
-			}
-			
-			public boolean visit(IfStatement statement){
-				GroumIfNode gin = new GroumIfNode(statement, pdgNode);
-				groumNodes.push(gin);
-				return true;
-			}
-			
-			public boolean visit(WhileStatement statement){
-				GroumWhileNode gwn = new GroumWhileNode(statement, pdgNode);
-				groumNodes.push(gwn);
-				return true;
-			}
-			
-			public boolean visit(ForStatement statement){
-				GroumForNode gfn = new GroumForNode(statement, pdgNode);
-				groumNodes.push(gfn);
-				return true;
-			}
-		});
+    private void extractTemporalGroum() {
+        GroumNode currentNode = null;
+        GroumNode lastNode = null;
 
-		while (groumNodes.size() > 1) {
-			GroumNode poppedNode = groumNodes.pop();
-			GroumNode previousNode = groumNodes.peek();
-			previousNode.SetInnerNode(poppedNode);
-		}
-		
-		if(!groumNodes.isEmpty()){
-			GroumNode node = groumNodes.pop();
-			//System.err.println(node.ToGroumString());
-			compoundGroumNodes.put(pdgNode, node);
-			
-		}
-		else
-		{
-			//System.err.println("");
-			compoundGroumNodes.put(pdgNode, null);
-		}
-	}
+        // [TODO GROUM] Parallel merging won't work here, need to address
+
+        for (GroumNode node : compoundGroumNodes.values()) {
+            if (Objects.isNull(node)) {
+                continue;
+            }
+
+            currentNode = constructInnerNode(node);
+
+            if (Objects.nonNull(lastNode)) {
+                addEdge(new GraphEdge(lastNode, currentNode));
+            }
+
+            lastNode = node;
+        }
+    }
+
+    private GroumNode getInnerNode(GroumNode groumNode) {
+        if (!groumNode.HasInnerNode()) {
+            return groumNode;
+        } else {
+            return getInnerNode(groumNode.GetInnerNode());
+        }
+    }
+
+    private GroumNode constructInnerNode(GroumNode groumNode) {
+        // [TODO GROUM] may have issue with parallel node
+        if (!groumNode.HasInnerNode()) {
+            addNode(groumNode);
+            return groumNode;
+        } else {
+            GroumNode innerNode = constructInnerNode(groumNode.GetInnerNode());
+            addNode(groumNode);
+            addEdge(new GraphEdge(groumNode.GetInnerNode(), groumNode));
+            return innerNode;
+        }
+    }
+
+    private GroumBlockNode getGroumBlock(PDGNode pdgNode) {
+        for(GroumBlockNode key : groumBlocks.keySet()) {
+            if(key.getLeader().equals(pdgNode))
+                return key;
+        }
+        return null;
+    }
+
+    private GroumBlockNode getNestedGroumBlock(PDGNode pdgNode) {
+        for(GroumBlockNode key : groumBlocks.keySet()) {
+            Set<CFGNode> nestedNodes = groumBlocks.get(key);
+            if(nestedNodes.contains(pdgNode.getCFGNode()))
+                return key;
+        }
+        return null;
+    }
+
+    private void processNode(PDG pdg, CompilationUnit compilationUnit, PDGNode pdgNode) {
+        Stack<GroumNode> groumNodes = new Stack<GroumNode>();
+        compilationUnit.accept(new ASTVisitor() {
+            public boolean visit(ClassInstanceCreation statement) {
+                GroumClassInstantiationNode gcicn = new GroumClassInstantiationNode(statement, pdgNode, getNestedGroumBlock(pdgNode));
+                groumNodes.push(gcicn);
+                return true;
+            }
+
+            public boolean visit(MethodInvocation statement) {
+                GroumMethodInvocationNode gmn = new GroumMethodInvocationNode(statement, pdgNode, getNestedGroumBlock(pdgNode));
+                if (!gmn.IsLocal())
+                    groumNodes.push(gmn);
+                return true;
+            }
+
+            public boolean visit(FieldAccess statement) {
+                GroumFieldAccessNode fieldAccessNode = new GroumFieldAccessNode(statement, pdgNode, getNestedGroumBlock(pdgNode));
+                groumNodes.push(fieldAccessNode);
+                return true;
+            }
+
+            public boolean visit(IfStatement statement) {
+                GroumIfNode gin = new GroumIfNode(statement, pdgNode, getGroumBlock(pdgNode));
+                groumNodes.push(gin);
+                return true;
+            }
+
+            public boolean visit(WhileStatement statement) {
+                GroumWhileNode gwn = new GroumWhileNode(statement, pdgNode, getGroumBlock(pdgNode));
+                groumNodes.push(gwn);
+                return true;
+            }
+
+            public boolean visit(ForStatement statement) {
+                GroumForNode gfn = new GroumForNode(statement, pdgNode, getGroumBlock(pdgNode));
+                groumNodes.push(gfn);
+                return true;
+            }
+        });
+
+        while (groumNodes.size() > 1) {
+            GroumNode poppedNode = groumNodes.pop();
+            GroumNode previousNode = groumNodes.peek();
+            previousNode.SetInnerNode(poppedNode);
+        }
+
+        if (!groumNodes.isEmpty()) {
+            GroumNode node = groumNodes.pop();
+            compoundGroumNodes.put(pdgNode, node);
+
+        } else {
+            compoundGroumNodes.put(pdgNode, null);
+        }
+    }
+
+    @Override
+    public String toString() {
+        return "Groum{" +
+                "\nnodes=" + nodes +
+                ",\nedges=" + edges +
+                "\n}";
+    }
 }

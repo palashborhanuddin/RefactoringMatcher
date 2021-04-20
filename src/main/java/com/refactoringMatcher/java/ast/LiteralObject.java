@@ -1,7 +1,5 @@
 package com.refactoringMatcher.java.ast;
 
-import java.io.Serializable;
-
 import org.eclipse.jdt.core.dom.BooleanLiteral;
 import org.eclipse.jdt.core.dom.CharacterLiteral;
 import org.eclipse.jdt.core.dom.Expression;
@@ -10,11 +8,7 @@ import org.eclipse.jdt.core.dom.NumberLiteral;
 import org.eclipse.jdt.core.dom.StringLiteral;
 import org.eclipse.jdt.core.dom.TypeLiteral;
 
-public class LiteralObject  implements Serializable{
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 8308235837695131645L;
+public class LiteralObject {
 	private LiteralType literalType;
 	private String value;
 	private TypeObject type;
@@ -29,6 +23,9 @@ public class LiteralObject  implements Serializable{
 			if(stringLiteral.resolveTypeBinding() != null) {
 				type = TypeObject.extractTypeObject(stringLiteral.resolveTypeBinding().getQualifiedName());
 			}
+			else {
+				type = TypeObject.extractTypeObject("java.lang.String");
+			}
 		}
 		else if(expression instanceof NullLiteral) {
 			NullLiteral nullLiteral = (NullLiteral)expression;
@@ -36,6 +33,9 @@ public class LiteralObject  implements Serializable{
 			value = "null";
 			if(nullLiteral.resolveTypeBinding() != null) {
 				type = TypeObject.extractTypeObject(nullLiteral.resolveTypeBinding().getQualifiedName());
+			}
+			else {
+				type = TypeObject.extractTypeObject("null");
 			}
 		}
 		else if(expression instanceof NumberLiteral) {
@@ -45,6 +45,10 @@ public class LiteralObject  implements Serializable{
 			if(numberLiteral.resolveTypeBinding() != null) {
 				type = TypeObject.extractTypeObject(numberLiteral.resolveTypeBinding().getQualifiedName());
 			}
+			else {
+				// TODO Setting a generic type for now.
+				type = TypeObject.extractTypeObject("java.Lang.Number");
+			}
 		}
 		else if(expression instanceof BooleanLiteral) {
 			BooleanLiteral booleanLiteral = (BooleanLiteral)expression;
@@ -52,6 +56,9 @@ public class LiteralObject  implements Serializable{
 			value = Boolean.toString(booleanLiteral.booleanValue());
 			if(booleanLiteral.resolveTypeBinding() != null) {
 				type = TypeObject.extractTypeObject(booleanLiteral.resolveTypeBinding().getQualifiedName());
+			}
+			else {
+				type = TypeObject.extractTypeObject("java.lang.Boolean");
 			}
 		}
 		else if(expression instanceof CharacterLiteral) {
@@ -61,6 +68,9 @@ public class LiteralObject  implements Serializable{
 			if(characterLiteral.resolveTypeBinding() != null) {
 				type = TypeObject.extractTypeObject(characterLiteral.resolveTypeBinding().getQualifiedName());
 			}
+			else {
+				type = TypeObject.extractTypeObject("java.lang.Character");
+			}
 		}
 		else if(expression instanceof TypeLiteral) {
 			TypeLiteral typeLiteral = (TypeLiteral)expression;
@@ -68,6 +78,9 @@ public class LiteralObject  implements Serializable{
 			value = typeLiteral.getType().toString();
 			if(typeLiteral.resolveTypeBinding() != null) {
 				type = TypeObject.extractTypeObject(typeLiteral.resolveTypeBinding().getQualifiedName());
+			}
+			else {
+				type = TypeObject.extractTypeObject("java.lang.Class");
 			}
 		}
 		this.literal = ASTInformationGenerator.generateASTInformation(expression);

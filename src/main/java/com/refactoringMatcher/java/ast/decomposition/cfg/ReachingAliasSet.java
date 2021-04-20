@@ -1,6 +1,5 @@
 package com.refactoringMatcher.java.ast.decomposition.cfg;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -8,12 +7,8 @@ import java.util.Set;
 
 import org.eclipse.jdt.core.dom.VariableDeclaration;
 
-public class ReachingAliasSet  implements Serializable{
+public class ReachingAliasSet {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 583405146250932071L;
 	private List<LinkedHashSet<VariableDeclaration>> aliasSets;
 	
 	public ReachingAliasSet() {
@@ -77,7 +72,7 @@ public class ReachingAliasSet  implements Serializable{
 	public boolean containsAlias(AbstractVariable variable) {
 		for(LinkedHashSet<VariableDeclaration> aliasSet : aliasSets) {
 			for(VariableDeclaration alias : aliasSet) {
-				if(alias.equals(variable))
+				if(alias.equals(variable.getVariableDeclaration()))
 					return true;
 			}
 		}
@@ -102,7 +97,7 @@ public class ReachingAliasSet  implements Serializable{
 		for(LinkedHashSet<VariableDeclaration> aliasSet : aliasSets) {
 			boolean containsVariable = false;
 			for(VariableDeclaration alias : aliasSet) {
-				if(alias.equals(variable)) {
+				if(alias.equals(variable.getVariableDeclaration())) {
 					containsVariable = true;
 					break;
 				}
@@ -110,7 +105,7 @@ public class ReachingAliasSet  implements Serializable{
 			if(containsVariable) {
 				Set<VariableDeclaration> aliases = new LinkedHashSet<VariableDeclaration>();
 				for(VariableDeclaration alias : aliasSet) {
-					if(!alias.resolveBinding().getKey().equals(variable))
+					if(!alias.equals(variable.getVariableDeclaration()))
 						aliases.add(alias);
 				}
 				return aliases;

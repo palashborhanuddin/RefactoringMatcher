@@ -1,23 +1,18 @@
 package com.refactoringMatcher.java.ast.decomposition;
 
+import com.refactoringMatcher.java.ast.ImportObject;
 import com.refactoringMatcher.java.ast.ParameterObject;
 import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.SynchronizedStatement;
 
-import java.io.Serializable;
 import java.util.List;
 
-public class SynchronizedStatementObject extends CompositeStatementObject  implements Serializable{
+public class SynchronizedStatementObject extends CompositeStatementObject {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 8532291980665623839L;
-
-	public SynchronizedStatementObject(Statement statement, List<ParameterObject> parameters, AbstractMethodFragment parent) {
-		super(statement, parameters, StatementType.SYNCHRONIZED, parent);
+	public SynchronizedStatementObject(Statement statement, List<ParameterObject> parameters, List<ImportObject> importObjectList, AbstractMethodFragment parent) {
+		super(statement, parameters, importObjectList, StatementType.SYNCHRONIZED, parent);
 		AbstractExpression abstractExpression = new AbstractExpression(
-				((SynchronizedStatement)statement).getExpression(), parameters, this);
+				((SynchronizedStatement)statement).getExpression(), parameters, importObjectList, this);
 		this.addExpression(abstractExpression);
 	}
 

@@ -1,35 +1,33 @@
 package com.refactoringMatcher.java.ast.decomposition.cfg;
 
-import java.io.Serializable;
-
 import org.eclipse.jdt.core.dom.VariableDeclaration;
 
-public class CompositeVariable extends AbstractVariable  implements Serializable{
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 4533681874892587063L;
+public class CompositeVariable extends AbstractVariable {
 	private AbstractVariable rightPart;
 	private volatile int hashCode = 0;
-	
+
 	public CompositeVariable(VariableDeclaration variableDeclaration, AbstractVariable rightPart) {
 		super(variableDeclaration);
 		this.rightPart = rightPart;
 	}
 
+	public CompositeVariable(AbstractVariable argument, AbstractVariable rightPart) {
+		super(argument.getVariableDeclaration());
+		this.rightPart = rightPart;
+	}
 	//if composite variable is "one.two.three" then right part is "two.three"
 	public AbstractVariable getRightPart() {
 		return rightPart;
 	}
 
 	//if composite variable is "one.two.three" then left part is "one.two"
-	private AbstractVariable getLeftPart() {
+	public AbstractVariable getLeftPart() {
 		PlainVariable leftPart;
 		if(variableDeclaration!=null)
 			leftPart = new PlainVariable(getVariableDeclaration());
 		else
 			leftPart = new PlainVariable(variableName);
-		
+
 		if(rightPart instanceof PlainVariable) {
 			return leftPart;
 		}
@@ -40,7 +38,7 @@ public class CompositeVariable extends AbstractVariable  implements Serializable
 	}
 
 	//if composite variable is "one.two.three" then final variable is "three"
-	private PlainVariable getFinalVariable() {
+	public PlainVariable getFinalVariable() {
 		if(rightPart instanceof PlainVariable) {
 			return (PlainVariable)rightPart;
 		}
@@ -78,7 +76,7 @@ public class CompositeVariable extends AbstractVariable  implements Serializable
 		}
 	}
 
-	private AbstractVariable getRightPartAfterPrefix(AbstractVariable variable) {
+	public AbstractVariable getRightPartAfterPrefix(AbstractVariable variable) {
 		if(variable instanceof PlainVariable) {
 			if(this.getInitialVariable().equals((PlainVariable)variable))
 				return this.getRightPart();

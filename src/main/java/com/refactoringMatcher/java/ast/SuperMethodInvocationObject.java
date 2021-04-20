@@ -1,18 +1,12 @@
 package com.refactoringMatcher.java.ast;
 
-import java.io.Serializable;
 import java.util.List;
 
 import org.eclipse.jdt.core.dom.SuperMethodInvocation;
 
-public class SuperMethodInvocationObject extends AbstractMethodInvocationObject  implements Serializable{
+public class SuperMethodInvocationObject extends AbstractMethodInvocationObject {
 
-    /**
-	 * 
-	 */
-	private static final long serialVersionUID = 2377579727382456994L;
-
-	public SuperMethodInvocationObject(TypeObject originClassType, String methodName, TypeObject returnType) {
+    public SuperMethodInvocationObject(TypeObject originClassType, String methodName, TypeObject returnType) {
         super(originClassType, methodName, returnType);
     }
 

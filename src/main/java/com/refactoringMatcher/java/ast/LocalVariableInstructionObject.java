@@ -1,23 +1,17 @@
 package com.refactoringMatcher.java.ast;
 
-import java.io.Serializable;
-
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.QualifiedName;
 import org.eclipse.jdt.core.dom.SimpleName;
 
-public class LocalVariableInstructionObject  implements Serializable{
-    /**
-	 * 
-	 */
-	private static final long serialVersionUID = 4680603151753351907L;
-	private String name;
+public class LocalVariableInstructionObject {
+    private String name;
     private ASTInformation simpleName;
     private volatile int hashCode = 0;
 
     public LocalVariableInstructionObject(SimpleName simpleName) {
-    	this.simpleName = ASTInformationGenerator.generateASTInformation(simpleName);
-    	this.name = simpleName.getIdentifier();
+        this.simpleName = ASTInformationGenerator.generateASTInformation(simpleName);
+        this.name = simpleName.getIdentifier();
     }
 
     public String getName() {
@@ -25,13 +19,13 @@ public class LocalVariableInstructionObject  implements Serializable{
     }
 
     public SimpleName getSimpleName() {
-    	ASTNode node = this.simpleName.recoverASTNode();
-    	if(node instanceof QualifiedName) {
-    		return ((QualifiedName)node).getName();
-    	}
-    	else {
-    		return (SimpleName)node;
-    	}
+        ASTNode node = this.simpleName.recoverASTNode();
+        if(node instanceof QualifiedName) {
+            return ((QualifiedName)node).getName();
+        }
+        else {
+            return (SimpleName)node;
+        }
     }
 
     public boolean equals(Object o) {
@@ -39,28 +33,28 @@ public class LocalVariableInstructionObject  implements Serializable{
             return true;
         }
         if (o instanceof LocalVariableInstructionObject) {
-        	LocalVariableInstructionObject lvio = (LocalVariableInstructionObject)o;
+            LocalVariableInstructionObject lvio = (LocalVariableInstructionObject)o;
             return this.hashCode() == lvio.hashCode();
         }
         return false;
     }
 
     public boolean equals(LocalVariableDeclarationObject lvdo) {
-    	return this.name.equals(lvdo.getName());
+        return this.name.equals(lvdo.getName());
     }
 
     public boolean equals(ParameterObject parameter) {
-    	return this.name.equals(parameter.getName());
+        return this.name.equals(parameter.getName());
     }
 
     public int hashCode() {
-    	if(hashCode == 0) {
-    		int result = 17;
-    		result = 37*result + name.hashCode();
-    		result = 37*result + simpleName.hashCode();
-    		hashCode = result;
-    	}
-    	return hashCode;
+        if(hashCode == 0) {
+            int result = 17;
+            result = 37*result + name.hashCode();
+            result = 37*result + simpleName.hashCode();
+            hashCode = result;
+        }
+        return hashCode;
     }
 
     public String toString() {

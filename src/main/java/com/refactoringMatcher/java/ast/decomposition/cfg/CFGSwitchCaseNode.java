@@ -1,15 +1,10 @@
 package com.refactoringMatcher.java.ast.decomposition.cfg;
 
-import com.refactoringMatcher.java.ast.decomposition.AbstractStatement;
 import org.eclipse.jdt.core.dom.SwitchCase;
 
-import java.io.Serializable;
+import com.refactoringMatcher.java.ast.decomposition.AbstractStatement;
 
-public class CFGSwitchCaseNode extends CFGNode  implements Serializable{
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 2169879772628197678L;
+public class CFGSwitchCaseNode extends CFGNode {
 	private boolean isDefault;
 	
 	public CFGSwitchCaseNode(AbstractStatement statement) {

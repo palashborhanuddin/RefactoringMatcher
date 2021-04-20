@@ -1,12 +1,35 @@
 package com.refactoringMatcher.java.ast.util;
 
+import com.refactoringMatcher.java.ast.decomposition.AbstractMethodFragment;
 import com.refactoringMatcher.java.ast.decomposition.cfg.AbstractVariable;
 import com.refactoringMatcher.java.ast.decomposition.cfg.CompositeVariable;
 import com.refactoringMatcher.java.ast.decomposition.cfg.PlainVariable;
-import org.eclipse.jdt.core.dom.*;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
+import org.eclipse.jdt.core.dom.ArrayAccess;
+import org.eclipse.jdt.core.dom.Assignment;
+import org.eclipse.jdt.core.dom.Block;
+import org.eclipse.jdt.core.dom.BodyDeclaration;
+import org.eclipse.jdt.core.dom.EnumDeclaration;
+import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.ExpressionStatement;
+import org.eclipse.jdt.core.dom.FieldAccess;
+import org.eclipse.jdt.core.dom.IBinding;
+import org.eclipse.jdt.core.dom.IVariableBinding;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.Name;
+import org.eclipse.jdt.core.dom.QualifiedName;
+import org.eclipse.jdt.core.dom.ReturnStatement;
+import org.eclipse.jdt.core.dom.SimpleName;
+import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
+import org.eclipse.jdt.core.dom.Statement;
+import org.eclipse.jdt.core.dom.ThisExpression;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
+import org.eclipse.jdt.core.dom.VariableDeclaration;
 
 public class MethodDeclarationUtility {
 
@@ -152,14 +175,14 @@ public class MethodDeclarationUtility {
 	}
 
 	public static AbstractVariable createVariable(SimpleName simpleName, AbstractVariable rightPart) {
-		IBinding binding = simpleName.resolveBinding();
-		if(binding != null && binding.getKind() == IBinding.VARIABLE) {
-			IVariableBinding variableBinding = (IVariableBinding)binding;
+	//	IBinding binding = simpleName.resolveBinding();
+	//	if(binding != null && binding.getKind() == IBinding.VARIABLE) {
+	//		IVariableBinding variableBinding = (IVariableBinding)binding;
 			AbstractVariable currentVariable = null;
 			if(rightPart == null)
-				currentVariable = new PlainVariable((VariableDeclaration)simpleName.getParent());
+				currentVariable = new PlainVariable(simpleName.getIdentifier());
 			else
-				currentVariable = new CompositeVariable((VariableDeclaration)simpleName.getParent(), rightPart);
+				currentVariable = new CompositeVariable((VariableDeclaration) simpleName.getParent(), rightPart);
 			
 			if(simpleName.getParent() instanceof QualifiedName) {
 				QualifiedName qualifiedName = (QualifiedName)simpleName.getParent();
@@ -194,7 +217,7 @@ public class MethodDeclarationUtility {
 			else {
 				return currentVariable;
 			}
-		}
+		//}
 		return null;
 	}
 

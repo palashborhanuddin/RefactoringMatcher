@@ -1,23 +1,23 @@
 package com.refactoringMatcher.java.ast;
 
-import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.ListIterator;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.VariableDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
-public class FieldObject extends VariableDeclarationObject  implements Serializable{
+public class FieldObject extends VariableDeclarationObject {
 
-    /**
-	 * 
-	 */
-	private static final long serialVersionUID = 5674105161961986298L;
-	private String name;
+    private String name;
     private TypeObject type;
+    private List<CommentObject> commentList;
     private boolean _static;
     private Access access;
     private String className;
+    //private VariableDeclarationFragment fragment;
     private ASTInformation fragment;
     private volatile int hashCode = 0;
 
@@ -26,13 +26,17 @@ public class FieldObject extends VariableDeclarationObject  implements Serializa
         this.name = name;
         this._static = false;
         this.access = Access.NONE;
+        this.commentList = new ArrayList<CommentObject>();
     }
 
     public void setVariableDeclarationFragment(VariableDeclarationFragment fragment) {
+    	//this.fragment = fragment;
+    	this.variableBindingKey = fragment.resolveBinding().getKey();
     	this.fragment = ASTInformationGenerator.generateASTInformation(fragment);
     }
 
     public VariableDeclarationFragment getVariableDeclarationFragment() {
+    	//return this.fragment;
     	ASTNode node = this.fragment.recoverASTNode();
     	if(node instanceof SimpleName) {
     		return (VariableDeclarationFragment)node.getParent();
@@ -58,6 +62,18 @@ public class FieldObject extends VariableDeclarationObject  implements Serializa
         return type;
     }
 
+	public boolean addComment(CommentObject comment) {
+		return commentList.add(comment);
+	}
+
+	public boolean addComments(List<CommentObject> comments) {
+		return commentList.addAll(comments);
+	}
+
+	public ListIterator<CommentObject> getCommentListIterator() {
+		return commentList.listIterator();
+	}
+
     public boolean isStatic() {
         return _static;
     }
@@ -67,7 +83,7 @@ public class FieldObject extends VariableDeclarationObject  implements Serializa
     }
 
     public FieldInstructionObject generateFieldInstruction() {
-    	FieldInstructionObject fieldInstruction = new FieldInstructionObject(this.className, this.type, this.name/*, this.variableBindingKey*/);
+    	FieldInstructionObject fieldInstruction = new FieldInstructionObject(this.className, this.type, this.name, this.variableBindingKey);
     	fieldInstruction.setStatic(this._static);
     	return fieldInstruction;
     }
@@ -80,8 +96,8 @@ public class FieldObject extends VariableDeclarationObject  implements Serializa
         if (o instanceof FieldObject) {
             FieldObject fieldObject = (FieldObject)o;
             return this.className.equals(fieldObject.className) &&
-            	this.name.equals(fieldObject.name) /*&& this.type.equals(fieldObject.type)*//* &&
-            	this.variableBindingKey.equals(fieldObject.variableBindingKey)*/;
+            	this.name.equals(fieldObject.name) && this.type.equals(fieldObject.type) &&
+            	this.variableBindingKey.equals(fieldObject.variableBindingKey);
         }
         return false;
     }
@@ -95,14 +111,17 @@ public class FieldObject extends VariableDeclarationObject  implements Serializa
     }
 
     public boolean equals(FieldInstructionObject fio) {
-        return /*this.className.equals(fio.getOwnerClass()) &&*/
-        this.name.equals(fio.getName()) /*&& this.type.equals(fio.getType())*/ /*&& this.variableBindingKey.equals(fio.getVariableBindingKey())*/;
+        return this.className.equals(fio.getOwnerClass()) &&
+        this.name.equals(fio.getName()) && this.type.equals(fio.getType()) && this.variableBindingKey.equals(fio.getVariableBindingKey());
     }
 
     public int hashCode() {
     	if(hashCode == 0) {
     		int result = 17;
+    		result = 37*result + className.hashCode();
     		result = 37*result + name.hashCode();
+    		result = 37*result + type.hashCode();
+    		result = 37*result + variableBindingKey.hashCode();
     		hashCode = result;
     	}
     	return hashCode;

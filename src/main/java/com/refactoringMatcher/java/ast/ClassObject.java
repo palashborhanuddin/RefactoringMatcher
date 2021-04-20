@@ -1,8 +1,10 @@
 package com.refactoringMatcher.java.ast;
 
-import java.io.Serializable;
-import java.util.ArrayList;
+import com.refactoringMatcher.java.ast.decomposition.MethodBodyObject;
+import com.refactoringMatcher.java.ast.util.TypeCheckElimination;
+
 import java.util.List;
+import java.util.ArrayList;
 import java.util.ListIterator;
 
 import org.eclipse.core.resources.IFile;
@@ -11,12 +13,8 @@ import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.eclipse.jdt.core.dom.EnumDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
-public class ClassObject extends ClassDeclarationObject  implements Serializable{
+public class ClassObject extends ClassDeclarationObject {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -8200380705834891351L;
 	private List<ConstructorObject> constructorList;
 	private List<EnumConstantDeclarationObject> enumConstantDeclarationList;
 	private TypeObject superclass;
@@ -132,10 +130,9 @@ public class ClassObject extends ClassDeclarationObject  implements Serializable
 			}
 		}
 		if(superclass != null) {
-/*			ClassObject superclassObject = ASTReader.getSystemObject().getClassObject(superclass.getClassType());
+			ClassObject superclassObject = ASTReader.getSystemObject().getClassObject(superclass.getClassType());
 			if(superclassObject != null)
-				return superclassObject.isFriend(className);*/
-			throw new NullPointerException();
+				return superclassObject.isFriend(className);
 		}
 		return false;
 	}
@@ -147,6 +144,30 @@ public class ClassObject extends ClassDeclarationObject  implements Serializable
 			return true;
 		return false;
 	}
+
+    public List<TypeCheckElimination> generateTypeCheckEliminations() {
+    	List<TypeCheckElimination> typeCheckEliminations = new ArrayList<TypeCheckElimination>();
+    	if(!_enum) {
+    		for(MethodObject methodObject : methodList) {
+    			MethodBodyObject methodBodyObject = methodObject.getMethodBody();
+    			if(methodBodyObject != null) {
+    				List<TypeCheckElimination> list = methodBodyObject.generateTypeCheckEliminations();
+    				for(TypeCheckElimination typeCheckElimination : list) {
+    					if(!typeCheckElimination.allTypeCheckBranchesAreEmpty()) {
+    						//TypeCheckCodeFragmentAnalyzer analyzer = new TypeCheckCodeFragmentAnalyzer(typeCheckElimination, typeDeclaration, methodObject.getMethodDeclaration());
+    						TypeCheckCodeFragmentAnalyzer analyzer = new TypeCheckCodeFragmentAnalyzer(typeCheckElimination, (TypeDeclaration)getAbstractTypeDeclaration(),
+    								methodObject.getMethodDeclaration(), iFile);
+    						if((typeCheckElimination.getTypeField() != null || typeCheckElimination.getTypeLocalVariable() != null || typeCheckElimination.getTypeMethodInvocation() != null) &&
+    								typeCheckElimination.allTypeCheckingsContainStaticFieldOrSubclassType() && typeCheckElimination.isApplicable()) {
+    							typeCheckEliminations.add(typeCheckElimination);
+    						}
+    					}
+    				}
+    			}
+    		}
+    	}
+    	return typeCheckEliminations;
+    }
 
     public void setAccess(Access access) {
         this.access = access;
@@ -231,6 +252,16 @@ public class ClassObject extends ClassDeclarationObject  implements Serializable
         while(ci.hasNext()) {
         	ConstructorObject co = ci.next();
             if(co.equals(cico))
+                return co;
+        }
+        return null;
+    }
+
+	public ConstructorObject getConstructor(ConstructorInvocationObject cio) {
+        ListIterator<ConstructorObject> ci = getConstructorIterator();
+        while(ci.hasNext()) {
+        	ConstructorObject co = ci.next();
+            if(co.equals(cio))
                 return co;
         }
         return null;

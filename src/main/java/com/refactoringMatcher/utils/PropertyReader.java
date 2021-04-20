@@ -20,7 +20,7 @@ public class PropertyReader {
     static {
         InputStream inputStream;
         properties = new Properties();
-        String fileName = "config.properties";
+        String fileName = "refactoring-matcher-config.properties";
 
         try {
             inputStream = PropertyReader.class.getClassLoader().getResourceAsStream(fileName);

@@ -1,16 +1,14 @@
 package com.refactoringMatcher.java.ast;
 
-import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.jdt.core.ITypeRoot;
 import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
 
-public class AnonymousClassDeclarationObject extends ClassDeclarationObject  implements Serializable{
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1758804424797822243L;
+public class AnonymousClassDeclarationObject extends ClassDeclarationObject {
 	private ASTInformation anonymousClassDeclaration;
 	private ClassObject classObject;
 	
@@ -43,6 +41,21 @@ public class AnonymousClassDeclarationObject extends ClassDeclarationObject  imp
 
 	public TypeObject getSuperclass() {
 		return null;
+	}
+
+	protected void accessedFieldFromThisClass(Set<FieldObject> fields, FieldInstructionObject fieldInstruction) {
+		List<FieldObject> allFields = new ArrayList<FieldObject>(fieldList);
+		if(classObject != null) {
+			//add the fields of the class in which the anonymous class is declared
+			allFields.addAll(classObject.fieldList);
+		}
+		for(FieldObject field : allFields) {
+			if(field.equals(fieldInstruction)) {
+				if(!fields.contains(field))
+					fields.add(field);
+				break;
+			}
+		}
 	}
 
 	public String toString() {

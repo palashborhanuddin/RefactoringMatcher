@@ -1,6 +1,5 @@
 package com.refactoringMatcher.java.ast;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.LinkedHashMap;
@@ -10,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.TreeNode;
 
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.InfixExpression;
@@ -18,11 +18,7 @@ import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.Type;
 
-public class IfStatementExpressionAnalyzer  implements Serializable{
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -3157505293250158893L;
+public class IfStatementExpressionAnalyzer {
 	//parent nodes are CONDITIONAL_AND (&&), CONDITIONAL_OR (||) infix operators, while leaf nodes are expressions
 	private DefaultMutableTreeNode root;
 	private Expression completeExpression;
@@ -273,9 +269,11 @@ public class IfStatementExpressionAnalyzer  implements Serializable{
 	}
 	
 	public boolean allParentNodesAreConditionalAndOperators() {
-		Enumeration<DefaultMutableTreeNode> enumeration = root.breadthFirstEnumeration();
+		// changed type to treenode from DefaultMutableTreeNode
+		Enumeration<TreeNode> enumeration = root.breadthFirstEnumeration();
 		while(enumeration.hasMoreElements()) {
-			DefaultMutableTreeNode node = enumeration.nextElement();
+			// cast added
+			DefaultMutableTreeNode node = (DefaultMutableTreeNode) enumeration.nextElement();
 			if(!node.isLeaf()) {
 				InfixExpression.Operator operator = (InfixExpression.Operator)node.getUserObject();
 				if(!operator.equals(InfixExpression.Operator.CONDITIONAL_AND))
@@ -286,9 +284,9 @@ public class IfStatementExpressionAnalyzer  implements Serializable{
 	}
 
 	public boolean allParentNodesAreConditionalOrOperators() {
-		Enumeration<DefaultMutableTreeNode> enumeration = root.breadthFirstEnumeration();
+		Enumeration<TreeNode> enumeration = root.breadthFirstEnumeration();
 		while(enumeration.hasMoreElements()) {
-			DefaultMutableTreeNode node = enumeration.nextElement();
+			DefaultMutableTreeNode node = (DefaultMutableTreeNode) enumeration.nextElement();
 			if(!node.isLeaf()) {
 				InfixExpression.Operator operator = (InfixExpression.Operator)node.getUserObject();
 				if(!operator.equals(InfixExpression.Operator.CONDITIONAL_OR))
@@ -300,9 +298,9 @@ public class IfStatementExpressionAnalyzer  implements Serializable{
 	
 	public int getNumberOfConditionalOperatorNodes() {
 		int counter = 0;
-		Enumeration<DefaultMutableTreeNode> enumeration = root.breadthFirstEnumeration();
+		Enumeration<TreeNode> enumeration = root.breadthFirstEnumeration();
 		while(enumeration.hasMoreElements()) {
-			DefaultMutableTreeNode node = enumeration.nextElement();
+			DefaultMutableTreeNode node = (DefaultMutableTreeNode) enumeration.nextElement();
 			if(!node.isLeaf()) {
 				counter++;
 			}

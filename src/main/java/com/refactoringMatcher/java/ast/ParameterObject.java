@@ -1,19 +1,14 @@
 package com.refactoringMatcher.java.ast;
 
-import java.io.Serializable;
-
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.VariableDeclaration;
 
-public class ParameterObject extends VariableDeclarationObject implements Serializable{
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -5268148924924318457L;
+public class ParameterObject extends VariableDeclarationObject {
 	private TypeObject type;
 	private String name;
 	private boolean varargs;
+	//private SingleVariableDeclaration singleVariableDeclaration;
 	private ASTInformation singleVariableDeclaration;
 	private volatile int hashCode = 0;
 
@@ -41,7 +36,14 @@ public class ParameterObject extends VariableDeclarationObject implements Serial
 		return varargs;
 	}
 
+	public void setSingleVariableDeclaration(SingleVariableDeclaration singleVariableDeclaration) {
+		//this.singleVariableDeclaration = singleVariableDeclaration;
+		this.variableBindingKey = singleVariableDeclaration.resolveBinding().getKey();
+		this.singleVariableDeclaration = ASTInformationGenerator.generateASTInformation(singleVariableDeclaration);
+	}
+
 	public SingleVariableDeclaration getSingleVariableDeclaration() {
+		//return this.singleVariableDeclaration;
 		return (SingleVariableDeclaration)this.singleVariableDeclaration.recoverASTNode();
 	}
 
@@ -50,10 +52,10 @@ public class ParameterObject extends VariableDeclarationObject implements Serial
             return true;
         }
 
-        if (o instanceof ParameterObject) {
-            ParameterObject parameterObject = (ParameterObject)o;
-            return this.hashCode() == parameterObject.hashCode();
-        }
+		if (o instanceof ParameterObject) {
+			ParameterObject parameterObject = (ParameterObject)o;
+			return this.hashCode() == parameterObject.hashCode();
+		}
         
         return false;
 	}
@@ -63,7 +65,7 @@ public class ParameterObject extends VariableDeclarationObject implements Serial
 			int result = 17;
 			result = 37*result + name.hashCode();
 			result = 37*result + type.hashCode();
-			result = 37*result + (varargs?result:0);
+			result = 37*result + (varargs ? result : 0);
 			result = 37*result + singleVariableDeclaration.hashCode();
 			hashCode = result;
 		}

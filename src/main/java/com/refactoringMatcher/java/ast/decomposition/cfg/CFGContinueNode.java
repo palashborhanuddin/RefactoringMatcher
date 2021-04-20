@@ -1,15 +1,10 @@
 package com.refactoringMatcher.java.ast.decomposition.cfg;
 
-import com.refactoringMatcher.java.ast.decomposition.AbstractStatement;
 import org.eclipse.jdt.core.dom.ContinueStatement;
 
-import java.io.Serializable;
+import com.refactoringMatcher.java.ast.decomposition.AbstractStatement;
 
-public class CFGContinueNode extends CFGNode  implements Serializable{
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -9214233871066669750L;
+public class CFGContinueNode extends CFGNode {
 	private String label;
 	private CFGNode innerMostLoopNode;
 	

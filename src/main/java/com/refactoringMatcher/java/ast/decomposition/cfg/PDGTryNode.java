@@ -1,24 +1,19 @@
 package com.refactoringMatcher.java.ast.decomposition.cfg;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
+import com.refactoringMatcher.java.ast.FieldObject;
 import com.refactoringMatcher.java.ast.VariableDeclarationObject;
 import com.refactoringMatcher.java.ast.decomposition.AbstractStatement;
 import com.refactoringMatcher.java.ast.decomposition.CatchClauseObject;
 import com.refactoringMatcher.java.ast.decomposition.TryStatementObject;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-
-public class PDGTryNode extends PDGBlockNode implements Serializable {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -3268570732551427034L;
-
-	public PDGTryNode(CFGTryNode cfgTryNode, Set<VariableDeclarationObject> variableDeclarationsInMethod/*,
-			Set<FieldObject> fieldsAccessedInMethod*/) {
-		super(cfgTryNode, variableDeclarationsInMethod/*, fieldsAccessedInMethod*/);
+public class PDGTryNode extends PDGBlockNode {
+	public PDGTryNode(CFGTryNode cfgTryNode, Set<VariableDeclarationObject> variableDeclarationsInMethod,
+			Set<FieldObject> fieldsAccessedInMethod) {
+		super(cfgTryNode, variableDeclarationsInMethod, fieldsAccessedInMethod);
 		this.controlParent = cfgTryNode.getControlParent();
 		determineDefinedAndUsedVariables();
 	}

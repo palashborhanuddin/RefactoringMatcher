@@ -1,17 +1,12 @@
 package com.refactoringMatcher.java.ast;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Set;
 
-public abstract class AbstractMethodInvocationObject  implements Serializable{
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 671745145529603529L;
+public abstract class AbstractMethodInvocationObject {
 	private TypeObject originClassType;
     private String methodName;
     private TypeObject returnType;
@@ -36,14 +31,6 @@ public abstract class AbstractMethodInvocationObject  implements Serializable{
         this.methodName = methodName;
         this.returnType = returnType;
         this.parameterList = parameterList;
-        this._static = false;
-    }
-    
-    public AbstractMethodInvocationObject(String methodName, TypeObject returnType) {
-        this.methodName = methodName;
-        this.returnType = returnType;
-        this.parameterList = new ArrayList<TypeObject>();
-        this.thrownExceptions = new LinkedHashSet<String>();
         this._static = false;
     }
 

@@ -1,8 +1,6 @@
 package com.refactoringMatcher.java.ast.decomposition;
 
-import java.io.Serializable;
-
-public enum StatementType implements Serializable{
+public enum StatementType {
 	ASSERT,
 	BLOCK {
 		public String toString() {

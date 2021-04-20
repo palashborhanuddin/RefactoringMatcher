@@ -1,19 +1,13 @@
 package com.refactoringMatcher.java.ast.decomposition.cfg;
 
-import java.io.Serializable;
-
-public abstract class PDGAbstractDataDependence extends PDGDependence  implements Serializable{
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 22228578950586322L;
+public abstract class PDGAbstractDataDependence extends PDGDependence {
 	private AbstractVariable data;
 	private CFGBranchNode loop;
 	private volatile int hashCode = 0;
 	
 	public PDGAbstractDataDependence(PDGNode src, PDGNode dst, PDGDependenceType type,
-			AbstractVariable data, CFGBranchNode loop, Graph graph) {
-		super(src, dst, type, graph);
+			AbstractVariable data, CFGBranchNode loop) {
+		super(src, dst, type);
 		this.data = data;
 		this.loop = loop;
 		src.addOutgoingEdge(this);
@@ -46,7 +40,7 @@ public abstract class PDGAbstractDataDependence extends PDGDependence  implement
 				equalLoop = this.loop.equals(dataDependence.loop);
 			if(this.loop == null && dataDependence.loop == null)
 				equalLoop = true;
-			return this.getSrc().equals(dataDependence.getSrc()) && this.getDst().equals(dataDependence.getDst()) &&
+			return this.src.equals(dataDependence.src) && this.dst.equals(dataDependence.dst) &&
 				this.data.equals(dataDependence.data) && equalLoop &&
 				this.getType().equals(dataDependence.getType());
 		}
@@ -56,8 +50,8 @@ public abstract class PDGAbstractDataDependence extends PDGDependence  implement
 	public int hashCode() {
 		if(hashCode == 0) {
 			int result = 17;
-			result = 37*result + getSrc().hashCode();
-			result = 37*result + getDst().hashCode();
+			result = 37*result + src.hashCode();
+			result = 37*result + dst.hashCode();
 			result = 37*result + data.hashCode();
 			if(loop != null)
 				result = 37*result + loop.hashCode();
@@ -67,12 +61,11 @@ public abstract class PDGAbstractDataDependence extends PDGDependence  implement
 		return hashCode;
 	}
 
-	@Override
 	public String toString() {
-		String loopInfo = isLoopCarried() ? " (through loop " + loop.getId() + ")": "";
-		return getSrc().toString() + "-->" + getDst().toString() 
-		+ " <" + getType().toString().toLowerCase() + "> " + data.toString() 
-		+	loopInfo 
-		+	"\n";
+		String loopInfo = isLoopCarried() ? " through loop " + loop.getId() : "";
+		return src.toString() + "-->" + data.toString() +
+				" <" + getType().toString().toLowerCase() + ">" +
+				loopInfo +
+				"\n" + dst.toString();
 	}
 }

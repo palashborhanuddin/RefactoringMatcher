@@ -5,27 +5,21 @@ import org.eclipse.jdt.core.ITypeRoot;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.*;
 
-import java.io.Serializable;
 import java.util.Map;
 
-public class ASTInformation implements Serializable {
+public class ASTInformation {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1592516912019481596L;
 	private ITypeRoot iTypeRoot;
 	private int startPosition;
 	private int length;
 	private int nodeType;
 	private volatile int hashCode = 0;
-
+	
 	public ASTInformation(ITypeRoot iTypeRoot, ASTNode astNode) {
 		this.iTypeRoot = iTypeRoot;
 		this.startPosition = astNode.getStartPosition();
 		this.length = astNode.getLength();
 		this.nodeType = astNode.getNodeType();
-		hashCode();
 	}
 
 	public ASTNode recoverASTNode() {
@@ -54,11 +48,11 @@ public class ASTInformation implements Serializable {
 			return null;
 		}
 	}
-
+	
 	public ITypeRoot getITypeRoot() {
 		return iTypeRoot;
 	}
-
+	
 	public int getStartPosition() {
 		return startPosition;
 	}
@@ -68,18 +62,20 @@ public class ASTInformation implements Serializable {
 	}
 
 	public boolean equals(Object o) {
-		if (this == o) {
+		if(this == o) {
 			return true;
 		}
-
-		if (o instanceof ASTInformation) {
-			ASTInformation astInformation = (ASTInformation) o;
-			return this.iTypeRoot.equals(astInformation.iTypeRoot) && this.startPosition == astInformation.startPosition
-					&& this.length == astInformation.length && this.nodeType == astInformation.nodeType;
+		
+		if(o instanceof ASTInformation) {
+			ASTInformation astInformation = (ASTInformation)o;
+			return this.iTypeRoot.equals(astInformation.iTypeRoot) &&
+					this.startPosition == astInformation.startPosition &&
+					this.length == astInformation.length &&
+					this.nodeType == astInformation.nodeType;
 		}
 		return false;
 	}
-
+	
 	public int hashCode() {
 		if (hashCode == 0) {
 			int result = 17;

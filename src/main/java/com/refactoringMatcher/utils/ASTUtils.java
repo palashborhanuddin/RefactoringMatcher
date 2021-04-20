@@ -1,14 +1,18 @@
 package com.refactoringMatcher.utils;
 
 import com.refactoringMatcher.java.ast.ConstructorObject;
+import com.refactoringMatcher.java.ast.ImportObject;
 import com.refactoringMatcher.java.ast.MethodObject;
+import io.vavr.Tuple3;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Diptopol
@@ -18,8 +22,14 @@ public class ASTUtils {
 
     private static Logger logger = LoggerFactory.getLogger(ASTUtils.class);
 
-    public static MethodObject createMethodObject(MethodDeclaration methodDeclaration) {
-        final ConstructorObject constructorObject = new ConstructorObject(methodDeclaration);
+    public static MethodObject createMethodObject(MethodDeclaration methodDeclaration, List<ImportObject> importObjectList) {
+        final ConstructorObject constructorObject = new ConstructorObject(methodDeclaration, importObjectList);
+
+        return new MethodObject(constructorObject);
+    }
+
+    public static MethodObject createMethodObject(MethodDeclaration methodDeclaration, List<ImportObject> importObjectList, Set<Tuple3<String, String, String>> jarSet) {
+        final ConstructorObject constructorObject = new ConstructorObject(methodDeclaration, importObjectList, jarSet);
 
         return new MethodObject(constructorObject);
     }
@@ -30,26 +40,52 @@ public class ASTUtils {
     }
 
     public static CompilationUnit getCompilationUnit(String sourceCode) {
-        ASTParser parser = ASTParser.newParser(AST.JLS8);
+        ASTParser parser = ASTParser.newParser(AST.JLS14);
         parser.setKind(ASTParser.K_COMPILATION_UNIT);
+
+        Map options = JavaCore.getOptions();
+        JavaCore.setComplianceOptions(JavaCore.VERSION_1_8, options);
+        parser.setCompilerOptions(options);
+
         parser.setSource(sourceCode.toCharArray());
-        parser.setResolveBindings(true);
+
         return (CompilationUnit) parser.createAST(null);
     }
 
+    /**
+     *
+     * TODO: Compilation Unit creation should be replaced by {@link ASTUtils#getCompilationUnit(String)}
+     *
+     * @param file
+     * @param wholeText
+     * @param startOffSet
+     * @param length
+     * @return
+     * @throws Exception
+     */
     public static MethodDeclaration getMethodDeclaration(String file, String wholeText, int startOffSet, int length)
             throws Exception {
         MethodDeclaration methodDeclaration;
         try {
-            ASTParser parser = ASTParser.newParser(AST.JLS8);
+            ASTParser parser = ASTParser.newParser(AST.JLS14);
             parser.setKind(ASTParser.K_COMPILATION_UNIT);
             Map options = JavaCore.getOptions();
             JavaCore.setComplianceOptions(JavaCore.VERSION_1_8, options);
             parser.setCompilerOptions(options);
-            parser.setResolveBindings(false);
-            parser.setEnvironment(new String[0], new String[] { file }, null, false);
+
+            /*
+             * If there is no need to resolving binding, then there should not be any necessity to resolve bindings.
+             */
+            /*parser.setEnvironment(new String[0], new String[] { file }, null, false);*/
+
             parser.setSource(wholeText.toCharArray());
-            parser.setResolveBindings(true);
+
+            /*
+             * We probably will not need to resolve binding types, since we will depend on Jar Analyzer too infer type
+             * and we aren't setting all the source files in the environment for
+             */
+            /*parser.setResolveBindings(true);*/
+
             CompilationUnit compilationUnit = (CompilationUnit) parser.createAST(null);
             ASTNode block = NodeFinder.perform(compilationUnit, startOffSet,
                     length);
