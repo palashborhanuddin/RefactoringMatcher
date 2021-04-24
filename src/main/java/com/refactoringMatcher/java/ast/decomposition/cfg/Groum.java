@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.*;
 
 import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
@@ -26,7 +27,7 @@ public class Groum extends Graph implements Serializable {
         compoundGroumNodes = new HashMap<PDGNode, GroumNode>();
         groumBlocks = new LinkedHashMap<GroumBlockNode, Set<CFGNode>>();
         Map<CFGBranchNode, Set<CFGNode>> pdgNestingMap = pdg.getPDGNestingMap();
-        GroumNode.setNodeNum(lastNodeNum);
+        //GroumNode.setNodeNum(lastNodeNum);
         for(CFGBranchNode key : pdgNestingMap.keySet()) {
             Set<CFGNode> nestedNodes = pdgNestingMap.get(key);
             GroumBlockNode block = new GroumBlockNode(key.getPDGNode());
@@ -43,9 +44,9 @@ public class Groum extends Graph implements Serializable {
             processNode(pdg, compilationUnit, pdgNode);
         }
         createGroumGraph(pdg);
-        //GraphNode.resetNodeNum();
-        //GroumBlockNode.resetBlockNum();
-        lastNodeNum = GraphNode.getNodeNum();
+        GraphNode.resetNodeNum();
+        GroumBlockNode.resetBlockNum();
+        //lastNodeNum = GraphNode.getNodeNum();
     }
 
     private void createGroumGraph(PDG pdg) {
@@ -75,12 +76,16 @@ public class Groum extends Graph implements Serializable {
                 if (Objects.nonNull(sourceGroumNode)) {
                     GroumNode src = sourceGroumNode;
                     GroumNode dst = compoundGroumNodes.get(outGoingEdge.getDst());
-                    if (GroumNodeType.CONTROL.equals(src.getGroumNodeType())) {
-                        src = src.GetInnerNode();
+                    /*if (GroumNodeType.CONTROL.equals(src.getGroumNodeType())) {
+                        for (GroumNode gnode : src.GetInnerNodes()) {
+                            src = gnode;
+                        }
                     }
                     if (GroumNodeType.CONTROL.equals(dst.getGroumNodeType())) {
-                        dst = dst.GetInnerNode();
-                    }
+                        for (GroumNode gnode : dst.GetInnerNodes()) {
+                            dst = gnode;
+                        }
+                    }*/
                     findEdgesActionNode(src, dst);
                     for (GroumNode node : listOfOutgoingEdgesDestination) {
                         findEdgesActionNode(node, dst);
@@ -94,69 +99,74 @@ public class Groum extends Graph implements Serializable {
     private void findEdgesActionNode(GroumNode src, GroumNode dst) {
         if (Objects.nonNull(src) && Objects.nonNull(dst)) {
             if (src.getId() != dst.getId()) {
-                if (src.definedVariables.size() > 0) {
-                    boolean related = false;
-                    for (AbstractVariable variable : src.definedVariables) {
-                        if (dst.definedVariables.contains(variable) || dst.usedVariables.contains(variable))
-                            related = true;
-                    }
-                    if (related) {
-                        addEdge(new GraphEdge(src, dst));
-                        // Find if belongs to groum control structure
-                        GroumBlockNode srcBlock = getNestedGroumBlock(src.GetPdgNode());
-                        GroumBlockNode dstBlock = getNestedGroumBlock(dst.GetPdgNode());
-                        if (Objects.nonNull(srcBlock) && Objects.nonNull(dstBlock) && !srcBlock.equals(dstBlock)) {
-                            GroumNode srcControlNode = compoundGroumNodes.get(srcBlock.getLeader());
-                            GroumNode dstControlNode = compoundGroumNodes.get(dstBlock.getLeader());
-                            addEdge(new GraphEdge(srcControlNode, dstControlNode));
+                if (!GroumNodeType.CONTROL.equals(src.getGroumNodeType()) && !GroumNodeType.CONTROL.equals(dst.getGroumNodeType())) {
+                    if (src.definedVariables.size() > 0) {
+                        boolean related = false;
+                        for (AbstractVariable variable : src.definedVariables) {
+                            if (dst.definedVariables.contains(variable) || dst.usedVariables.contains(variable))
+                                related = true;
+                        }
+                        if (related) {
+                            addEdge(new GraphEdge(src, dst));
+                            // Find if belongs to groum control structure
+                            GroumBlockNode srcBlock = getNestedGroumBlock(src.GetPdgNode());
+                            GroumBlockNode dstBlock = getNestedGroumBlock(dst.GetPdgNode());
+                            if (Objects.nonNull(srcBlock) && Objects.nonNull(dstBlock) && !srcBlock.equals(dstBlock)) {
+                                GroumNode srcControlNode = compoundGroumNodes.get(srcBlock.getLeader());
+                                GroumNode dstControlNode = compoundGroumNodes.get(dstBlock.getLeader());
+                                addEdge(new GraphEdge(srcControlNode, dstControlNode));
+                            }
                         }
                     }
                 }
-                findEdgesActionNode(src.GetInnerNode(), dst);
-                findEdgesActionNode(src, dst.GetInnerNode());
+                for (GroumNode snode : src.GetInnerNodes()) {
+                    findEdgesActionNode(snode, dst);
+                    for (GroumNode dnode : dst.GetInnerNodes()) {
+                        findEdgesActionNode(snode, dnode);
+                    }
+                }
             }
         }
     }
 
     private void extractTemporalGroum() {
-        GroumNode currentNode = null;
         GroumNode lastNode = null;
-
-        // [TODO GROUM] Parallel merging won't work here, need to address
 
         for (GroumNode node : compoundGroumNodes.values()) {
             if (Objects.isNull(node)) {
                 continue;
             }
 
-            currentNode = constructInnerNode(node);
-
+            List<GroumNode> currentNodes = new ArrayList<GroumNode>();
+            constructInnerNode(node, currentNodes);
             if (Objects.nonNull(lastNode)) {
-                addEdge(new GraphEdge(lastNode, currentNode));
+                for (GroumNode currentNode : currentNodes)
+                    addEdge(new GraphEdge(lastNode, currentNode));
             }
 
             lastNode = node;
         }
     }
 
-    private GroumNode getInnerNode(GroumNode groumNode) {
+    /*private GroumNode getInnerNode(GroumNode groumNode) {
         if (!groumNode.HasInnerNode()) {
             return groumNode;
         } else {
             return getInnerNode(groumNode.GetInnerNode());
         }
-    }
+    }*/
 
-    private GroumNode constructInnerNode(GroumNode groumNode) {
-        // [TODO GROUM] may have issue with parallel node
+    private void constructInnerNode(GroumNode groumNode, List<GroumNode> innerNodes) {
         if (!groumNode.HasInnerNode()) {
             addNode(groumNode);
-            return groumNode;
+            innerNodes.add(groumNode);
         } else {
-            GroumNode innerNode = constructInnerNode(groumNode.GetInnerNode());
-            addNode(groumNode);
-            addEdge(new GraphEdge(groumNode.GetInnerNode(), groumNode));
-            return innerNode;
+            List<GroumNode> nodeList = groumNode.GetInnerNodes();
+            for (GroumNode node : nodeList) {
+                constructInnerNode(node, innerNodes);
+                addNode(groumNode);
+                addEdge(new GraphEdge(node, groumNode));
+            }
         }
     }
 
@@ -177,8 +187,48 @@ public class Groum extends Graph implements Serializable {
         return null;
     }
 
+    private GroumNode findPreviousNode(Deque<GroumNode> groumNodes, GroumNode poppedNode) {
+        Iterator nodeIterator = groumNodes.iterator();
+
+        while (nodeIterator.hasNext()) {
+            GroumNode node = (GroumNode)nodeIterator.next();
+            if (poppedNode instanceof GroumMethodInvocationNode) {
+                GroumMethodInvocationNode gmi = (GroumMethodInvocationNode)poppedNode;
+                ASTNode astNode = gmi.GetMethodInvocation();
+                if (matchForParent(node, astNode)) return node;
+            } else if (poppedNode instanceof GroumClassInstantiationNode) {
+                GroumClassInstantiationNode gci = (GroumClassInstantiationNode) poppedNode;
+                ASTNode astNode = gci.GetClassInstanceCreation();
+                if (matchForParent(node, astNode)) return node;
+            } else if (poppedNode instanceof GroumFieldAccessNode) {
+                GroumFieldAccessNode gfa = (GroumFieldAccessNode) poppedNode;
+                ASTNode astNode = gfa.GetFieldAccessStatement();
+                if (matchForParent(node, astNode)) return node;
+            }
+        }
+        return groumNodes.peek();
+    }
+
+    private boolean matchForParent(GroumNode node, ASTNode astNode) {
+        if (astNode == null)
+            return false;
+        if (node instanceof GroumMethodInvocationNode) {
+            GroumMethodInvocationNode gnode = (GroumMethodInvocationNode)node;
+            if (astNode.getParent() == gnode.GetMethodInvocation()) {
+                return true;
+            }
+        }
+        else if (node instanceof GroumClassInstantiationNode) {
+            GroumClassInstantiationNode gnode = (GroumClassInstantiationNode) node;
+            if (astNode.getParent() == gnode.GetClassInstanceCreation()) {
+                return true;
+            }
+        }
+        return matchForParent(node, astNode.getParent());
+    }
+
     private void processNode(PDG pdg, CompilationUnit compilationUnit, PDGNode pdgNode) {
-        Stack<GroumNode> groumNodes = new Stack<GroumNode>();
+        Deque<GroumNode> groumNodes = new ArrayDeque<GroumNode>();
         compilationUnit.accept(new ASTVisitor() {
             public boolean visit(ClassInstanceCreation statement) {
                 GroumClassInstantiationNode gcicn = new GroumClassInstantiationNode(statement, pdgNode, getNestedGroumBlock(pdgNode));
@@ -220,14 +270,13 @@ public class Groum extends Graph implements Serializable {
 
         while (groumNodes.size() > 1) {
             GroumNode poppedNode = groumNodes.pop();
-            GroumNode previousNode = groumNodes.peek();
+            GroumNode previousNode = findPreviousNode(groumNodes, poppedNode);
             previousNode.SetInnerNode(poppedNode);
         }
 
         if (!groumNodes.isEmpty()) {
             GroumNode node = groumNodes.pop();
             compoundGroumNodes.put(pdgNode, node);
-
         } else {
             compoundGroumNodes.put(pdgNode, null);
         }

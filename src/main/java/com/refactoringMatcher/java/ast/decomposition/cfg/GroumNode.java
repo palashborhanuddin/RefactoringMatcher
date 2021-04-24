@@ -3,9 +3,7 @@ package com.refactoringMatcher.java.ast.decomposition.cfg;
 import com.refactoringMatcher.java.ast.FieldInstructionObject;
 
 import java.io.Serializable;
-import java.util.LinkedHashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 public class GroumNode extends GraphNode implements Serializable  {
 
@@ -17,7 +15,8 @@ public class GroumNode extends GraphNode implements Serializable  {
 	protected Set<AbstractVariable> usedVariables;
 	private GroumNodeType groumNodeType;
 	private GroumBlockNode groumBlockNode;
-	private GroumNode innerNode;
+	//private GroumNode innerNode;
+	private List<GroumNode> innerNodes;
 
 	public GroumNode(PDGNode pdg, GroumNodeType nodeType){
 		pdgNode = pdg;
@@ -26,6 +25,7 @@ public class GroumNode extends GraphNode implements Serializable  {
 		this.declaredVariables = new LinkedHashSet<AbstractVariable>();
 		this.definedVariables = new LinkedHashSet<AbstractVariable>();
 		this.usedVariables = new LinkedHashSet<AbstractVariable>();
+		this.innerNodes = new ArrayList<GroumNode>();
 	}
 
 	public GroumNodeType getGroumNodeType() {
@@ -33,15 +33,16 @@ public class GroumNode extends GraphNode implements Serializable  {
 	}
 
 	public void SetInnerNode(GroumNode node) {
-		innerNode = node;
+		//innerNode = node;
+		innerNodes.add(node);
 	}
 
-	public GroumNode GetInnerNode()	{
-		return innerNode;
+	public List<GroumNode> GetInnerNodes()	{
+		return innerNodes;
 	}
 	
 	public boolean HasInnerNode() {
-		return innerNode != null;
+		return (innerNodes.size() > 0);
 	}
 
 	public GroumBlockNode getGroumBlockNode() {
