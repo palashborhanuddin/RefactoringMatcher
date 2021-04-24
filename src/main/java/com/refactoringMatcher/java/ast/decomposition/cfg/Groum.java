@@ -73,19 +73,15 @@ public class Groum extends Graph implements Serializable {
             if (PDGDependenceType.CONTROL.equals(outGoingPDGEdge.getType())
                     || PDGDependenceType.DATA.equals(outGoingPDGEdge.getType())
                     || PDGDependenceType.DEF_ORDER.equals(outGoingPDGEdge.getType())) {
+                if (PDGDependenceType.DATA.equals(outGoingPDGEdge.getType())) {
+                    PDGAbstractDataDependence outGoingPDGAbstractEdge = (PDGAbstractDataDependence) outGoingEdge;
+                    if (outGoingPDGAbstractEdge.isLoopCarried())
+                        continue;
+                }
                 if (Objects.nonNull(sourceGroumNode)) {
                     GroumNode src = sourceGroumNode;
                     GroumNode dst = compoundGroumNodes.get(outGoingEdge.getDst());
-                    /*if (GroumNodeType.CONTROL.equals(src.getGroumNodeType())) {
-                        for (GroumNode gnode : src.GetInnerNodes()) {
-                            src = gnode;
-                        }
-                    }
-                    if (GroumNodeType.CONTROL.equals(dst.getGroumNodeType())) {
-                        for (GroumNode gnode : dst.GetInnerNodes()) {
-                            dst = gnode;
-                        }
-                    }*/
+
                     findEdgesActionNode(src, dst);
                     for (GroumNode node : listOfOutgoingEdgesDestination) {
                         findEdgesActionNode(node, dst);
@@ -147,14 +143,6 @@ public class Groum extends Graph implements Serializable {
             lastNode = node;
         }
     }
-
-    /*private GroumNode getInnerNode(GroumNode groumNode) {
-        if (!groumNode.HasInnerNode()) {
-            return groumNode;
-        } else {
-            return getInnerNode(groumNode.GetInnerNode());
-        }
-    }*/
 
     private void constructInnerNode(GroumNode groumNode, List<GroumNode> innerNodes) {
         if (!groumNode.HasInnerNode()) {
