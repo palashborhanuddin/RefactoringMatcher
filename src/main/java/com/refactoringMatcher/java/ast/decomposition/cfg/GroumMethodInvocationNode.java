@@ -29,6 +29,7 @@ public class GroumMethodInvocationNode extends GroumActionNode implements Serial
 	private void determineDefinedAndUsedVariables() {
 
 		if (pdgNode.definedVariables.size() > 0) {
+			// TODO GROUM what if parent is another expression and then assign/declare? check for.
 			if ((methodInvocation.getParent() instanceof VariableDeclarationFragment)) {
 				Iterator<AbstractVariable> definedVariableIterator = this.pdgNode.getDefinedVariableIterator();
 
