@@ -192,7 +192,16 @@ public class Groum extends Graph implements Serializable {
                 GroumFieldAccessNode gfa = (GroumFieldAccessNode) poppedNode;
                 ASTNode astNode = gfa.GetFieldAccessStatement();
                 if (matchForParent(node, astNode)) return node;
+            } else if (poppedNode instanceof GroumWhileNode) {
+                GroumWhileNode gwn = (GroumWhileNode) poppedNode;
+                ASTNode astNode = gwn.GetWhileStatement();
+                if (matchForParent(node, astNode)) return node;
+            } else if (poppedNode instanceof GroumIfNode) {
+                GroumIfNode gin = (GroumIfNode) poppedNode;
+                ASTNode astNode = gin.GetIfStatement();
+                if (matchForParent(node, astNode)) return node;
             }
+            // TODO GROUM Handle for plain expressions
         }
         return groumNodes.peek();
     }
@@ -209,6 +218,18 @@ public class Groum extends Graph implements Serializable {
         else if (node instanceof GroumClassInstantiationNode) {
             GroumClassInstantiationNode gnode = (GroumClassInstantiationNode) node;
             if (astNode.getParent() == gnode.GetClassInstanceCreation()) {
+                return true;
+            }
+        }
+        else if (node instanceof GroumWhileNode) {
+            GroumWhileNode gnode = (GroumWhileNode) node;
+            if (astNode.getParent() == gnode.GetWhileStatement()) {
+                return true;
+            }
+        }
+        else if (node instanceof GroumIfNode) {
+            GroumIfNode gnode = (GroumIfNode) node;
+            if (astNode.getParent() == gnode.GetIfStatement()) {
                 return true;
             }
         }
