@@ -1,7 +1,18 @@
 package com.refactoringMatcher.java.ast.decomposition.cfg;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Deque;
+import java.util.ArrayDeque;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Objects;
+import java.time.Instant;
 
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -28,6 +39,7 @@ public class Groum extends Graph implements Serializable {
         groumBlocks = new LinkedHashMap<GroumBlockNode, Set<CFGNode>>();
         Map<CFGBranchNode, Set<CFGNode>> pdgNestingMap = pdg.getPDGNestingMap();
         //GroumNode.setNodeNum(lastNodeNum);
+        long prev = Instant.now().toEpochMilli();
         for(CFGBranchNode key : pdgNestingMap.keySet()) {
             Set<CFGNode> nestedNodes = pdgNestingMap.get(key);
             GroumBlockNode block = new GroumBlockNode(key.getPDGNode());
@@ -46,6 +58,8 @@ public class Groum extends Graph implements Serializable {
         createGroumGraph(pdg);
         GraphNode.resetNodeNum();
         GroumBlockNode.resetBlockNum();
+        long now = Instant.now().toEpochMilli();
+        System.out.println("Time taken: " + (now - prev) + " ms, started: " + prev + ", ended: " + now);
         //lastNodeNum = GraphNode.getNodeNum();
     }
 
@@ -68,7 +82,7 @@ public class Groum extends Graph implements Serializable {
     }
 
     private void groumEdgesCorrespondPdgOutgoingEdges(GroumNode sourceGroumNode, GraphNode sourcePdgNode) {
-        Set<GroumNode> listOfOutgoingEdgesDestination = new HashSet<GroumNode>();
+        Set<List<GroumNode>> listOfOutgoingEdgesDestination = new HashSet<List<GroumNode>>();
         for (GraphEdge outGoingEdge : sourcePdgNode.getOutgoingEdges()) {
             if (Objects.isNull(compoundGroumNodes.get(outGoingEdge.getDst())))
                 continue;
@@ -88,11 +102,12 @@ public class Groum extends Graph implements Serializable {
 
                     for (GroumNode dst : dsts) {
                         findEdgesActionNode(src, dst);
-                        for (GroumNode node : listOfOutgoingEdgesDestination) {
-                            findEdgesActionNode(node, dst);
+                        for (List<GroumNode> nodeList : listOfOutgoingEdgesDestination) {
+                            for (GroumNode node : nodeList)
+                                findEdgesActionNode(node, dst);
                         }
-                        listOfOutgoingEdgesDestination.add(dst);
                     }
+                    listOfOutgoingEdgesDestination.add(dsts);
                 }
             }
         }
