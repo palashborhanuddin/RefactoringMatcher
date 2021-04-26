@@ -11,6 +11,7 @@ import java.util.Deque;
 import java.util.ArrayDeque;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.time.Instant;
 
@@ -35,7 +36,7 @@ public class Groum extends Graph implements Serializable {
     private HashMap<GroumBlockNode, Set<CFGNode>> groumBlocks;
 
     public Groum(PDG pdg) {
-        compoundGroumNodes = new HashMap<PDGNode, List<GroumNode>>();
+        compoundGroumNodes = new LinkedHashMap<PDGNode, List<GroumNode>>();
         groumBlocks = new LinkedHashMap<GroumBlockNode, Set<CFGNode>>();
         Map<CFGBranchNode, Set<CFGNode>> pdgNestingMap = pdg.getPDGNestingMap();
         //GroumNode.setNodeNum(lastNodeNum);
@@ -153,25 +154,73 @@ public class Groum extends Graph implements Serializable {
     private void extractTemporalGroum() {
         List<GroumNode> lastNodes = null;
 
+        Set<List<GroumNode>> visitedNodes = new LinkedHashSet<List<GroumNode>>();
         for (List<GroumNode> nodeList : compoundGroumNodes.values()) {
             if (Objects.isNull(nodeList)) {
                 continue;
             }
+            if (visitedNodes.contains(nodeList)) {
+                continue;
+            } else {
+                visitedNodes.add(nodeList);
+            }
 
-            for (GroumNode node : nodeList) {
-                List<GroumNode> currentNodes = new ArrayList<GroumNode>();
-                constructInnerNode(node, currentNodes);
-                if (Objects.nonNull(lastNodes)) {
-                    for (GroumNode lastNode : lastNodes) {
-                        for (GroumNode currentNode : currentNodes) {
-                            addEdge(new GraphEdge(lastNode, currentNode));
-                        }
+            lastNodes = constructStatementGroums(nodeList, lastNodes, visitedNodes);
+        }
+    }
+
+    private List<GroumNode> constructStatementGroums(List<GroumNode> nodeList, List<GroumNode> lastNodes, Set<List<GroumNode>> visitedNodes) {
+        for (GroumNode node : nodeList) {
+            List<GroumNode> currentNodes = new ArrayList<GroumNode>();
+            constructInnerNode(node, currentNodes);
+            if (Objects.nonNull(lastNodes)) {
+                for (GroumNode lastNode : lastNodes) {
+                    for (GroumNode currentNode : currentNodes) {
+                        addEdge(new GraphEdge(lastNode, currentNode));
                     }
                 }
             }
-
+        }
+        // check for descendant parallel block possibility
+        Iterator<GroumNode> iterator = nodeList.listIterator();
+        GroumNode node = iterator.next();
+        if (node instanceof GroumIfNode) {
+            lastNodes = constructDescendantBranchBlockGroums(node, visitedNodes);
+        }
+        else {
             lastNodes = nodeList;
         }
+        return lastNodes;
+    }
+
+    private List<GroumNode> constructDescendantBranchBlockGroums(GroumNode lNode, Set<List<GroumNode>> visitedNodes) {
+        GroumBlockNode blockNode = getGroumBlock(lNode.GetPdgNode());
+        List<GroumNode> lastNodes = new ArrayList<GroumNode>();
+        lastNodes.add(lNode);
+        List<GroumNode> leafNodes = new ArrayList<GroumNode>();
+        boolean falseControlDependenceFound = false;
+        for (GraphEdge outGoingEdge : blockNode.getLeader().getOutgoingEdges()) {
+            List<GroumNode> nodeList = compoundGroumNodes.get(outGoingEdge.getDst());
+            if (Objects.isNull(nodeList)) {
+                continue;
+            }
+            if (visitedNodes.contains(nodeList)) {
+                continue;
+            } else {
+                visitedNodes.add(nodeList);
+            }
+            PDGControlDependence controlDependence = (PDGControlDependence) outGoingEdge;
+            if (controlDependence.isFalseControlDependence() && !falseControlDependenceFound) {
+                falseControlDependenceFound = true;
+                leafNodes.addAll(lastNodes);
+                lastNodes.clear();
+                lastNodes.add(lNode);
+            }
+
+            lastNodes = constructStatementGroums(nodeList, lastNodes, visitedNodes);
+        }
+        leafNodes.addAll(lastNodes);
+        return leafNodes;
     }
 
     private void constructInnerNode(GroumNode groumNode, List<GroumNode> innerNodes) {
