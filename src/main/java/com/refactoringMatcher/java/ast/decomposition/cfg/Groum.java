@@ -22,6 +22,7 @@ import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.ForStatement;
+import org.eclipse.jdt.core.dom.EnhancedForStatement;
 import org.eclipse.jdt.core.dom.IfStatement;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.WhileStatement;
@@ -48,7 +49,7 @@ public class Groum extends Graph implements Serializable {
         }
         for (GraphNode graphNode : pdg.nodes) {
             PDGNode pdgNode = (PDGNode) graphNode;
-            ASTParser parser = ASTParser.newParser(AST.JLS8);
+            ASTParser parser = ASTParser.newParser(AST.JLS14);
             parser.setKind(ASTParser.K_COMPILATION_UNIT);
             String statement = "public class DummyClass{void dummy(){" + pdgNode.getCFGNode().getStatementString() + ";}}";
             parser.setSource(statement.toCharArray());
@@ -357,6 +358,12 @@ public class Groum extends Graph implements Serializable {
             }
 
             public boolean visit(ForStatement statement) {
+                GroumForNode gfn = new GroumForNode(statement, pdgNode, getGroumBlock(pdgNode));
+                groumNodes.push(gfn);
+                return true;
+            }
+
+            public boolean visit(EnhancedForStatement statement) {
                 GroumForNode gfn = new GroumForNode(statement, pdgNode, getGroumBlock(pdgNode));
                 groumNodes.push(gfn);
                 return true;

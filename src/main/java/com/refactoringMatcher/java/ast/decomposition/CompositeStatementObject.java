@@ -283,7 +283,15 @@ public class CompositeStatementObject extends AbstractStatement {
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append(getType().toString());
-		if(expressionList.size() > 0) {
+		if (getType() == StatementType.ENHANCED_FOR) {
+			sb.append("(");
+			for(int i=0; i<expressionList.size()-1; i++) {
+				sb.append(expressionList.get(i).getLocalVariableDeclarations().get(0)).append(" : ");
+			}
+			sb.append(expressionList.get(expressionList.size()-1).toString());
+			sb.append(")");
+		}
+		else if(expressionList.size() > 0) {
 			sb.append("(");
 			for(int i=0; i<expressionList.size()-1; i++) {
 				sb.append(expressionList.get(i).toString()).append("; ");
