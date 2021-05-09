@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Set;
 
 import io.vavr.Tuple3;
+import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.Statement;
 
 /*
@@ -32,14 +33,8 @@ public class CompositeStatementObject extends AbstractStatement {
 	private List<AbstractStatement> statementList;
 	private List<AbstractExpression> expressionList;
 
-	public CompositeStatementObject(Statement statement, List<ParameterObject> parameters, List<ImportObject> importObjectList, StatementType type, AbstractMethodFragment parent) {
-		super(statement, parameters, importObjectList, type, parent);
-		this.statementList = new ArrayList<AbstractStatement>();
-		this.expressionList = new ArrayList<AbstractExpression>();
-	}
-
-	public CompositeStatementObject(Statement statement, List<ParameterObject> parameters, List<ImportObject> importObjectList, Set<Tuple3<String, String, String>> jarSet, StatementType type, AbstractMethodFragment parent) {
-		super(statement, parameters, importObjectList, jarSet, type, parent);
+	public CompositeStatementObject(Statement statement, List<ParameterObject> parameters, List<ImportObject> importObjectList, List<FieldDeclaration> fieldDeclarationList, Set<Tuple3<String, String, String>> jarSet, StatementType type, AbstractMethodFragment parent) {
+		super(statement, parameters, importObjectList, fieldDeclarationList, jarSet, type, parent);
 		this.statementList = new ArrayList<AbstractStatement>();
 		this.expressionList = new ArrayList<AbstractExpression>();
 	}

@@ -28,6 +28,7 @@ public class GroumWhileTestClass {
 		in.close();
 	}
 
+/*
 	public void paintComponent(Graphic g) {
 		boolean scale = false;
 		drawWidth = available.getWidth();
@@ -46,7 +47,7 @@ public class GroumWhileTestClass {
 		}
 		Rectangle2D chartArea = new Rectangle2D.Double(0.0, 0.0, drawWidth, drawHeight);
 	}
-
+*/
 	private static void outputMessage(String s) {
 	}
 

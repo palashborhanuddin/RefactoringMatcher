@@ -6,11 +6,14 @@ import com.refactoringMatcher.java.ast.util.ExpressionExtractor;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
+import io.vavr.Tuple3;
 import org.eclipse.jdt.core.dom.ConstructorInvocation;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.ThrowStatement;
+import org.eclipse.jdt.core.dom.FieldDeclaration;
 
 /*
  * StatementObject represents the following AST Statement subclasses:
@@ -29,9 +32,9 @@ import org.eclipse.jdt.core.dom.ThrowStatement;
 
 public class StatementObject extends AbstractStatement {
 	
-	public StatementObject(Statement statement, List<ParameterObject> parameters, List<ImportObject> importObjectList, StatementType type, AbstractMethodFragment parent) {
-		super(statement, parameters, importObjectList, type,  parent);
-		
+	public StatementObject(Statement statement, List<ParameterObject> parameters, List<ImportObject> importObjectList, List<FieldDeclaration> fieldDeclarationList, Set<Tuple3<String, String, String>> jarSet, StatementType type, AbstractMethodFragment parent) {
+		super(statement, parameters, importObjectList, fieldDeclarationList, jarSet, type,  parent);
+		// TODO GROUM let's track here for the field accesses
 		ExpressionExtractor expressionExtractor = new ExpressionExtractor();
         List<Expression> assignments = expressionExtractor.getAssignments(statement);
         List<Expression> postfixExpressions = expressionExtractor.getPostfixExpressions(statement);

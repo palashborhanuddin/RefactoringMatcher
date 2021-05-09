@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.HashSet;
 
 import org.eclipse.jdt.core.dom.Statement;
 
@@ -17,7 +18,8 @@ public class TryStatementObject extends CompositeStatementObject {
 	private CompositeStatementObject finallyClause;
 	
 	public TryStatementObject(Statement statement, List<ParameterObject> parameters, List<ImportObject> importObjectList, AbstractMethodFragment parent) {
-		super(statement, parameters, importObjectList, StatementType.TRY, parent);
+		// TODO GROUM fieldaccesslist and jarset are not needed here.
+		super(statement, parameters, importObjectList, new ArrayList<>(), new HashSet<>(), StatementType.TRY, parent);
 		this.catchClauses = new ArrayList<CatchClauseObject>();
 	}
 

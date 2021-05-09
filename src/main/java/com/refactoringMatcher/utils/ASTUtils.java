@@ -22,14 +22,8 @@ public class ASTUtils {
 
     private static Logger logger = LoggerFactory.getLogger(ASTUtils.class);
 
-    public static MethodObject createMethodObject(MethodDeclaration methodDeclaration, List<ImportObject> importObjectList) {
-        final ConstructorObject constructorObject = new ConstructorObject(methodDeclaration, importObjectList);
-
-        return new MethodObject(constructorObject);
-    }
-
-    public static MethodObject createMethodObject(MethodDeclaration methodDeclaration, List<ImportObject> importObjectList, Set<Tuple3<String, String, String>> jarSet) {
-        final ConstructorObject constructorObject = new ConstructorObject(methodDeclaration, importObjectList, jarSet);
+    public static MethodObject createMethodObject(MethodDeclaration methodDeclaration, List<ImportObject> importObjectList, List<FieldDeclaration> fieldDeclarationList, Set<Tuple3<String, String, String>> jarSet) {
+        final ConstructorObject constructorObject = new ConstructorObject(methodDeclaration, importObjectList, fieldDeclarationList, jarSet);
 
         return new MethodObject(constructorObject);
     }

@@ -19,6 +19,7 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.ImportDeclaration;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.NodeFinder;
+import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jgit.api.errors.InvalidRemoteException;
 import org.eclipse.jgit.lib.Repository;
 import org.refactoringminer.api.GitService;
@@ -101,12 +102,14 @@ public class RefactoringExtractionService {
 
             Optional<String> effectivePOM = GitUtils.generateEffectivePom(commitId, repository);
 
+            // TODO GROUM check how to get field declerations here
+            List<FieldDeclaration> fieldDeclarationList = new ArrayList<>();
             Set<Tuple3<String, String, String>> jarSet = new HashSet<>();
             if (effectivePOM.isPresent()) {
                 jarSet = GitUtils.listOfJavaProjectLibraryFromEffectivePom(effectivePOM.get());
             }
 
-            PDG extractedMethodPDG = new PDG(ASTUtils.createMethodObject(methodDeclaration, importObjectList, jarSet), importObjectList);
+            PDG extractedMethodPDG = new PDG(ASTUtils.createMethodObject(methodDeclaration, importObjectList, fieldDeclarationList, jarSet), importObjectList, fieldDeclarationList);
 
             Groum extractedMethodGroum = new Groum(extractedMethodPDG);
 

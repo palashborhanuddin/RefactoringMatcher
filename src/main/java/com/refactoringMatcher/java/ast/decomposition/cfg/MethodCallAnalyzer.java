@@ -31,6 +31,7 @@ import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.SuperMethodInvocation;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclaration;
+import org.eclipse.jdt.core.dom.FieldDeclaration;
 //import org.eclipse.jface.preference.IPreferenceStore;
 
 public class MethodCallAnalyzer {
@@ -426,7 +427,7 @@ public class MethodCallAnalyzer {
 			System.out.println("[TODO PDGCFG] In MethodCallAnalyzer::processArgumentOfExternalMethodInvocation, passing dummy params to compile and run, understand the flow and delegate proper values");
 			List<ParameterObject> parameters = new ArrayList<ParameterObject>();
 			List<ImportObject> importObjectList = new ArrayList<ImportObject>();
-			MethodBodyObject methodBodyObject = new MethodBodyObject(methodBody, parameters, importObjectList);
+			MethodBodyObject methodBodyObject = new MethodBodyObject(methodBody, parameters, importObjectList, new ArrayList<>(), new HashSet<>());
 
 			for(AbstractVariable originalField : methodBodyObject.getDefinedFieldsThroughParameters()) {
 				if(parameterDeclaration.equals(originalField.getVariableDeclaration())) {
@@ -682,7 +683,8 @@ public class MethodCallAnalyzer {
 				System.out.println("[TODO PDGCFG] In MethodCallAnalyzer::processExternalMethodInvocation, passing dummy params to compile and run, understand the flow and delegate proper values");
 				List<ParameterObject> parameters = new ArrayList<ParameterObject>();
 				List<ImportObject> importObjectList = new ArrayList<ImportObject>();
-				MethodBodyObject methodBodyObject = new MethodBodyObject(methodBody, parameters, importObjectList);
+				List<FieldDeclaration> fieldDeclarationList = new ArrayList<>();
+				MethodBodyObject methodBodyObject = new MethodBodyObject(methodBody, parameters, importObjectList, fieldDeclarationList, new HashSet<>());
 				LinkedHashSet<PlainVariable> definedFields = new LinkedHashSet<PlainVariable>();
 				LinkedHashSet<PlainVariable> usedFields = new LinkedHashSet<PlainVariable>();
 				for(PlainVariable originalField : methodBodyObject.getDefinedFieldsThroughThisReference()) {

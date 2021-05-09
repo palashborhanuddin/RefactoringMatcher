@@ -56,10 +56,7 @@ import com.refactoringMatcher.java.ast.decomposition.AbstractExpression;
 import com.refactoringMatcher.java.ast.decomposition.MethodBodyObject;
 import com.refactoringMatcher.java.ast.util.StatementExtractor;
 
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class ASTReader {
 
@@ -548,7 +545,7 @@ public class ASTReader {
 		Block methodBody = methodDeclaration.getBody();
 		List<ImportObject> importObjectList = new ArrayList<ImportObject>();
 		if(methodBody != null) {
-			MethodBodyObject methodBodyObject = new MethodBodyObject(methodBody, parameterObjectList, importObjectList);
+			MethodBodyObject methodBodyObject = new MethodBodyObject(methodBody, parameterObjectList, importObjectList, new ArrayList<>(), new HashSet<>());
 			constructorObject.setMethodBody(methodBodyObject);
 		}
 		

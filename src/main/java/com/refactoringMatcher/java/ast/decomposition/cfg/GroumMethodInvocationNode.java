@@ -12,18 +12,47 @@ import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
+import org.eclipse.jdt.core.dom.FieldDeclaration;
+import org.eclipse.jdt.core.dom.VariableDeclaration;
+import org.eclipse.jdt.core.dom.FieldAccess;
 
 public class GroumMethodInvocationNode extends GroumActionNode implements Serializable {
 
 	private MethodInvocation methodInvocation;
+	private List<FieldDeclaration> fieldDeclarationList;
 	private Boolean isLocal = false;
 
-	public GroumMethodInvocationNode(MethodInvocation statement, PDGNode pdgNode, GroumBlockNode groumBlockNode) {
+	public GroumMethodInvocationNode(MethodInvocation statement, PDGNode pdgNode, List<FieldDeclaration> fieldDeclarationList, GroumBlockNode groumBlockNode) {
 		super(pdgNode);
 		methodInvocation = statement;
+		this.fieldDeclarationList = fieldDeclarationList;
 		setValue(ToGroumString());
+		getDefinedAncestorNode();
 		setGroumBlockNode(groumBlockNode);
 		determineDefinedAndUsedVariables();
+	}
+
+	private void getDefinedAncestorNode() {
+		boolean isFound = false;
+		for (GraphEdge incomingEdge : pdgNode.getIncomingEdges()) {
+			if (incomingEdge instanceof PDGDataDependence) {
+				PDGNode node = (PDGNode) incomingEdge.getSrc();
+				Iterator<AbstractVariable> definedVariableIterator = node.getDefinedVariableIterator();
+				while (definedVariableIterator.hasNext()) {
+					AbstractVariable abstractVariable = definedVariableIterator.next();
+
+					if (Objects.nonNull(abstractVariable)
+							&& (Objects.nonNull(methodInvocation.getExpression()))
+							&& abstractVariable.getVariableName().equals(methodInvocation.getExpression().toString())) {
+						setAncestorDefinedNode(node);
+						isFound = true;
+						break;
+					}
+				}
+			}
+			if (isFound)
+				break;
+		}
 	}
 
 	private void determineDefinedAndUsedVariables() {
@@ -112,8 +141,46 @@ public class GroumMethodInvocationNode extends GroumActionNode implements Serial
 			}
 		}
 
-		if (Objects.isNull(variableType))
-			isLocal = true;
+		if (Objects.isNull(variableType)) {
+			boolean isFound = false;
+			for (FieldDeclaration field : fieldDeclarationList) {
+				if (Objects.nonNull(methodInvocation.getExpression())) {
+					if (methodInvocation.getExpression() instanceof SimpleName) {
+						for (Object variable : field.fragments()) {
+							VariableDeclaration var = (VariableDeclaration) variable;
+							if (var.getName().toString().equals(methodInvocation.getExpression().toString())) {
+								variableType = field.getType().toString();
+								isFound = true;
+								break;
+							}
+						}
+					}
+					else if (methodInvocation.getExpression() instanceof FieldAccess) {
+						FieldAccess fieldName = (FieldAccess) methodInvocation.getExpression();
+						for (Object variable : field.fragments()) {
+							VariableDeclaration var = (VariableDeclaration) variable;
+							if (var.getName().toString().equals(fieldName.getName().toString())) {
+								variableType = field.getType().toString();
+								isFound = true;
+								break;
+							}
+						}
+					}
+					else if (methodInvocation.getExpression() instanceof MethodInvocation) {
+						MethodInvocation mm = (MethodInvocation) methodInvocation.getExpression();
+						// TODO GROUM need to have Method Return type!!
+						//if (field.toString().equals(mm..toString())) {
+						//	variableType = field.getType().toString();
+						//}
+					}
+				}
+				if (isFound)
+					break;
+			}
+			if (!isFound)
+				isLocal = true;
+		}
+
 		return Objects.nonNull(variableType)
 				? variableType + "." + methodInvocation.getName().toString()
 				: methodInvocation.getName().toString();

@@ -18,6 +18,7 @@ import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.LabeledStatement;
 import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.VariableDeclaration;
+import org.eclipse.jdt.core.dom.FieldDeclaration;
 
 public class PDG extends Graph {
 	private CFG cfg;
@@ -26,18 +27,21 @@ public class PDG extends Graph {
 	private Set<VariableDeclarationObject> variableDeclarationsInMethod;
 	private Set<FieldObject> fieldsAccessedInMethod;
 	private Map<PDGNode, Set<BasicBlock>> dominatedBlockMap;
+	private List<FieldDeclaration> fieldDeclarationList;
 
 	public PDG(MethodObject methodObject) {
 		CFG cfg = new CFG(methodObject);
 		createPDG(cfg);
 	}
 
-	public PDG(MethodObject methodObject, List<ImportObject> importObjectList) {
+	public PDG(MethodObject methodObject, List<ImportObject> importObjectList, List<FieldDeclaration> fieldDeclarationList) {
 		CFG cfg = new CFG(methodObject, importObjectList);
+		this.fieldDeclarationList = fieldDeclarationList;
 		createPDG(cfg);
 	}
 
 	public PDG(CFG cfg) {
+		this.fieldDeclarationList = new ArrayList<>();
 		createPDG(cfg);
 	}
 
@@ -735,6 +739,10 @@ public class PDG extends Graph {
 
 	public List<BasicBlock> getBasicBlocks() {
 		return cfg.getBasicBlocks();
+	}
+
+	public List<FieldDeclaration> getFieldDeclarationList() {
+		return fieldDeclarationList;
 	}
 
 	private Set<BasicBlock> forwardReachableBlocks(BasicBlock basicBlock) {

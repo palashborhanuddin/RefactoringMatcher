@@ -47,6 +47,7 @@ public abstract class AbstractMethodFragment {
 	private AbstractMethodFragment parent;
 	private List<ParameterObject> parameters;
 	private List<ImportObject> importObjectList;
+	private List<FieldDeclaration> fieldDeclarationList;
 	private Set<Tuple3<String, String, String>> jarSet;
 	
 	private List<MethodInvocationObject> methodInvocationList;
@@ -95,19 +96,12 @@ public abstract class AbstractMethodFragment {
 	private Map<PlainVariable, LinkedHashSet<ConstructorInvocationObject>> parametersPassedAsArgumentsInConstructorInvocations;
 	private Map<PlainVariable, LinkedHashSet<ClassInstanceCreationObject>> variablesAssignedWithClassInstanceCreations;
 
-	protected AbstractMethodFragment(AbstractMethodFragment parent, List<ParameterObject> parameters, List<ImportObject> importObjectList, Set<Tuple3<String, String, String>> jarSet) {
+	protected AbstractMethodFragment(AbstractMethodFragment parent, List<ParameterObject> parameters, List<ImportObject> importObjectList, List<FieldDeclaration> fieldDeclarationList, Set<Tuple3<String, String, String>> jarSet) {
 		this.parent = parent;
 		this.parameters = parameters;
 		this.importObjectList = importObjectList;
+		this.fieldDeclarationList = fieldDeclarationList;
 		this.jarSet = jarSet;
-		initializeLocalMembers();
-	}
-
-	protected AbstractMethodFragment(AbstractMethodFragment parent, List<ParameterObject> parameters, List<ImportObject> importObjectList) {
-		this.parent = parent;
-		this.parameters = parameters;
-		this.importObjectList = importObjectList;
-		jarSet = new HashSet<>();
 		initializeLocalMembers();
 	}
 
@@ -291,6 +285,8 @@ public abstract class AbstractMethodFragment {
 			return null;
 		}
 
+		// TODO GROUM possible checkpoint if field decleration
+
 		Set<PlainVariable> declarationsInParent = parent.getDeclaredLocalVariables();
 		PlainVariable declaration = null;
 		for (PlainVariable plainVariable : declarationsInParent) {
@@ -413,7 +409,7 @@ public abstract class AbstractMethodFragment {
 						javaVersion, importStatementList, methodName, methodInvocation.arguments().size()).getMethodList();
 				// [TODO PDGCFG] what could be the reason that there will be no methodInfo?
 				if (methodInfoList.size() == 0) {
-					System.out.println("No information found for: " +methodName);
+					//System.out.println("No information found for: " +methodName);
 					continue;
 				}
 				// [TODO PDGCFG] why the first index only? is it expected to have multiple methodInfo? why there should be more than one?
@@ -668,7 +664,7 @@ public abstract class AbstractMethodFragment {
 							
 							Block methodBody = methodDeclaration.getBody();
 							if(methodBody != null) {
-								MethodBodyObject methodBodyObject = new MethodBodyObject(methodBody, parameterObjectList, importObjectList);
+								MethodBodyObject methodBodyObject = new MethodBodyObject(methodBody, parameterObjectList, importObjectList, fieldDeclarationList, jarSet);
 								constructorObject.setMethodBody(methodBodyObject);
 							}
 							

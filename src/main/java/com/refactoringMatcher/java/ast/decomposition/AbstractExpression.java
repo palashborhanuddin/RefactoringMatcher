@@ -1,6 +1,7 @@
 package com.refactoringMatcher.java.ast.decomposition;
 
 import java.util.List;
+import java.util.Set;
 
 import com.refactoringMatcher.java.ast.ASTInformation;
 import com.refactoringMatcher.java.ast.ASTInformationGenerator;
@@ -8,14 +9,16 @@ import com.refactoringMatcher.java.ast.ImportObject;
 import com.refactoringMatcher.java.ast.ParameterObject;
 import com.refactoringMatcher.java.ast.util.ExpressionExtractor;
 
+import io.vavr.Tuple3;
 import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.FieldDeclaration;
 
 public class AbstractExpression extends AbstractMethodFragment {
 
 	private ASTInformation expression;
 
-	public AbstractExpression(Expression expression, List<ParameterObject> parameters, List<ImportObject> importObjectList, AbstractMethodFragment parent) {
-		super(parent, parameters, importObjectList);
+	public AbstractExpression(Expression expression, List<ParameterObject> parameters, List<ImportObject> importObjectList, List<FieldDeclaration> fieldDeclarationList, Set<Tuple3<String, String, String>> jarSet, AbstractMethodFragment parent) {
+		super(parent, parameters, importObjectList, fieldDeclarationList, jarSet);
 		this.expression = ASTInformationGenerator.generateASTInformation(expression);
 		processExpression(expression);
 	}

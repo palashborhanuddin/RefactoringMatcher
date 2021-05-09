@@ -42,27 +42,22 @@ import org.eclipse.jdt.core.dom.UnionType;
 import org.eclipse.jdt.core.dom.VariableDeclarationExpression;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 import org.eclipse.jdt.core.dom.WhileStatement;
+import org.eclipse.jdt.core.dom.FieldDeclaration;
 
 public class MethodBodyObject {
 	
 	private CompositeStatementObject compositeStatement;
 	private List<ParameterObject> parameters;
 	private List<ImportObject> importObjectList;
+	private List<FieldDeclaration> fieldDeclarationList;
+	Set<Tuple3<String, String, String>> jarSet;
 
-	public MethodBodyObject(Block methodBody, List<ParameterObject> parameterList, List<ImportObject> importObjectList) {
+	public MethodBodyObject(Block methodBody, List<ParameterObject> parameterList, List<ImportObject> importObjectList, List<FieldDeclaration> fieldDeclarationList, Set<Tuple3<String, String, String>> jarSet) {
 		this.parameters = parameterList;
 		this.importObjectList = importObjectList;
-		this.compositeStatement = new CompositeStatementObject(methodBody, parameters, importObjectList, StatementType.BLOCK, null);
-		List<Statement> statements = methodBody.statements();
-		for(Statement statement : statements) {
-			processStatement(compositeStatement, statement);
-		}
-	}
-
-	public MethodBodyObject(Block methodBody, List<ParameterObject> parameterList, List<ImportObject> importObjectList, Set<Tuple3<String, String, String>> jarSet) {
-		this.parameters = parameterList;
-		this.importObjectList = importObjectList;
-		this.compositeStatement = new CompositeStatementObject(methodBody, parameters, importObjectList, jarSet, StatementType.BLOCK, null);
+		this.fieldDeclarationList = fieldDeclarationList;
+		this.jarSet = jarSet;
+		this.compositeStatement = new CompositeStatementObject(methodBody, parameters, importObjectList, fieldDeclarationList, jarSet, StatementType.BLOCK, null);
 		List<Statement> statements = methodBody.statements();
 		for(Statement statement : statements) {
 			processStatement(compositeStatement, statement);
@@ -396,7 +391,7 @@ public class MethodBodyObject {
 		if(statement instanceof Block) {
 			Block block = (Block)statement;
 			List<Statement> blockStatements = block.statements();
-			CompositeStatementObject child = new CompositeStatementObject(block, parameters, importObjectList, StatementType.BLOCK, parent);
+			CompositeStatementObject child = new CompositeStatementObject(block, parameters, importObjectList, fieldDeclarationList, jarSet, StatementType.BLOCK, parent);
 			parent.addStatement(child);
 			for(Statement blockStatement : blockStatements) {
 				processStatement(child, blockStatement);
@@ -404,8 +399,8 @@ public class MethodBodyObject {
 		}
 		else if(statement instanceof IfStatement) {
 			IfStatement ifStatement = (IfStatement)statement;
-			CompositeStatementObject child = new CompositeStatementObject(ifStatement, parameters, importObjectList, StatementType.IF, parent);
-			AbstractExpression abstractExpression = new AbstractExpression(ifStatement.getExpression(), parameters, importObjectList, child);
+			CompositeStatementObject child = new CompositeStatementObject(ifStatement, parameters, importObjectList, fieldDeclarationList, jarSet, StatementType.IF, parent);
+			AbstractExpression abstractExpression = new AbstractExpression(ifStatement.getExpression(), parameters, importObjectList, fieldDeclarationList, jarSet, child);
 			child.addExpression(abstractExpression);
 			//processExpression(child, ifStatement.getExpression());
 			parent.addStatement(child);
@@ -416,22 +411,22 @@ public class MethodBodyObject {
 		}
 		else if(statement instanceof ForStatement) {
 			ForStatement forStatement = (ForStatement)statement;
-			CompositeStatementObject child = new CompositeStatementObject(forStatement, parameters, importObjectList, StatementType.FOR, parent);
+			CompositeStatementObject child = new CompositeStatementObject(forStatement, parameters, importObjectList, fieldDeclarationList, jarSet, StatementType.FOR, parent);
 			List<Expression> initializers = forStatement.initializers();
 			for(Expression initializer : initializers) {
-				AbstractExpression abstractExpression = new AbstractExpression(initializer, parameters, importObjectList, child);
+				AbstractExpression abstractExpression = new AbstractExpression(initializer, parameters, importObjectList, fieldDeclarationList, jarSet, child);
 				child.addExpression(abstractExpression);
 				//processExpression(child, initializer);
 			}
 			Expression expression = forStatement.getExpression();
 			if(expression != null) {
-				AbstractExpression abstractExpression = new AbstractExpression(expression, parameters, importObjectList, child);
+				AbstractExpression abstractExpression = new AbstractExpression(expression, parameters, importObjectList, fieldDeclarationList, jarSet, child);
 				child.addExpression(abstractExpression);
 				//processExpression(child, expression);
 			}
 			List<Expression> updaters = forStatement.updaters();
 			for(Expression updater : updaters) {
-				AbstractExpression abstractExpression = new AbstractExpression(updater, parameters, importObjectList, child);
+				AbstractExpression abstractExpression = new AbstractExpression(updater, parameters, importObjectList, fieldDeclarationList, jarSet, child);
 				child.addExpression(abstractExpression);
 				//processExpression(child, updater);
 			}
@@ -440,17 +435,17 @@ public class MethodBodyObject {
 		}
 		else if(statement instanceof EnhancedForStatement) {
 			EnhancedForStatement enhancedForStatement = (EnhancedForStatement)statement;
-			CompositeStatementObject child = new CompositeStatementObject(enhancedForStatement, parameters, importObjectList, StatementType.ENHANCED_FOR, parent);
+			CompositeStatementObject child = new CompositeStatementObject(enhancedForStatement, parameters, importObjectList, fieldDeclarationList, jarSet, StatementType.ENHANCED_FOR, parent);
 			SingleVariableDeclaration variableDeclaration = enhancedForStatement.getParameter();
-			AbstractExpression variableDeclarationName = new AbstractExpression(variableDeclaration.getName(), parameters, importObjectList, child);
+			AbstractExpression variableDeclarationName = new AbstractExpression(variableDeclaration.getName(), parameters, importObjectList, fieldDeclarationList, jarSet, child);
 			child.addExpression(variableDeclarationName);
 			//processExpression(child, variableDeclaration.getName());
 			if(variableDeclaration.getInitializer() != null) {
-				AbstractExpression variableDeclarationInitializer = new AbstractExpression(variableDeclaration.getInitializer(), parameters, importObjectList, child);
+				AbstractExpression variableDeclarationInitializer = new AbstractExpression(variableDeclaration.getInitializer(), parameters, importObjectList, fieldDeclarationList, jarSet, child);
 				child.addExpression(variableDeclarationInitializer);
 				//processExpression(child, variableDeclaration.getInitializer());
 			}
-			AbstractExpression abstractExpression = new AbstractExpression(enhancedForStatement.getExpression(), parameters, importObjectList, child);
+			AbstractExpression abstractExpression = new AbstractExpression(enhancedForStatement.getExpression(), parameters, importObjectList, fieldDeclarationList, jarSet, child);
 			child.addExpression(abstractExpression);
 			//processExpression(child, enhancedForStatement.getExpression());
 			parent.addStatement(child);
@@ -458,8 +453,8 @@ public class MethodBodyObject {
 		}
 		else if(statement instanceof WhileStatement) {
 			WhileStatement whileStatement = (WhileStatement)statement;
-			CompositeStatementObject child = new CompositeStatementObject(whileStatement, parameters, importObjectList, StatementType.WHILE, parent);
-			AbstractExpression abstractExpression = new AbstractExpression(whileStatement.getExpression(), parameters, importObjectList, child);
+			CompositeStatementObject child = new CompositeStatementObject(whileStatement, parameters, importObjectList, fieldDeclarationList, jarSet, StatementType.WHILE, parent);
+			AbstractExpression abstractExpression = new AbstractExpression(whileStatement.getExpression(), parameters, importObjectList, fieldDeclarationList, jarSet, child);
 			child.addExpression(abstractExpression);
 			//processExpression(child, whileStatement.getExpression());
 			parent.addStatement(child);
@@ -467,8 +462,8 @@ public class MethodBodyObject {
 		}
 		else if(statement instanceof DoStatement) {
 			DoStatement doStatement = (DoStatement)statement;
-			CompositeStatementObject child = new CompositeStatementObject(doStatement, parameters, importObjectList, StatementType.DO, parent);
-			AbstractExpression abstractExpression = new AbstractExpression(doStatement.getExpression(), parameters, importObjectList, child);
+			CompositeStatementObject child = new CompositeStatementObject(doStatement, parameters, importObjectList, fieldDeclarationList, jarSet, StatementType.DO, parent);
+			AbstractExpression abstractExpression = new AbstractExpression(doStatement.getExpression(), parameters, importObjectList, fieldDeclarationList, jarSet, child);
 			child.addExpression(abstractExpression);
 			//processExpression(child, doStatement.getExpression());
 			parent.addStatement(child);
@@ -476,14 +471,14 @@ public class MethodBodyObject {
 		}
 		else if(statement instanceof ExpressionStatement) {
 			ExpressionStatement expressionStatement = (ExpressionStatement)statement;
-			StatementObject child = new StatementObject(expressionStatement, parameters, importObjectList, StatementType.EXPRESSION, parent);
+			StatementObject child = new StatementObject(expressionStatement, parameters, importObjectList, fieldDeclarationList, jarSet, StatementType.EXPRESSION, parent);
 			//processExpression(child, expressionStatement.getExpression());
 			parent.addStatement(child);
 		}
 		else if(statement instanceof SwitchStatement) {
 			SwitchStatement switchStatement = (SwitchStatement)statement;
-			CompositeStatementObject child = new CompositeStatementObject(switchStatement, parameters, importObjectList, StatementType.SWITCH, parent);
-			AbstractExpression abstractExpression = new AbstractExpression(switchStatement.getExpression(), parameters, importObjectList, child);
+			CompositeStatementObject child = new CompositeStatementObject(switchStatement, parameters, importObjectList, fieldDeclarationList, jarSet, StatementType.SWITCH, parent);
+			AbstractExpression abstractExpression = new AbstractExpression(switchStatement.getExpression(), parameters, importObjectList, fieldDeclarationList, jarSet, child);
 			child.addExpression(abstractExpression);
 			//processExpression(child, switchStatement.getExpression());
 			parent.addStatement(child);
@@ -493,14 +488,14 @@ public class MethodBodyObject {
 		}
 		else if(statement instanceof SwitchCase) {
 			SwitchCase switchCase = (SwitchCase)statement;
-			StatementObject child = new StatementObject(switchCase, parameters, importObjectList, StatementType.SWITCH_CASE, parent);
+			StatementObject child = new StatementObject(switchCase, parameters, importObjectList, fieldDeclarationList, jarSet, StatementType.SWITCH_CASE, parent);
 			/*if(switchCase.getExpression() != null)
 				processExpression(child, switchCase.getExpression());*/
 			parent.addStatement(child);
 		}
 		else if(statement instanceof AssertStatement) {
 			AssertStatement assertStatement = (AssertStatement)statement;
-			StatementObject child = new StatementObject(assertStatement, parameters, importObjectList, StatementType.ASSERT, parent);
+			StatementObject child = new StatementObject(assertStatement, parameters, importObjectList, fieldDeclarationList, jarSet, StatementType.ASSERT, parent);
 			/*processExpression(child, assertStatement.getExpression());
 			Expression message = assertStatement.getMessage();
 			if(message != null)
@@ -509,7 +504,7 @@ public class MethodBodyObject {
 		}
 		else if(statement instanceof LabeledStatement) {
 			LabeledStatement labeledStatement = (LabeledStatement)statement;
-			CompositeStatementObject child = new CompositeStatementObject(labeledStatement, parameters, importObjectList, StatementType.LABELED, parent);
+			CompositeStatementObject child = new CompositeStatementObject(labeledStatement, parameters, importObjectList, fieldDeclarationList, jarSet, StatementType.LABELED, parent);
 			/*if(labeledStatement.getLabel() != null)
 				processExpression(child, labeledStatement.getLabel());*/
 			parent.addStatement(child);
@@ -517,7 +512,7 @@ public class MethodBodyObject {
 		}
 		else if(statement instanceof ReturnStatement) {
 			ReturnStatement returnStatement = (ReturnStatement)statement;
-			StatementObject child = new StatementObject(returnStatement, parameters, importObjectList, StatementType.RETURN, parent);
+			StatementObject child = new StatementObject(returnStatement, parameters, importObjectList, fieldDeclarationList, jarSet, StatementType.RETURN, parent);
 			//processExpression(child, returnStatement.getExpression());
 			parent.addStatement(child);	
 		}
@@ -530,7 +525,7 @@ public class MethodBodyObject {
 		}
 		else if(statement instanceof ThrowStatement) {
 			ThrowStatement throwStatement = (ThrowStatement)statement;
-			StatementObject child = new StatementObject(throwStatement, parameters, importObjectList, StatementType.THROW, parent);
+			StatementObject child = new StatementObject(throwStatement, parameters, importObjectList, fieldDeclarationList, jarSet, StatementType.THROW, parent);
 			//processExpression(child, throwStatement.getExpression());
 			parent.addStatement(child);
 		}
@@ -539,7 +534,7 @@ public class MethodBodyObject {
 			TryStatementObject child = new TryStatementObject(tryStatement, parameters, importObjectList, parent);
 			List<VariableDeclarationExpression> resources = tryStatement.resources();
 			for(VariableDeclarationExpression expression : resources) {
-				AbstractExpression variableDeclarationExpression = new AbstractExpression(expression, parameters, importObjectList, child);
+				AbstractExpression variableDeclarationExpression = new AbstractExpression(expression, parameters, importObjectList, fieldDeclarationList, jarSet, child);
 				child.addExpression(variableDeclarationExpression);
 				//processExpression(child, expression);
 			}
@@ -549,7 +544,7 @@ public class MethodBodyObject {
 			for(CatchClause catchClause : catchClauses) {
 				CatchClauseObject catchClauseObject = new CatchClauseObject();
 				Block catchClauseBody = catchClause.getBody();
-				CompositeStatementObject catchClauseStatementObject = new CompositeStatementObject(catchClauseBody, parameters, importObjectList, StatementType.BLOCK, null);
+				CompositeStatementObject catchClauseStatementObject = new CompositeStatementObject(catchClauseBody, parameters, importObjectList, fieldDeclarationList, jarSet, StatementType.BLOCK, null);
 				SingleVariableDeclaration variableDeclaration = catchClause.getException();
 				Type variableDeclarationType = variableDeclaration.getType();
 				if(variableDeclarationType instanceof UnionType) {
@@ -562,10 +557,10 @@ public class MethodBodyObject {
 				else {
 					catchClauseObject.addExceptionType(variableDeclarationType.resolveBinding().getQualifiedName());
 				}
-				AbstractExpression variableDeclarationName = new AbstractExpression(variableDeclaration.getName(), parameters, importObjectList, child);
+				AbstractExpression variableDeclarationName = new AbstractExpression(variableDeclaration.getName(), parameters, importObjectList, fieldDeclarationList, jarSet, child);
 				catchClauseObject.addExpression(variableDeclarationName);
 				if(variableDeclaration.getInitializer() != null) {
-					AbstractExpression variableDeclarationInitializer = new AbstractExpression(variableDeclaration.getInitializer(), parameters, importObjectList, child);
+					AbstractExpression variableDeclarationInitializer = new AbstractExpression(variableDeclaration.getInitializer(), parameters, importObjectList, fieldDeclarationList, jarSet, child);
 					catchClauseObject.addExpression(variableDeclarationInitializer);
 				}
 				List<Statement> blockStatements = catchClauseBody.statements();
@@ -577,7 +572,7 @@ public class MethodBodyObject {
 			}
 			Block finallyBlock = tryStatement.getFinally();
 			if(finallyBlock != null) {
-				CompositeStatementObject finallyClauseStatementObject = new CompositeStatementObject(finallyBlock, parameters, importObjectList, StatementType.BLOCK, null);
+				CompositeStatementObject finallyClauseStatementObject = new CompositeStatementObject(finallyBlock, parameters, importObjectList, fieldDeclarationList, jarSet, StatementType.BLOCK, null);
 				List<Statement> blockStatements = finallyBlock.statements();
 				for(Statement blockStatement : blockStatements) {
 					processStatement(finallyClauseStatementObject, blockStatement);
@@ -587,7 +582,7 @@ public class MethodBodyObject {
 		}
 		else if(statement instanceof VariableDeclarationStatement) {
 			VariableDeclarationStatement variableDeclarationStatement = (VariableDeclarationStatement)statement;
-			StatementObject child = new StatementObject(variableDeclarationStatement, parameters, importObjectList, StatementType.VARIABLE_DECLARATION, parent);
+			StatementObject child = new StatementObject(variableDeclarationStatement, parameters, importObjectList, fieldDeclarationList, jarSet, StatementType.VARIABLE_DECLARATION, parent);
 			/*List<VariableDeclarationFragment> fragments = variableDeclarationStatement.fragments();
 			for(VariableDeclarationFragment fragment : fragments) {
 				processExpression(child, fragment.getName());
@@ -597,7 +592,7 @@ public class MethodBodyObject {
 		}
 		else if(statement instanceof ConstructorInvocation) {
 			ConstructorInvocation constructorInvocation = (ConstructorInvocation)statement;
-			StatementObject child = new StatementObject(constructorInvocation, parameters, importObjectList, StatementType.CONSTRUCTOR_INVOCATION, parent);
+			StatementObject child = new StatementObject(constructorInvocation, parameters, importObjectList, fieldDeclarationList, jarSet, StatementType.CONSTRUCTOR_INVOCATION, parent);
 			/*List<Expression> arguments = constructorInvocation.arguments();
 			for(Expression argument : arguments)
 				processExpression(child, argument);*/
@@ -605,7 +600,7 @@ public class MethodBodyObject {
 		}
 		else if(statement instanceof SuperConstructorInvocation) {
 			SuperConstructorInvocation superConstructorInvocation = (SuperConstructorInvocation)statement;
-			StatementObject child = new StatementObject(superConstructorInvocation, parameters, importObjectList, StatementType.SUPER_CONSTRUCTOR_INVOCATION, parent);
+			StatementObject child = new StatementObject(superConstructorInvocation, parameters, importObjectList, fieldDeclarationList, jarSet, StatementType.SUPER_CONSTRUCTOR_INVOCATION, parent);
 			/*if(superConstructorInvocation.getExpression() != null)
 				processExpression(child, superConstructorInvocation.getExpression());
 			List<Expression> arguments = superConstructorInvocation.arguments();
@@ -615,21 +610,21 @@ public class MethodBodyObject {
 		}
 		else if(statement instanceof BreakStatement) {
 			BreakStatement breakStatement = (BreakStatement)statement;
-			StatementObject child = new StatementObject(breakStatement, parameters, importObjectList, StatementType.BREAK, parent);
+			StatementObject child = new StatementObject(breakStatement, parameters, importObjectList, fieldDeclarationList, jarSet, StatementType.BREAK, parent);
 			/*if(breakStatement.getLabel() != null)
 				processExpression(child, breakStatement.getLabel());*/
 			parent.addStatement(child);
 		}
 		else if(statement instanceof ContinueStatement) {
 			ContinueStatement continueStatement = (ContinueStatement)statement;
-			StatementObject child = new StatementObject(continueStatement, parameters, importObjectList, StatementType.CONTINUE, parent);
+			StatementObject child = new StatementObject(continueStatement, parameters, importObjectList, fieldDeclarationList, jarSet, StatementType.CONTINUE, parent);
 			/*if(continueStatement.getLabel() != null)
 				processExpression(child, continueStatement.getLabel());*/
 			parent.addStatement(child);
 		}
 		else if(statement instanceof EmptyStatement) {
 			EmptyStatement emptyStatement = (EmptyStatement)statement;
-			StatementObject child = new StatementObject(emptyStatement, parameters, importObjectList, StatementType.EMPTY, parent);
+			StatementObject child = new StatementObject(emptyStatement, parameters, importObjectList, fieldDeclarationList, jarSet, StatementType.EMPTY, parent);
 			parent.addStatement(child);
 		}
 	}
