@@ -4,8 +4,6 @@ import com.refactoringMatcher.domain.RefactoringExtractionInfo;
 import com.refactoringMatcher.domain.RefactoringInfo;
 import com.refactoringMatcher.domain.RepositoryInfo;
 import com.refactoringMatcher.java.ast.ImportObject;
-import com.refactoringMatcher.java.ast.MethodObject;
-import com.refactoringMatcher.java.ast.decomposition.cfg.Graph;
 import com.refactoringMatcher.java.ast.decomposition.cfg.Groum;
 import com.refactoringMatcher.java.ast.decomposition.cfg.PDG;
 import com.refactoringMatcher.utils.ASTUtils;
@@ -20,6 +18,7 @@ import org.eclipse.jdt.core.dom.ImportDeclaration;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.NodeFinder;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jgit.api.errors.InvalidRemoteException;
 import org.eclipse.jgit.lib.Repository;
 import org.refactoringminer.api.GitService;
@@ -34,6 +33,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Optional;
+import java.util.Arrays;
 import java.util.stream.Collectors;
 
 /**
@@ -102,8 +102,11 @@ public class RefactoringExtractionService {
 
             Optional<String> effectivePOM = GitUtils.generateEffectivePom(commitId, repository);
 
-            // TODO GROUM check how to get field declerations here
             List<FieldDeclaration> fieldDeclarationList = new ArrayList<>();
+            List<TypeDeclaration> typeDeclarationList = compilationUnit.types();
+            for (TypeDeclaration typeDeclaration : typeDeclarationList) {
+               fieldDeclarationList.addAll(Arrays.asList(typeDeclaration.getFields()));
+            }
             Set<Tuple3<String, String, String>> jarSet = new HashSet<>();
             if (effectivePOM.isPresent()) {
                 jarSet = GitUtils.listOfJavaProjectLibraryFromEffectivePom(effectivePOM.get());

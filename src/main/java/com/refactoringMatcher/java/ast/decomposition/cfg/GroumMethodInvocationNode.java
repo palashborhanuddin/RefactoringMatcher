@@ -61,12 +61,12 @@ public class GroumMethodInvocationNode extends GroumActionNode implements Serial
 			// TODO GROUM what if parent is another expression and then assign/declare? check for.
 			if ((methodInvocation.getParent() instanceof VariableDeclarationFragment)) {
 				Iterator<AbstractVariable> definedVariableIterator = this.pdgNode.getDefinedVariableIterator();
-
+				VariableDeclarationFragment variableDeclarationFragment = (VariableDeclarationFragment) methodInvocation.getParent();
 				while (definedVariableIterator.hasNext()) {
 					AbstractVariable abstractVariable = definedVariableIterator.next();
 					if (Objects.nonNull(abstractVariable)
-							&& Objects.nonNull(methodInvocation.getExpression())
-							&& abstractVariable.getVariableName().equals(methodInvocation.getExpression().toString())) {
+							&& Objects.nonNull(variableDeclarationFragment)
+							&& abstractVariable.getVariableName().equals(variableDeclarationFragment.getName().toString())) {
 						declaredVariables.add(abstractVariable);
 						definedVariables.add(abstractVariable);
 						break;
