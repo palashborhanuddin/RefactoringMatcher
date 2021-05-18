@@ -99,10 +99,10 @@ public abstract class ClassDeclarationObject {
     	TypeObject superclass = this.getSuperclass();
     	if(superclass == null)
     		return false;
-    	else if(superclass.getClassType().equals("junit.framework.TestCase"))
+    	else if(superclass.getQualifiedClassType().equals("junit.framework.TestCase"))
     		return true;
     	else {
-    		ClassObject superClassObject = ASTReader.getSystemObject().getClassObject(superclass.getClassType());
+    		ClassObject superClassObject = ASTReader.getSystemObject().getClassObject(superclass.getQualifiedClassType());
     		if(superClassObject != null)
     			return superClassObject.extendsTestCase();
     	}
@@ -165,7 +165,7 @@ public abstract class ClassDeclarationObject {
         ListIterator<FieldObject> fi = getFieldIterator();
         while(fi.hasNext()) {
             FieldObject fo = fi.next();
-            if(fo.getType().getClassType().equals(className))
+            if(fo.getType().getQualifiedClassType().equals(className))
                 return true;
         }
         return false;

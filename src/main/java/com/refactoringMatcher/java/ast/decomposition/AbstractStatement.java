@@ -21,6 +21,7 @@ public abstract class AbstractStatement extends AbstractMethodFragment {
 		super(parent, parameters, importObjectList, fieldDeclarationList, jarSet);
 		this.type = type;
 		this.statement = ASTInformationGenerator.generateASTInformation(statement);
+		setStatement(this.statement);
 	}
 
     public Statement getStatement() {

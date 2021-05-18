@@ -21,7 +21,7 @@ public class GroumWhileNode extends GroumControlNode implements Serializable {
 		setValue(ToGroumString());
 	}
 
-	public String ToGroumString(){
+	private String ToGroumString(){
 		return "WHILE";
 	}
 

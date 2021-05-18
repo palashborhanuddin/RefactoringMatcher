@@ -29,7 +29,8 @@ public class PDGExpression {
 	private Set<CreationObject> createdTypes;
 	private Set<String> thrownExceptionTypes;
 	private MethodCallAnalyzer methodCallAnalyzer;
-	
+
+	// TODO GROUM- no use of this class
 	public PDGExpression(AbstractExpression expression, Set<VariableDeclarationObject> variableDeclarationsInMethod) {
 		this.declaredVariables = new LinkedHashSet<AbstractVariable>();
 		this.definedVariables = new LinkedHashSet<AbstractVariable>();
@@ -184,7 +185,7 @@ public class PDGExpression {
 		SystemObject systemObject = ASTReader.getSystemObject();
 		ClassInstanceCreation classInstanceCreation = classInstanceCreationObject.getClassInstanceCreation();
 		IMethodBinding methodBinding = classInstanceCreation.resolveConstructorBinding();
-		ClassObject classObject = systemObject.getClassObject(classInstanceCreationObject.getType().getClassType());
+		ClassObject classObject = systemObject.getClassObject(classInstanceCreationObject.getType().getQualifiedClassType());
 		ConstructorObject constructorObject = null;
 		if(classObject != null) {
 			constructorObject = classObject.getConstructor(classInstanceCreationObject);

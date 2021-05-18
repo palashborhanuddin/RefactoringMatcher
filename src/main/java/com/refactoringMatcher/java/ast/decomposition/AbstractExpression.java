@@ -20,6 +20,7 @@ public class AbstractExpression extends AbstractMethodFragment {
 	public AbstractExpression(Expression expression, List<ParameterObject> parameters, List<ImportObject> importObjectList, List<FieldDeclaration> fieldDeclarationList, Set<Tuple3<String, String, String>> jarSet, AbstractMethodFragment parent) {
 		super(parent, parameters, importObjectList, fieldDeclarationList, jarSet);
 		this.expression = ASTInformationGenerator.generateASTInformation(expression);
+		setStatement(this.expression);
 		processExpression(expression);
 	}
 

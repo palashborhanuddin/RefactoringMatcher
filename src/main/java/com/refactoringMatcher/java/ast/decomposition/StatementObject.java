@@ -34,7 +34,6 @@ public class StatementObject extends AbstractStatement {
 	
 	public StatementObject(Statement statement, List<ParameterObject> parameters, List<ImportObject> importObjectList, List<FieldDeclaration> fieldDeclarationList, Set<Tuple3<String, String, String>> jarSet, StatementType type, AbstractMethodFragment parent) {
 		super(statement, parameters, importObjectList, fieldDeclarationList, jarSet, type,  parent);
-		// TODO GROUM let's track here for the field accesses
 		ExpressionExtractor expressionExtractor = new ExpressionExtractor();
         List<Expression> assignments = expressionExtractor.getAssignments(statement);
         List<Expression> postfixExpressions = expressionExtractor.getPostfixExpressions(statement);

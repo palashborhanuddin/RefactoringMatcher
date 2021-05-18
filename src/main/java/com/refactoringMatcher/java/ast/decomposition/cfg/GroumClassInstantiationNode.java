@@ -10,6 +10,7 @@ import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
+import org.eclipse.jdt.core.dom.ParameterizedType;
 
 import com.refactoringMatcher.java.ast.util.ExpressionExtractor;
 
@@ -82,8 +83,11 @@ public class GroumClassInstantiationNode extends GroumActionNode implements Seri
 
 	private static final long serialVersionUID = 3562275374298174028L;
 
-	public String ToGroumString() {
-		return classInstanceCreation.getType().toString() + ".<init>" ;
+	private String ToGroumString() {
+		if (classInstanceCreation.getType() instanceof ParameterizedType) {
+			return ((ParameterizedType) classInstanceCreation.getType()).getType().toString() + ".<init>";
+		}
+		return classInstanceCreation.getType().toString() + ".<init>";
 	}
 
 }

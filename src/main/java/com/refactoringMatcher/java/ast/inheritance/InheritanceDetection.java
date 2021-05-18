@@ -26,7 +26,7 @@ public class InheritanceDetection {
             ClassObject classObject = classIterator.next();
             TypeObject superclassType = classObject.getSuperclass();
             if(superclassType != null) {
-            	String superclass = superclassType.getClassType();
+            	String superclass = superclassType.getQualifiedClassType();
             	if(system.getClassObject(superclass) != null) {
             		InheritanceTree childTree = getTree(classObject.getName());
             		InheritanceTree parentTree = getTree(superclass);

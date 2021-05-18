@@ -19,6 +19,15 @@ public class MethodInvocationObject extends AbstractMethodInvocationObject {
     	this.methodInvocation = ASTInformationGenerator.generateASTInformation(methodInvocation);
     }
 
+    public void setStatementInformation(ASTInformation statementInformation) {
+        //this.methodInvocation = methodInvocation;
+        this.statementInformation = statementInformation;
+    }
+
+    public ASTInformation getStatementInformation() {
+        return this.statementInformation;
+    }
+
     public MethodInvocation getMethodInvocation() {
     	//return this.methodInvocation;
     	return (MethodInvocation)this.methodInvocation.recoverASTNode();

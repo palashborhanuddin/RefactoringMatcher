@@ -25,6 +25,7 @@ public class PDG extends Graph {
 	private PDGMethodEntryNode entryNode;
 	private Map<CFGBranchNode, Set<CFGNode>> nestingMap;
 	private Set<VariableDeclarationObject> variableDeclarationsInMethod;
+	private List<MethodInvocationObject> methodInvocationObjectListInMethod;
 	private Set<FieldObject> fieldsAccessedInMethod;
 	private Map<PDGNode, Set<BasicBlock>> dominatedBlockMap;
 	private List<FieldDeclaration> fieldDeclarationList;
@@ -58,6 +59,7 @@ public class PDG extends Graph {
 		}
 		this.variableDeclarationsInMethod = new LinkedHashSet<VariableDeclarationObject>();
 		this.fieldsAccessedInMethod = new LinkedHashSet<FieldObject>();
+		this.methodInvocationObjectListInMethod = new ArrayList<MethodInvocationObject>();
 		System.out.println("[TODO PDGCFG] @createPDG, need to figure out how to generate fieldsAccessedInMethod, following codes commented");
 		/*for(FieldObject field : accessedFields) {
 			this.fieldsAccessedInMethod.add(field);
@@ -70,6 +72,7 @@ public class PDG extends Graph {
 		for(LocalVariableDeclarationObject localVariableDeclaration : cfg.getMethod().getLocalVariableDeclarations()) {
 			variableDeclarationsInMethod.add(localVariableDeclaration);
 		}
+		this.methodInvocationObjectListInMethod.addAll(cfg.getMethod().getMethodInvocations());
 		createControlDependenciesFromEntryNode();
 		if(!nodes.isEmpty()) {
 			//IPreferenceStore store = Activator.getDefault().getPreferenceStore();
@@ -92,6 +95,10 @@ public class PDG extends Graph {
 
 	public AbstractMethodDeclaration getMethod() {
 		return cfg.getMethod();
+	}
+
+	public List<MethodInvocationObject> getMethodInvocationObjectListInMethod() {
+		return methodInvocationObjectListInMethod;
 	}
 
 	public Set<VariableDeclarationObject> getVariableDeclarationObjectsInMethod() {

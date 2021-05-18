@@ -13,8 +13,10 @@ public abstract class AbstractMethodInvocationObject {
     private List<TypeObject> parameterList;
     private Set<String> thrownExceptions;
     private boolean _static;
+    private boolean invokerTypeDetermined;
     //private MethodInvocation methodInvocation;
     protected ASTInformation methodInvocation;
+    protected ASTInformation statementInformation;
     private volatile int hashCode = 0;
 
     public AbstractMethodInvocationObject(TypeObject originClassType, String methodName, TypeObject returnType) {
@@ -24,6 +26,7 @@ public abstract class AbstractMethodInvocationObject {
         this.parameterList = new ArrayList<TypeObject>();
         this.thrownExceptions = new LinkedHashSet<String>();
         this._static = false;
+        this.invokerTypeDetermined = false;
     }
 
     public AbstractMethodInvocationObject(TypeObject originClassType, String methodName, TypeObject returnType, List<TypeObject> parameterList) {
@@ -31,7 +34,9 @@ public abstract class AbstractMethodInvocationObject {
         this.methodName = methodName;
         this.returnType = returnType;
         this.parameterList = parameterList;
+        this.thrownExceptions = new LinkedHashSet<String>();
         this._static = false;
+        this.invokerTypeDetermined = false;
     }
 
     public boolean addParameter(TypeObject parameterType) {
@@ -55,7 +60,7 @@ public abstract class AbstractMethodInvocationObject {
     }
 
     public String getOriginClassName() {
-        return this.originClassType.getClassType();
+        return this.originClassType.getQualifiedClassType();
     }
 
     public String getMethodName() {
@@ -75,6 +80,14 @@ public abstract class AbstractMethodInvocationObject {
 
     public void setStatic(boolean s) {
         _static = s;
+    }
+
+    public void setInvokerTypeDetermined(boolean invokerTypeDetermined) {
+        this.invokerTypeDetermined = invokerTypeDetermined;
+    }
+
+    public boolean isInvokerTypeDetermined() {
+        return invokerTypeDetermined;
     }
 
     public void addThrownException(String type) {

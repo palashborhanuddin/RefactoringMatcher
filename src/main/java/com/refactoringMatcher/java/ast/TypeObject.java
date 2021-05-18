@@ -4,24 +4,33 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TypeObject {
-    private String classType;
+    private String qualifiedClassType;
+	private String className; // non qualified
     private String genericType;
     private int arrayDimension;
     private volatile int hashCode = 0;
 
     public TypeObject(String type) {
-        this.classType = type;
+        this.qualifiedClassType = type;
     }
 
-    public String getClassType() {
-        return classType;
+    public String getQualifiedClassType() {
+        return qualifiedClassType;
     }
 
     public String getGenericType() {
         return genericType;
     }
 
-    public void setGeneric(String g) {
+	public void setNonQualifiedClassName(String className) {
+		this.className = className;
+	}
+
+	public String getNonQualifiedClassName() {
+		return className;
+	}
+
+	public void setGeneric(String g) {
         this.genericType = g;
     }
     
@@ -35,10 +44,10 @@ public class TypeObject {
 
     public boolean equalsClassType(TypeObject typeObject) {
     	//this case covers type parameter names, such as E, K, N, T, V, S, U
-    	if(this.classType.length() == 1 || typeObject.classType.length() == 1)
+    	if(this.qualifiedClassType.length() == 1 || typeObject.qualifiedClassType.length() == 1)
     		return true;
     	else
-    		return this.classType.equals(typeObject.classType);
+    		return this.qualifiedClassType.equals(typeObject.qualifiedClassType);
     }
 
     public boolean equalsGenericType(TypeObject typeObject) {
@@ -82,7 +91,7 @@ public class TypeObject {
         if (o instanceof TypeObject) {
             TypeObject typeObject = (TypeObject)o;
 
-            if(this.classType.equals(typeObject.classType)) {
+            if(this.qualifiedClassType.equals(typeObject.qualifiedClassType)) {
                 if(this.genericType == null && typeObject.genericType == null)
                     return this.arrayDimension == typeObject.arrayDimension;
                 else if(this.genericType != null && typeObject.genericType != null)
@@ -95,7 +104,7 @@ public class TypeObject {
     public int hashCode() {
     	if(hashCode == 0) {
     		int result = 17;
-    		result = 37*result + classType.hashCode();
+    		result = 37*result + qualifiedClassType.hashCode();
     		if(genericType != null)
     			result = 37*result + genericType.hashCode();
     		result = 37*result + arrayDimension;
@@ -106,7 +115,7 @@ public class TypeObject {
 
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append(classType);
+        sb.append(qualifiedClassType);
         if(genericType != null)
             sb.append(genericType);
         for(int i=0; i<arrayDimension; i++)

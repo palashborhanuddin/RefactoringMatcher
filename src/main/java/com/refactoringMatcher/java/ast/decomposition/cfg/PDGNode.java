@@ -45,7 +45,8 @@ public class PDGNode extends GraphNode implements Comparable<PDGNode> {
 	protected Set<FieldObject> fieldsAccessedInMethod;
 	private Set<AbstractVariable> originalDefinedVariables;
 	private Set<AbstractVariable> originalUsedVariables;
-	private MethodCallAnalyzer methodCallAnalyzer;
+	// TODO GROUM - No use of the following methodCallAnalyzer
+	//private MethodCallAnalyzer methodCallAnalyzer;
 	
 	public PDGNode() {
 		super();
@@ -69,7 +70,7 @@ public class PDGNode extends GraphNode implements Comparable<PDGNode> {
 		this.usedVariables = new LinkedHashSet<AbstractVariable>();
 		this.createdTypes = new LinkedHashSet<CreationObject>();
 		this.thrownExceptionTypes = new LinkedHashSet<String>();
-		this.methodCallAnalyzer = new MethodCallAnalyzer(definedVariables, usedVariables, thrownExceptionTypes, this.variableDeclarationsInMethod);
+//		this.methodCallAnalyzer = new MethodCallAnalyzer(definedVariables, usedVariables, thrownExceptionTypes, this.variableDeclarationsInMethod);
 	}
 
 	public Iterator<AbstractVariable> getDeclaredVariableIterator() {

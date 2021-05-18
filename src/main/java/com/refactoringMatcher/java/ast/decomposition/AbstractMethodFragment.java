@@ -34,7 +34,6 @@ import org.eclipse.jdt.core.dom.PostfixExpression;
 import org.eclipse.jdt.core.dom.PrefixExpression;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
-import org.eclipse.jdt.core.dom.SuperFieldAccess;
 import org.eclipse.jdt.core.dom.SuperMethodInvocation;
 import org.eclipse.jdt.core.dom.ThisExpression;
 import org.eclipse.jdt.core.dom.ThrowStatement;
@@ -49,6 +48,7 @@ public abstract class AbstractMethodFragment {
 	private List<ImportObject> importObjectList;
 	private List<FieldDeclaration> fieldDeclarationList;
 	private Set<Tuple3<String, String, String>> jarSet;
+	private ASTInformation statement;
 	
 	private List<MethodInvocationObject> methodInvocationList;
 	private List<SuperMethodInvocationObject> superMethodInvocationList;
@@ -153,7 +153,11 @@ public abstract class AbstractMethodFragment {
 		this.variablesAssignedWithClassInstanceCreations = new LinkedHashMap<PlainVariable, LinkedHashSet<ClassInstanceCreationObject>>();
 	}
 
-    public AbstractMethodFragment getParent() {
+	public void setStatement(ASTInformation statement) {
+		this.statement = statement;
+	}
+
+	public AbstractMethodFragment getParent() {
     	return this.parent;
     }
 
@@ -232,7 +236,17 @@ public abstract class AbstractMethodFragment {
 							addLocalVariableInstruction(localVariable);
 							PlainVariable variable;
 							if(simpleName.getParent() instanceof FieldAccess){
-								variable = new PlainVariable(localVariable.getName());
+								if (((FieldAccess) simpleName.getParent()).getExpression() instanceof ThisExpression) {
+									VariableDeclaration variableDeclaration = getVaribleDeclaration(localVariable);
+									if (variableDeclaration == null) {
+										variable = new PlainVariable(localVariable.getName());
+									}
+									else {
+										variable = new PlainVariable(variableDeclaration);
+									}
+								}
+								else
+									variable = new PlainVariable(localVariable.getName());
 							} else if(simpleName.getParent() instanceof QualifiedName && simpleName.getParent().toString().endsWith(simpleName.getIdentifier()) ){
 								variable = new PlainVariable(simpleName.getParent().toString());
 							}
@@ -282,10 +296,16 @@ public abstract class AbstractMethodFragment {
 				if(parameter.getName().equals(localVariable.getName()))
 					return parameter.getVariableDeclaration();
 			}
+			for (FieldDeclaration fieldDeclaration : fieldDeclarationList) {
+				for (Object variable : fieldDeclaration.fragments()) {
+					VariableDeclaration var = (VariableDeclaration) variable;
+					if (var.getName().toString().equals(localVariable.getName())) {
+						return var;
+					}
+				}
+			}
 			return null;
 		}
-
-		// TODO GROUM possible checkpoint if field decleration
 
 		Set<PlainVariable> declarationsInParent = parent.getDeclaredLocalVariables();
 		PlainVariable declaration = null;
@@ -400,26 +420,26 @@ public abstract class AbstractMethodFragment {
 			if(expression instanceof MethodInvocation) {
 				MethodInvocation methodInvocation = (MethodInvocation)expression;
 				//IMethodBinding methodBinding = methodInvocation.resolveMethodBinding();
-				// [TODO PDGCFG] in above statement IMethodBinding would be null. so need to address using JarAnalyser.
 				String methodName = methodInvocation.getName().getFullyQualifiedName();
+				String invokerVariableType = getInvokerVariableType(methodInvocation.getExpression());
+				if (invokerVariableType.isEmpty()) {
+					System.out.println("No invoker type found for: " + methodInvocation.toString());
+				}
 				String javaVersion = "11.0.10";
-				//System.out.println("MethodName: " +methodName+ ", methodInvocation: " +methodInvocation.arguments().toString());
 				List<MethodInfo> methodInfoList = TypeInferenceFluentAPI.getInstance().
 						new Criteria(jarSet,
-						javaVersion, importStatementList, methodName, methodInvocation.arguments().size()).getMethodList();
-				// [TODO PDGCFG] what could be the reason that there will be no methodInfo?
+						javaVersion, importStatementList, methodName, methodInvocation.arguments().size()).setInvokerType(invokerVariableType).getMethodList();
 				if (methodInfoList.size() == 0) {
-					//System.out.println("No information found for: " +methodName);
+					System.out.println("No information found for: " +methodName);
 					continue;
 				}
-				// [TODO PDGCFG] why the first index only? is it expected to have multiple methodInfo? why there should be more than one?
 				MethodInfo methodInfo = methodInfoList.get(0);
-				//System.out.println("MethodInfo: " + methodInfo.toString());
 
 				//String originClassName = methodBinding.getDeclaringClass().getQualifiedName();
 				//TypeObject originClassTypeObject = TypeObject.extractTypeObject(originClassName);
 				String originClassName = methodInfo.getClassInfo().getQualifiedName();
 				TypeObject originClassTypeObject = TypeObject.extractTypeObject(originClassName);
+				originClassTypeObject.setNonQualifiedClassName(methodInfo.getClassInfo().getName());
 				//String methodInvocationName = methodBinding.getName();
 				//String qualifiedName = methodBinding.getReturnType().getQualifiedName();
 				//TypeObject returnType = TypeObject.extractTypeObject(qualifiedName);
@@ -429,6 +449,8 @@ public abstract class AbstractMethodFragment {
 
 				MethodInvocationObject methodInvocationObject = new MethodInvocationObject(originClassTypeObject, methodInvocationName, returnType);
 				methodInvocationObject.setMethodInvocation(methodInvocation);
+				methodInvocationObject.setStatementInformation(statement);
+				methodInvocationObject.setInvokerTypeDetermined(invokerVariableType.length() > 0);
 				/*ITypeBinding[] parameterTypes = methodBinding.getParameterTypes();
 				for(ITypeBinding parameterType : parameterTypes) {
 					String qualifiedParameterName = parameterType.getQualifiedName();
@@ -456,7 +478,9 @@ public abstract class AbstractMethodFragment {
 					methodInvocationObject.setStatic(true);
 				}
 				addMethodInvocation(methodInvocationObject);
-				AbstractVariable invoker = MethodDeclarationUtility.processMethodInvocationExpression(methodInvocation.getExpression());
+				// TODO GROUM - no use of the members updated here therefore no use of the following code snippet for now.
+				// Cleanup later
+				AbstractVariable invoker = null; //MethodDeclarationUtility.processMethodInvocationExpression(methodInvocation.getExpression());
 				if(invoker != null) {
 					PlainVariable initialVariable = invoker.getInitialVariable();
 					if(initialVariable.isField()) {
@@ -539,6 +563,71 @@ public abstract class AbstractMethodFragment {
 				}
 			}
 		}
+	}
+
+	private String getInvokerVariableType(Expression expression) {
+		String emptyString = "";
+		if (Objects.isNull(expression))
+			return emptyString;
+		PlainVariable variable;
+		if (expression instanceof FieldAccess) {
+			if (((FieldAccess) expression).getExpression() instanceof ThisExpression) {
+				SimpleName simpleName = ((FieldAccess) expression).getName();
+				LocalVariableInstructionObject localVariable = new LocalVariableInstructionObject(simpleName);
+				VariableDeclaration variableDeclaration = getVaribleDeclaration(localVariable);
+				if (variableDeclaration == null) {
+					return emptyString;
+				}
+				else {
+					variable = new PlainVariable(variableDeclaration);
+					return variable.getVariableBaseType();
+				}
+			}
+			else {
+				// TODO GROUM what to do as we don't know the field type?
+				return emptyString;
+			}
+		}
+		else if (expression instanceof MethodInvocation) {
+			for (MethodInvocationObject methodInvocationObject : getMethodInvocations()) {
+				if (expression.toString().equals(methodInvocationObject.getMethodInvocation().toString())
+						&& methodInvocationObject.isInvokerTypeDetermined()) {
+					return methodInvocationObject.getReturnType().getQualifiedClassType();
+				}
+			}
+			// TODO GROUM what to do as we don't know the method return type?
+			return emptyString;
+		}
+		else if (expression instanceof QualifiedName) {
+			return ((QualifiedName) expression).getFullyQualifiedName();
+		}
+		else if (expression instanceof SimpleName) {
+			SimpleName simpleName = (SimpleName) expression;
+			LocalVariableInstructionObject localVariable = new LocalVariableInstructionObject(simpleName);
+			VariableDeclaration variableDeclaration = getVaribleDeclaration(localVariable);
+			if (variableDeclaration == null) {
+				for (ImportObject importObject : importObjectList) {
+					if (importObject.getImportName().endsWith("." + simpleName.getIdentifier())) {
+						return simpleName.getIdentifier();
+					}
+					else if (importObject.isOnDemand()) {
+						String importObjectString = importObject.getImportName() + "." + simpleName.getIdentifier();
+						try {
+							Class.forName(importObjectString);
+							return simpleName.getIdentifier();
+						} catch (ClassNotFoundException e) {
+							e.printStackTrace();
+						}
+					}
+				}
+				return emptyString;
+			}
+			else {
+				variable = new PlainVariable(variableDeclaration);
+				return variable.getVariableBaseType();
+			}
+		}
+		return emptyString;
 	}
 
 	private void addMethodInvocation(MethodInvocationObject methodInvocationObject) {

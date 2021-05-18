@@ -114,7 +114,7 @@ public class GroumFieldAccessNode extends GroumActionNode {
         return fieldAccessExpression;
     }
 
-    public String ToGroumString() {
+    private String ToGroumString() {
         return value;
     }
 }

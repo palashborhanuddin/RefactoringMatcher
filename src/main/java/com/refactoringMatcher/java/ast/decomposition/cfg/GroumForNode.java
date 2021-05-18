@@ -37,7 +37,7 @@ public class GroumForNode extends GroumControlNode implements Serializable {
 		return enhancedForStatement;
 	}
 
-	public String ToGroumString(){
+	private String ToGroumString(){
 		return "FOR";
 	}
 	/**

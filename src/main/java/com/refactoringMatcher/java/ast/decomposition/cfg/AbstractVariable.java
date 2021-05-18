@@ -3,20 +3,21 @@ package com.refactoringMatcher.java.ast.decomposition.cfg;
 import com.refactoringMatcher.java.ast.ASTInformation;
 import com.refactoringMatcher.java.ast.ASTInformationGenerator;
 import com.refactoringMatcher.java.ast.TypeObject;
-import org.eclipse.jdt.core.dom.IVariableBinding;
-import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.VariableDeclaration;
+import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 import org.eclipse.jdt.core.dom.VariableDeclarationExpression;
 import org.eclipse.jdt.core.dom.ForStatement;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
+import org.eclipse.jdt.core.dom.ParameterizedType;
 
 public abstract class AbstractVariable {
 	//protected VariableDeclaration name;
 	protected String variableName;
 	protected String variableType;
+	protected String variableBaseType;
 	protected ASTInformation variableDeclaration;
 	protected ASTInformation scope;
 	protected boolean isField;
@@ -39,10 +40,31 @@ public abstract class AbstractVariable {
 				ASTNode variableDeclarationParent = variableDeclaration.getParent();
 				if (variableDeclarationParent instanceof VariableDeclarationStatement) {
 					VariableDeclarationStatement variableDeclarationStatement = (VariableDeclarationStatement) variableDeclarationParent;
-					this.variableType = new TypeObject(variableDeclarationStatement.getType().toString()).getClassType();
+					this.variableType = new TypeObject(variableDeclarationStatement.getType().toString()).getQualifiedClassType();
+					if (variableDeclarationStatement.getType() instanceof ParameterizedType) {
+						this.variableBaseType = ((ParameterizedType) variableDeclarationStatement.getType()).getType().toString();
+					}
+					else
+						this.variableBaseType = this.variableType;
 					scope = variableDeclarationStatement.getParent();
-				} else if (variableDeclarationParent instanceof VariableDeclarationExpression) {
-					this.variableType = new TypeObject(((VariableDeclarationExpression) variableDeclarationParent).getType().toString()).getClassType();
+				}
+				else if (variableDeclarationParent instanceof FieldDeclaration) {
+					FieldDeclaration variableDeclarationStatement = (FieldDeclaration) variableDeclarationParent;
+					this.variableType = new TypeObject(variableDeclarationStatement.getType().toString()).getQualifiedClassType();
+					if (variableDeclarationStatement.getType() instanceof ParameterizedType) {
+						this.variableBaseType = ((ParameterizedType) variableDeclarationStatement.getType()).getType().toString();
+					}
+					else
+						this.variableBaseType = this.variableType;
+					scope = variableDeclarationStatement.getParent();
+				}
+				else if (variableDeclarationParent instanceof VariableDeclarationExpression) {
+					this.variableType = new TypeObject(((VariableDeclarationExpression) variableDeclarationParent).getType().toString()).getQualifiedClassType();
+					if (((VariableDeclarationExpression) variableDeclarationParent).getType() instanceof ParameterizedType) {
+						this.variableBaseType = ((ParameterizedType) ((VariableDeclarationExpression) variableDeclarationParent).getType()).getType().toString();
+					}
+					else
+						this.variableBaseType = this.variableType;
 					if (variableDeclarationParent.getParent() instanceof ForStatement)
 						scope = variableDeclarationParent.getParent();
 					else if (variableDeclarationParent.getParent() != null) {
@@ -50,7 +72,12 @@ public abstract class AbstractVariable {
 					}
 				}
 			} else if (variableDeclaration instanceof SingleVariableDeclaration) {
-				this.variableType = new TypeObject(((SingleVariableDeclaration) variableDeclaration).getType().toString()).getClassType();
+				this.variableType = new TypeObject(((SingleVariableDeclaration) variableDeclaration).getType().toString()).getQualifiedClassType();
+				if (((SingleVariableDeclaration) variableDeclaration).getType() instanceof ParameterizedType) {
+					this.variableBaseType = ((ParameterizedType) ((SingleVariableDeclaration) variableDeclaration).getType()).getType().toString();
+				}
+				else
+					this.variableBaseType = this.variableType;
 				scope = variableDeclaration.getParent();
 			}
 			this.scope = ASTInformationGenerator.generateASTInformation(scope);
@@ -88,6 +115,10 @@ public abstract class AbstractVariable {
 		if(variableType == null)
 			return null;
 		return variableType;
+	}
+
+	public String getVariableBaseType() {
+		return variableBaseType;
 	}
 
 	public void setIfParameter() {

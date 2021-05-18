@@ -19,7 +19,7 @@ public class GroumIfNode extends GroumControlNode implements Serializable {
 		return ifStatement;
 	}
 
-	public String ToGroumString(){
+	private String ToGroumString(){
 		return "IF";
 	}
 	/**

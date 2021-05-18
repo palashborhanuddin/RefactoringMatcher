@@ -36,7 +36,7 @@ public class CompleteInheritanceDetection {
             ClassObject classObject = classIterator.next();
             TypeObject superclassType = classObject.getSuperclass();
             if(superclassType != null) {
-            	String superclass = superclassType.getClassType();
+            	String superclass = superclassType.getQualifiedClassType();
             	if(system.getClassObject(superclass) != null) {
             		addSubclassToSuperclass(superclass, classObject.getName());
             	}
@@ -44,8 +44,8 @@ public class CompleteInheritanceDetection {
             ListIterator<TypeObject> interfaceIterator = classObject.getInterfaceIterator();
             while(interfaceIterator.hasNext()) {
             	TypeObject superInterface = interfaceIterator.next();
-            	if(system.getClassObject(superInterface.getClassType()) != null) {
-                	addSubclassToSuperclass(superInterface.getClassType(), classObject.getName());
+            	if(system.getClassObject(superInterface.getQualifiedClassType()) != null) {
+                	addSubclassToSuperclass(superInterface.getQualifiedClassType(), classObject.getName());
                 }
             }
         }

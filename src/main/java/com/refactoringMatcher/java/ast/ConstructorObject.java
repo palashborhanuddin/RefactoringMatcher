@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.HashSet;
 
 import io.vavr.Tuple3;
 import org.eclipse.jdt.core.dom.Block;
@@ -470,12 +469,12 @@ public class ConstructorObject implements AbstractMethodDeclaration {
     }
 
     public boolean equals(ClassInstanceCreationObject creationObject) {
-    	return this.className.equals(creationObject.getType().getClassType()) &&
+    	return this.className.equals(creationObject.getType().getQualifiedClassType()) &&
     			equalParameterTypes(this.getParameterTypeList(), creationObject.getParameterTypeList());
     }
 
     public boolean equals(ConstructorInvocationObject constructorInvocationObject) {
-    	return this.className.equals(constructorInvocationObject.getOriginClassType().getClassType()) &&
+    	return this.className.equals(constructorInvocationObject.getOriginClassType().getQualifiedClassType()) &&
     			equalParameterTypes(this.getParameterTypeList(), constructorInvocationObject.getParameterTypeList());
     }
 

@@ -5,28 +5,29 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
+import com.refactoringMatcher.java.ast.MethodInvocationObject;
 import com.refactoringMatcher.java.ast.util.ExpressionExtractor;
 
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.SimpleName;
+import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
-import org.eclipse.jdt.core.dom.VariableDeclaration;
-import org.eclipse.jdt.core.dom.FieldAccess;
+import org.eclipse.jdt.core.dom.ASTNode;
 
 public class GroumMethodInvocationNode extends GroumActionNode implements Serializable {
 
 	private MethodInvocation methodInvocation;
 	private List<FieldDeclaration> fieldDeclarationList;
-	private Boolean isLocal = false;
+	private boolean isLocal = true;
 
-	public GroumMethodInvocationNode(MethodInvocation statement, PDGNode pdgNode, List<FieldDeclaration> fieldDeclarationList, GroumBlockNode groumBlockNode) {
+	public GroumMethodInvocationNode(MethodInvocation statement, PDGNode pdgNode, List<MethodInvocationObject> methodInvocationObjectList, List<FieldDeclaration> fieldDeclarationList, GroumBlockNode groumBlockNode) {
 		super(pdgNode);
 		methodInvocation = statement;
 		this.fieldDeclarationList = fieldDeclarationList;
-		setValue(ToGroumString());
+		setValue(ToGroumString(methodInvocationObjectList));
 		getDefinedAncestorNode();
 		setGroumBlockNode(groumBlockNode);
 		determineDefinedAndUsedVariables();
@@ -118,7 +119,7 @@ public class GroumMethodInvocationNode extends GroumActionNode implements Serial
 		return methodInvocation;
 	}
 
-	public Boolean IsLocal() {
+	public boolean IsLocal() {
 		return isLocal;
 	}
 
@@ -127,58 +128,28 @@ public class GroumMethodInvocationNode extends GroumActionNode implements Serial
 	 */
 	private static final long serialVersionUID = -7222706825193092243L;
 
-	public String ToGroumString() {
-		Iterator<AbstractVariable> usedVariableIterator = this.pdgNode.getUsedVariableIterator();
+	private String ToGroumString(List<MethodInvocationObject> methodInvocationObjectList) {
 		String variableType = null;
-
-		while (usedVariableIterator.hasNext()) {
-			AbstractVariable abstractVariable = usedVariableIterator.next();
-
-			if (Objects.nonNull(abstractVariable)
-					&& Objects.nonNull(methodInvocation.getExpression())
-					&& abstractVariable.getVariableName().equals(methodInvocation.getExpression().toString())) {
-				variableType = abstractVariable.getVariableType();
-			}
-		}
-
-		if (Objects.isNull(variableType)) {
-			boolean isFound = false;
-			for (FieldDeclaration field : fieldDeclarationList) {
-				if (Objects.nonNull(methodInvocation.getExpression())) {
-					if (methodInvocation.getExpression() instanceof SimpleName) {
-						for (Object variable : field.fragments()) {
-							VariableDeclaration var = (VariableDeclaration) variable;
-							if (var.getName().toString().equals(methodInvocation.getExpression().toString())) {
-								variableType = field.getType().toString();
-								isFound = true;
-								break;
-							}
-						}
-					}
-					else if (methodInvocation.getExpression() instanceof FieldAccess) {
-						FieldAccess fieldName = (FieldAccess) methodInvocation.getExpression();
-						for (Object variable : field.fragments()) {
-							VariableDeclaration var = (VariableDeclaration) variable;
-							if (var.getName().toString().equals(fieldName.getName().toString())) {
-								variableType = field.getType().toString();
-								isFound = true;
-								break;
-							}
-						}
-					}
-					else if (methodInvocation.getExpression() instanceof MethodInvocation) {
-						MethodInvocation mm = (MethodInvocation) methodInvocation.getExpression();
-						// TODO GROUM need to have Method Return type!!
-						//if (field.toString().equals(mm..toString())) {
-						//	variableType = field.getType().toString();
-						//}
-					}
-				}
-				if (isFound)
+		for (MethodInvocationObject methodInvocationObject : methodInvocationObjectList) {
+			ASTNode astNode = methodInvocationObject.getStatementInformation().recoverASTNode();
+			if (astNode instanceof Statement) {
+				if (methodInvocation.toString().equals(methodInvocationObject.getMethodInvocation().toString())
+						&& ((Statement) astNode).toString().equals(pdgNode.getASTStatement().toString())
+						&& methodInvocationObject.isInvokerTypeDetermined()) {
+					variableType = methodInvocationObject.getOriginClassType().getNonQualifiedClassName();
+					isLocal = false;
 					break;
+				}
 			}
-			if (!isFound)
-				isLocal = true;
+			else if(astNode instanceof Expression) {
+				if (methodInvocation.toString().equals(methodInvocationObject.getMethodInvocation().toString())
+						&& ((Expression) astNode).toString().equals(pdgNode.getASTStatement().toString())
+						&& methodInvocationObject.isInvokerTypeDetermined()) {
+					variableType = methodInvocationObject.getOriginClassType().getNonQualifiedClassName();
+					isLocal = false;
+					break;
+				}
+			}
 		}
 
 		return Objects.nonNull(variableType)

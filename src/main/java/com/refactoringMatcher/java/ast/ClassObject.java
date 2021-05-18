@@ -86,11 +86,11 @@ public class ClassObject extends ClassDeclarationObject {
 
 	public boolean isFriend(String className) {
 		if(superclass != null) {
-			if(superclass.getClassType().equals(className))
+			if(superclass.getQualifiedClassType().equals(className))
 				return true;
 		}
 		for(TypeObject interfaceType : interfaceList) {
-			if(interfaceType.getClassType().equals(className))
+			if(interfaceType.getQualifiedClassType().equals(className))
 				return true;
 		}
 		for(FieldObject field : fieldList) {
@@ -130,7 +130,7 @@ public class ClassObject extends ClassDeclarationObject {
 			}
 		}
 		if(superclass != null) {
-			ClassObject superclassObject = ASTReader.getSystemObject().getClassObject(superclass.getClassType());
+			ClassObject superclassObject = ASTReader.getSystemObject().getClassObject(superclass.getQualifiedClassType());
 			if(superclassObject != null)
 				return superclassObject.isFriend(className);
 		}
@@ -138,7 +138,7 @@ public class ClassObject extends ClassDeclarationObject {
 	}
 
 	private boolean checkFriendship(TypeObject type, String className) {
-		if(type.getClassType().equals(className))
+		if(type.getQualifiedClassType().equals(className))
 			return true;
 		if(type.getGenericType() != null && type.getGenericType().contains(className))
 			return true;
