@@ -551,11 +551,12 @@ public class MethodBodyObject {
 					UnionType unionType = (UnionType)variableDeclarationType;
 					List<Type> types = unionType.types();
 					for(Type type : types) {
-						catchClauseObject.addExceptionType(type.resolveBinding().getQualifiedName());
+						catchClauseObject.addExceptionType(type.toString());
 					}
 				}
 				else {
-					catchClauseObject.addExceptionType(variableDeclarationType.resolveBinding().getQualifiedName());
+					String s = variableDeclarationType.toString();
+					catchClauseObject.addExceptionType(variableDeclarationType.toString());
 				}
 				AbstractExpression variableDeclarationName = new AbstractExpression(variableDeclaration.getName(), parameters, importObjectList, fieldDeclarationList, jarSet, child);
 				catchClauseObject.addExpression(variableDeclarationName);

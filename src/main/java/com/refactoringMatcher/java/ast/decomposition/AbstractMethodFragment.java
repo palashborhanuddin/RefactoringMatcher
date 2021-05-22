@@ -616,7 +616,7 @@ public abstract class AbstractMethodFragment {
 							Class.forName(importObjectString);
 							return simpleName.getIdentifier();
 						} catch (ClassNotFoundException e) {
-							e.printStackTrace();
+							// ignore
 						}
 					}
 				}

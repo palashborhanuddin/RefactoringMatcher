@@ -27,6 +27,7 @@ import org.eclipse.jdt.core.dom.IfStatement;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.WhileStatement;
 import org.eclipse.jdt.core.dom.FieldAccess;
+import org.eclipse.jdt.core.dom.TryStatement;
 
 public class Groum extends Graph implements Serializable {
 
@@ -51,7 +52,11 @@ public class Groum extends Graph implements Serializable {
             PDGNode pdgNode = (PDGNode) graphNode;
             ASTParser parser = ASTParser.newParser(AST.JLS14);
             parser.setKind(ASTParser.K_COMPILATION_UNIT);
-            String statement = "public class DummyClass{void dummy(){" + pdgNode.getCFGNode().getStatementString() + ";}}";
+            String statementString = pdgNode.getCFGNode().getStatementString();
+            if (statementString.equals("try\n")) {
+                statementString += " {} finally {}";
+            }
+            String statement = "public class DummyClass{void dummy(){" + statementString + ";}}";
             parser.setSource(statement.toCharArray());
             parser.setResolveBindings(true);
             CompilationUnit compilationUnit = (CompilationUnit) parser.createAST(null);
@@ -178,9 +183,11 @@ public class Groum extends Graph implements Serializable {
         if (Objects.nonNull(srcBlock) && Objects.nonNull(dstBlock) && !srcBlock.equals(dstBlock)) {
             List<GroumNode> srcControlNodes = compoundGroumNodes.get(srcBlock.getLeader());
             List<GroumNode> dstControlNodes = compoundGroumNodes.get(dstBlock.getLeader());
-            for (GroumNode srcControlNode : srcControlNodes) {
-                for (GroumNode dstControlNode : dstControlNodes) {
-                    addEdge(new GraphEdge(srcControlNode, dstControlNode));
+            if (Objects.nonNull(srcControlNodes) && Objects.nonNull(dstControlNodes)) {
+                for (GroumNode srcControlNode : srcControlNodes) {
+                    for (GroumNode dstControlNode : dstControlNodes) {
+                        addEdge(new GraphEdge(srcControlNode, dstControlNode));
+                    }
                 }
             }
         }
@@ -220,7 +227,10 @@ public class Groum extends Graph implements Serializable {
         Iterator<GroumNode> iterator = nodeList.listIterator();
         GroumNode node = iterator.next();
         if (node instanceof GroumIfNode) {
-            lastNodes = constructDescendantBranchBlockGroums(node, visitedNodes);
+            lastNodes = constructDescendantBranchIfBlockGroums(node, visitedNodes);
+        }
+        else if (node instanceof GroumTryNode) {
+            lastNodes = constructDescendantBranchTryBlockGroums(node, visitedNodes);
         }
         else {
             lastNodes = nodeList;
@@ -228,7 +238,17 @@ public class Groum extends Graph implements Serializable {
         return lastNodes;
     }
 
-    private List<GroumNode> constructDescendantBranchBlockGroums(GroumNode lNode, Set<List<GroumNode>> visitedNodes) {
+    private List<GroumNode> constructDescendantBranchTryBlockGroums(GroumNode lNode, Set<List<GroumNode>> visitedNodes) {
+        GroumBlockNode blockNode = getGroumBlock(lNode.GetPdgNode());
+        List<GroumNode> lastNodes = new ArrayList<GroumNode>();
+        lastNodes.add(lNode);
+        List<GroumNode> leafNodes = new ArrayList<GroumNode>();
+        // TODO GROUM Process leafnodes.
+        leafNodes.addAll(lastNodes);
+        return leafNodes;
+    }
+
+    private List<GroumNode> constructDescendantBranchIfBlockGroums(GroumNode lNode, Set<List<GroumNode>> visitedNodes) {
         GroumBlockNode blockNode = getGroumBlock(lNode.GetPdgNode());
         List<GroumNode> lastNodes = new ArrayList<GroumNode>();
         lastNodes.add(lNode);
@@ -289,7 +309,7 @@ public class Groum extends Graph implements Serializable {
         return null;
     }
 
-    private GroumNode findPreviousNode(Deque<GroumNode> groumNodes, GroumNode poppedNode) {
+    private GroumNode findImmediateParentNode(Deque<GroumNode> groumNodes, GroumNode poppedNode) {
         Iterator nodeIterator = groumNodes.iterator();
 
         GroumNode gnode = null;
@@ -407,12 +427,18 @@ public class Groum extends Graph implements Serializable {
                 groumNodes.push(gfn);
                 return true;
             }
+
+            public boolean visit(TryStatement statement) {
+                GroumTryNode gtn = new GroumTryNode(statement, pdgNode, getGroumBlock(pdgNode));
+                groumNodes.push(gtn);
+                return true;
+            }
         });
 
         List<GroumNode> initParallelNodes = new ArrayList<GroumNode>();
         while (groumNodes.size() > 1) {
             GroumNode poppedNode = groumNodes.pop();
-            GroumNode previousNode = findPreviousNode(groumNodes, poppedNode);
+            GroumNode previousNode = findImmediateParentNode(groumNodes, poppedNode);
             if (Objects.nonNull(previousNode)) {
                 previousNode.SetInnerNode(poppedNode);
             } else {

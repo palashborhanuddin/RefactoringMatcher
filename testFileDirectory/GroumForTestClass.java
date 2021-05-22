@@ -2,9 +2,11 @@
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.lang.*;
 
 public class GroumForTestClass {
 
@@ -13,7 +15,11 @@ public class GroumForTestClass {
 
     public List<TryStatementObject> getTryStatements() {
         List<TryStatementObject> tryStatements = new ArrayList<TryStatementObject>();
+        int size = tryStatements.size();
         int size = this.statementList.size();
+        Map<String, String> emptymap = Collections.emptyMap();
+        Integer i = java.lang.Integer.valueOf(1).toString().equals("1");
+        String s = String.valueOf(1);
         if(this.getType().equals(StatementType.TRY))
             tryStatements.add((TryStatementObject)this);
         for(AbstractStatement statement : statementList) {

@@ -286,6 +286,9 @@ public class CompositeStatementObject extends AbstractStatement {
 			sb.append(expressionList.get(expressionList.size()-1).toString());
 			sb.append(")");
 		}
+		else if ((expressionList.size() == 0) && getType() == StatementType.FOR) {
+			sb.append("(;;)");
+		}
 		else if(expressionList.size() > 0) {
 			sb.append("(");
 			for(int i=0; i<expressionList.size()-1; i++) {
