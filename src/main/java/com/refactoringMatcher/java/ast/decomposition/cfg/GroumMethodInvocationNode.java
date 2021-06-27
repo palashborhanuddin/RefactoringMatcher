@@ -143,7 +143,7 @@ public class GroumMethodInvocationNode extends GroumActionNode implements Serial
 			}
 			else if(astNode instanceof Expression) {
 				if (methodInvocation.toString().equals(methodInvocationObject.getMethodInvocation().toString())
-						&& ((Expression) astNode).toString().equals(pdgNode.getASTStatement().toString())
+						&& pdgNode.getASTStatement().toString().contains(((Expression) astNode).toString())
 						&& methodInvocationObject.isInvokerTypeDetermined()) {
 					variableType = methodInvocationObject.getOriginClassType().getNonQualifiedClassName();
 					isLocal = false;

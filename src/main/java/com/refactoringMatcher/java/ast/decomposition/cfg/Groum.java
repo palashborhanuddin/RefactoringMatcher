@@ -13,7 +13,9 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Objects;
+import java.util.Comparator;
 import java.time.Instant;
+import java.util.stream.Collectors;
 
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -27,7 +29,6 @@ import org.eclipse.jdt.core.dom.IfStatement;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.WhileStatement;
 import org.eclipse.jdt.core.dom.FieldAccess;
-import org.eclipse.jdt.core.dom.TryStatement;
 
 public class Groum extends Graph implements Serializable {
 
@@ -48,12 +49,19 @@ public class Groum extends Graph implements Serializable {
             GroumBlockNode block = new GroumBlockNode(key.getPDGNode());
             groumBlocks.put(block, nestedNodes);
         }
-        for (GraphNode graphNode : pdg.nodes) {
+        List<GraphNode> sortedPdgNodes = pdg.nodes.stream().sorted(new Comparator<GraphNode>() {
+            @Override
+            public int compare(GraphNode leftObject, GraphNode rightObject) {
+                return Integer.compare(leftObject.getId(), rightObject.getId());
+            }
+        }).collect(Collectors.toList());
+
+        for (GraphNode graphNode : sortedPdgNodes) {
             PDGNode pdgNode = (PDGNode) graphNode;
             ASTParser parser = ASTParser.newParser(AST.JLS14);
             parser.setKind(ASTParser.K_COMPILATION_UNIT);
             String statementString = pdgNode.getCFGNode().getStatementString();
-            if (statementString.equals("try\n")) {
+            if (statementString.equals("try\n")) { // TODO GROUM what if a try statement with resources?
                 statementString += " {} finally {}";
             }
             String statement = "public class DummyClass{void dummy(){" + statementString + ";}}";
@@ -226,11 +234,8 @@ public class Groum extends Graph implements Serializable {
         // check for descendant parallel block possibility
         Iterator<GroumNode> iterator = nodeList.listIterator();
         GroumNode node = iterator.next();
-        if (node instanceof GroumIfNode) {
-            lastNodes = constructDescendantBranchIfBlockGroums(node, visitedNodes);
-        }
-        else if (node instanceof GroumTryNode) {
-            lastNodes = constructDescendantBranchTryBlockGroums(node, visitedNodes);
+        if (node instanceof GroumControlNode) {
+            lastNodes = constructDescendantBranchBlockGroums(node, visitedNodes);
         }
         else {
             lastNodes = nodeList;
@@ -238,17 +243,7 @@ public class Groum extends Graph implements Serializable {
         return lastNodes;
     }
 
-    private List<GroumNode> constructDescendantBranchTryBlockGroums(GroumNode lNode, Set<List<GroumNode>> visitedNodes) {
-        GroumBlockNode blockNode = getGroumBlock(lNode.GetPdgNode());
-        List<GroumNode> lastNodes = new ArrayList<GroumNode>();
-        lastNodes.add(lNode);
-        List<GroumNode> leafNodes = new ArrayList<GroumNode>();
-        // TODO GROUM Process leafnodes.
-        leafNodes.addAll(lastNodes);
-        return leafNodes;
-    }
-
-    private List<GroumNode> constructDescendantBranchIfBlockGroums(GroumNode lNode, Set<List<GroumNode>> visitedNodes) {
+    private List<GroumNode> constructDescendantBranchBlockGroums(GroumNode lNode, Set<List<GroumNode>> visitedNodes) {
         GroumBlockNode blockNode = getGroumBlock(lNode.GetPdgNode());
         List<GroumNode> lastNodes = new ArrayList<GroumNode>();
         lastNodes.add(lNode);
@@ -428,11 +423,12 @@ public class Groum extends Graph implements Serializable {
                 return true;
             }
 
-            public boolean visit(TryStatement statement) {
+           /* Nothing to do for the try block as there is NO PDG Edge to and from for a TRY node.
+           public boolean visit(TryStatement statement) {
                 GroumTryNode gtn = new GroumTryNode(statement, pdgNode, getGroumBlock(pdgNode));
                 groumNodes.push(gtn);
                 return true;
-            }
+            }*/
         });
 
         List<GroumNode> initParallelNodes = new ArrayList<GroumNode>();
